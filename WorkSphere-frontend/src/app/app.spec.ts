@@ -1,10 +1,24 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { App } from './app';
+import { AuthService } from './core/services/auth.service';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [App, RouterTestingModule],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: {
+            authReady: signal(false),
+            currentUser: signal(null),
+            checkAuth: () => of(false)
+          }
+        }
+      ]
     }).compileComponents();
   });
 
@@ -14,10 +28,10 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should show the loading shell while auth is pending', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, WorkSphere-frontend');
+    expect(compiled.querySelector('app-loading')).toBeTruthy();
   });
 });

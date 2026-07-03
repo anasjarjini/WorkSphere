@@ -1,0 +1,261 @@
+<div class="auth-container register-container">
+  <div class="card auth-card register-card">
+    <div class="auth-header">
+      <div class="logo-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </div>
+      <h1 class="auth-title">Inscription Entreprise</h1>
+      <p class="auth-subtitle">Créez votre espace WorkSphere et votre compte Administrateur RH</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+
+    @if (!successMessage()) {
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+        
+        <!-- Section: Votre entreprise -->
+        <div class="form-section">
+          <h3 class="section-title">Votre entreprise</h3>
+          
+          <div class="form-group">
+            <label for="company_name" class="form-label">Nom de l'entreprise *</label>
+            <input
+              id="company_name"
+              type="text"
+              formControlName="company_name"
+              placeholder="Ex: Tech Innovations"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('company_name')"
+            />
+            @if (isFieldInvalid('company_name') && !getServerError('company_name')) {
+              <span class="error-text">Le nom de l'entreprise est requis.</span>
+            }
+            @if (getServerError('company_name')) {
+              <span class="error-text">{{ getServerError('company_name') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="company_email" class="form-label">Email de l'entreprise (Optionnel)</label>
+            <input
+              id="company_email"
+              type="email"
+              formControlName="company_email"
+              placeholder="contact@entreprise.com"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('company_email')"
+            />
+            @if (isFieldInvalid('company_email') && !getServerError('company_email')) {
+              <span class="error-text">Format d'email invalide.</span>
+            }
+            @if (getServerError('company_email')) {
+              <span class="error-text">{{ getServerError('company_email') }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section: Administrateur RH -->
+        <div class="form-section">
+          <h3 class="section-title">Votre compte Administrateur RH</h3>
+
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="admin_first_name" class="form-label">Prénom *</label>
+              <input
+                id="admin_first_name"
+                type="text"
+                formControlName="admin_first_name"
+                placeholder="Jean"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('admin_first_name')"
+              />
+              @if (isFieldInvalid('admin_first_name') && !getServerError('admin_first_name')) {
+                <span class="error-text">Requis.</span>
+              }
+              @if (getServerError('admin_first_name')) {
+                <span class="error-text">{{ getServerError('admin_first_name') }}</span>
+              }
+            </div>
+
+            <div class="form-group half-width">
+              <label for="admin_last_name" class="form-label">Nom *</label>
+              <input
+                id="admin_last_name"
+                type="text"
+                formControlName="admin_last_name"
+                placeholder="Dupont"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('admin_last_name')"
+              />
+              @if (isFieldInvalid('admin_last_name') && !getServerError('admin_last_name')) {
+                <span class="error-text">Requis.</span>
+              }
+              @if (getServerError('admin_last_name')) {
+                <span class="error-text">{{ getServerError('admin_last_name') }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="admin_name" class="form-label">Nom d'affichage (complet) *</label>
+            <input
+              id="admin_name"
+              type="text"
+              formControlName="admin_name"
+              placeholder="Jean Dupont"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('admin_name')"
+            />
+            @if (isFieldInvalid('admin_name') && !getServerError('admin_name')) {
+              <span class="error-text">Le nom complet est requis.</span>
+            }
+            @if (getServerError('admin_name')) {
+              <span class="error-text">{{ getServerError('admin_name') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="admin_email" class="form-label">Email professionnel *</label>
+            <input
+              id="admin_email"
+              type="email"
+              formControlName="admin_email"
+              placeholder="jean.dupont@entreprise.com"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('admin_email')"
+              autocomplete="email"
+            />
+            @if (isFieldInvalid('admin_email') && !getServerError('admin_email')) {
+              <span class="error-text">Email invalide ou requis.</span>
+            }
+            @if (getServerError('admin_email')) {
+              <span class="error-text">{{ getServerError('admin_email') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="admin_password" class="form-label">Mot de passe *</label>
+            <input
+              id="admin_password"
+              type="password"
+              formControlName="admin_password"
+              placeholder="Saisissez un mot de passe fort"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('admin_password')"
+              autocomplete="new-password"
+            />
+            @if (getServerError('admin_password')) {
+              <span class="error-text">{{ getServerError('admin_password') }}</span>
+            }
+            
+            <!-- Indicateur de force du mot de passe en temps réel -->
+            @if (passwordValue()) {
+              <div class="strength-meter-wrapper">
+                <div class="strength-meter-bar">
+                  <div 
+                    class="strength-meter-progress" 
+                    [class]="passwordStrengthLabel().class"
+                    [style.width.%]="passwordStrengthPercent()"
+                  ></div>
+                </div>
+                <div class="flex justify-between" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                  <span style="color: var(--color-text-muted);">Sécurité :</span>
+                  <span [class]="passwordStrengthLabel().class" style="font-weight: 600;">
+                    {{ passwordStrengthLabel().text }}
+                  </span>
+                </div>
+              </div>
+            }
+
+            <div class="password-rules-checklist">
+              <div class="rule-item" [class.met]="passwordRequirements().minLength">
+                <span class="rule-bullet"></span><span>Au moins 8 caractères</span>
+              </div>
+              <div class="rule-item" [class.met]="passwordRequirements().hasUpper">
+                <span class="rule-bullet"></span><span>Une majuscule (A-Z)</span>
+              </div>
+              <div class="rule-item" [class.met]="passwordRequirements().hasLower">
+                <span class="rule-bullet"></span><span>Une minuscule (a-z)</span>
+              </div>
+              <div class="rule-item" [class.met]="passwordRequirements().hasNumber">
+                <span class="rule-bullet"></span><span>Un chiffre (0-9)</span>
+              </div>
+              <div class="rule-item" [class.met]="passwordRequirements().hasSymbol">
+                <span class="rule-bullet"></span><span>Un symbole (!@#$...)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="admin_password_confirmation" class="form-label">Confirmez le mot de passe *</label>
+            <input
+              id="admin_password_confirmation"
+              type="password"
+              formControlName="admin_password_confirmation"
+              placeholder="Confirmez votre mot de passe"
+              class="form-control"
+              [class.invalid]="isFieldInvalid('admin_password_confirmation')"
+              autocomplete="new-password"
+            />
+            
+            @if (confirmPasswordValue()) {
+              <div class="match-indicator flex items-center gap-1" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                @if (passwordsMatch()) {
+                  <span style="color: var(--color-success); font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Les mots de passe correspondent.
+                  </span>
+                } @else {
+                  <span style="color: var(--color-error); font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Les mots de passe ne correspondent pas.
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          class="btn btn-primary w-full mt-4" 
+          [disabled]="isLoading() || registerForm.invalid"
+        >
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            Création en cours...
+          } @else {
+            Créer l'entreprise
+          }
+        </button>
+      </form>
+    }
+    
+    <div class="flex justify-center" style="margin-top: 1.5rem;">
+      <a routerLink="/login" class="link-accent" style="font-size: 0.875rem;">Vous avez déjà un compte ? Connectez-vous</a>
+    </div>
+  </div>
+</div>

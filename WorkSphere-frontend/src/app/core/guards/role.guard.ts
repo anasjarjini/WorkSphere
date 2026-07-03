@@ -1,0 +1,41 @@
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+/**
+ * Garde de navigation basé sur le rôle de l'utilisateur.
+ * Vérifie si le rôle de l'utilisateur correspond aux rôles autorisés pour cette route.
+ * Redirige vers le bon espace si non autorisé.
+ */
+export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  // 1. On s'assure d'abord que l'initialisation d'authentification est terminée
+  if (!authService.authReady()) {
+    return true;
+  }
+
+  // 2. On s'assure d'abord que l'utilisateur est bien connecté 
+  // (même si authGuard devrait bloquer avant)
+  const user = authService.currentUser();
+  
+  if (!authService.isAuthenticated() || !user) {
+    return router.createUrlTree(['/login']);
+  }
+
+  // 2. On récupère les rôles autorisés depuis les données de la route (définies dans app.routes.ts)
+  const expectedRoles: string[] = route.data['roles'] || [];
+
+  // 3. On extrait le rôle principal de l'utilisateur
+  const userRole = user.roles && user.roles.length > 0 ? user.roles[0].name : '';
+
+  // 4. Si le rôle est autorisé, on laisse passer
+  if (expectedRoles.includes(userRole)) {
+    return true;
+  }
+
+  // 5. Sinon, on redirige l'utilisateur vers le dashboard qui correspond réellement à son rôle
+  const redirectPath = authService.getRedirectPathForRole(userRole);
+  return router.createUrlTree([redirectPath]);
+};
