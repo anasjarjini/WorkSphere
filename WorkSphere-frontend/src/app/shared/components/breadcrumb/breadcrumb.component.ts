@@ -14,49 +14,19 @@ interface Breadcrumb {
   standalone: true,
   imports: [RouterModule],
   template: `
-    <nav aria-label="Fil d'Ariane" class="breadcrumb">
-      <a routerLink="/" class="crumb-link">Accueil</a>
+    <nav aria-label="Fil d'Ariane" class="flex items-center gap-2 text-[0.8125rem] py-3 flex-wrap mb-4">
+      <a routerLink="/" class="text-text-muted no-underline font-medium transition-colors duration-200 hover:text-accent cursor-pointer">Accueil</a>
       @for (crumb of breadcrumbs(); track crumb.path; let last = $last) {
-        <span class="separator">/</span>
+        <span class="text-border font-light">/</span>
         @if (last) {
-          <span class="crumb-current">{{ crumb.label }}</span>
+          <span class="text-text font-semibold">{{ crumb.label }}</span>
         } @else {
-          <a [routerLink]="crumb.path" class="crumb-link">{{ crumb.label }}</a>
+          <a [routerLink]="crumb.path" class="text-text-muted no-underline font-medium transition-colors duration-200 hover:text-accent cursor-pointer">{{ crumb.label }}</a>
         }
       }
     </nav>
   `,
-  styles: [`
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8125rem;
-      padding: 0.75rem 0;
-      flex-wrap: wrap;
-    }
-
-    .crumb-link {
-      color: var(--color-text-muted);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color var(--transition-fast);
-    }
-
-    .crumb-link:hover {
-      color: var(--color-accent);
-    }
-
-    .separator {
-      color: var(--color-border);
-      font-weight: 300;
-    }
-
-    .crumb-current {
-      color: var(--color-text-main);
-      font-weight: 600;
-    }
-  `]
+  styles: []
 })
 export class BreadcrumbComponent {
   private readonly router = inject(Router);

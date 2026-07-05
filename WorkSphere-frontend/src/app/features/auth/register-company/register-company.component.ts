@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { PasswordStrengthComponent } from '../../../shared/components/password-strength/password-strength.component';
 
 /**
  * Validateur personnalisé pour vérifier que le mot de passe admin et sa confirmation correspondent.
@@ -19,7 +20,7 @@ const passwordMatchValidator: ValidatorFn = (control: AbstractControl): Validati
 @Component({
   selector: 'app-register-company',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, CommonModule],
+  imports: [ReactiveFormsModule, RouterModule, CommonModule, PasswordStrengthComponent],
   templateUrl: './register-company.component.html',
   styleUrl: './register-company.component.scss'
 })
@@ -44,7 +45,6 @@ export class RegisterCompanyComponent implements OnInit {
     company_email: ['', [Validators.email]], // Optionnel, mais validé si rempli
     
     // Section Admin RH
-    admin_name: ['', [Validators.required]],
     admin_first_name: ['', [Validators.required]],
     admin_last_name: ['', [Validators.required]],
     admin_email: ['', [Validators.required, Validators.email]],
@@ -60,43 +60,7 @@ export class RegisterCompanyComponent implements OnInit {
   }, { validators: [passwordMatchValidator] });
 
 
-  // --- Analyse de la force du mot de passe (Même logique que ActivateAccount) ---
-  readonly passwordRequirements = computed(() => {
-    const pwd = this.passwordValue();
-    return {
-      minLength: pwd.length >= 8,
-      hasUpper: /[A-Z]/.test(pwd),
-      hasLower: /[a-z]/.test(pwd),
-      hasNumber: /[0-9]/.test(pwd),
-      hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
-    };
-  });
-
-  readonly passwordStrengthPercent = computed(() => {
-    const reqs = this.passwordRequirements();
-    const met = [
-      reqs.minLength,
-      reqs.hasUpper,
-      reqs.hasLower,
-      reqs.hasNumber,
-      reqs.hasSymbol
-    ].filter(Boolean).length;
-    return met * 20; // 0 à 100%
-  });
-
-  readonly passwordStrengthLabel = computed(() => {
-    const percent = this.passwordStrengthPercent();
-    if (percent === 0) return { text: 'Inexistant', class: 'strength-none' };
-    if (percent <= 40) return { text: 'Faible', class: 'strength-weak' };
-    if (percent <= 80) return { text: 'Moyen', class: 'strength-medium' };
-    return { text: 'Fort', class: 'strength-strong' };
-  });
-
-  readonly passwordsMatch = computed(() => {
-    const pwd = this.passwordValue();
-    const cpwd = this.confirmPasswordValue();
-    return pwd && cpwd && pwd === cpwd;
-  });
+  // La logique de force du mot de passe est maintenant dans le composant partagé PasswordStrengthComponent
 
   ngOnInit(): void {
     // Écoute des changements pour les signaux du mot de passe

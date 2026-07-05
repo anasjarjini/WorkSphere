@@ -20,6 +20,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register-company/register-company.component').then((m) => m.RegisterCompanyComponent)
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./layouts/admin-layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
     canActivate: [authGuard, roleGuard],
@@ -29,6 +37,11 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/admin/dashboard/dashboard.component').then((m) => m.AdminDashboardComponent),
         data: { breadcrumb: 'Dashboard' }
+      },
+      {
+        path: 'employees',
+        loadComponent: () => import('./features/admin/employee-list/employee-list.component').then((m) => m.EmployeeListComponent),
+        data: { breadcrumb: 'Employés' }
       },
       {
         path: 'employees/import',

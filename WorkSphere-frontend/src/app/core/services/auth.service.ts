@@ -82,6 +82,23 @@ export class AuthService {
   }
 
   /**
+   * Demander un email de réinitialisation de mot de passe.
+   * PAS de stockage de token — on transmet juste l'appel à l'API.
+   */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  /**
+   * Réinitialiser le mot de passe avec le token reçu par email.
+   * PAS de stockage de token ni de mise à jour de currentUser —
+   * l'utilisateur devra se reconnecter manuellement après.
+   */
+  resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, payload);
+  }
+
+  /**
    * Déconnexion de l'utilisateur
    */
   logout(): Observable<any> {

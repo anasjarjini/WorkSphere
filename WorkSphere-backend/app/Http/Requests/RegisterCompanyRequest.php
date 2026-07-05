@@ -19,13 +19,13 @@ class RegisterCompanyRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
+     *
      */
     public function rules(): array
     {
         return [
             'company_name' => ['required', 'string', 'max:255'],
             'company_email' => ['nullable', 'email'],
-            'admin_name' => ['required', 'string', 'max:255'],
             'admin_first_name' => ['required', 'string', 'max:255'],
             'admin_last_name' => ['required', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'unique:users,email'],

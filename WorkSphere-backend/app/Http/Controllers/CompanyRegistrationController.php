@@ -30,7 +30,7 @@ class CompanyRegistrationController extends Controller
 
             // 2. Create User
             $user = User::create([
-                'name' => $validated['admin_name'],
+                'name' => $validated['admin_first_name'] . ' ' . $validated['admin_last_name'],
                 'email' => $validated['admin_email'],
                 'password' => Hash::make($validated['admin_password']),
                 'company_id' => $company->id,

@@ -1,0 +1,390 @@
+<div class="min-h-screen bg-background py-8 px-6">
+  <div class="max-w-7xl mx-auto flex flex-col gap-6">
+
+    <!-- ── Header ───────────────────────────────────────────────── -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-text-heading">Employés</h1>
+        <p class="font-sans text-[0.9375rem] text-text-secondary mt-1">
+          Gérez les employés de votre entreprise
+        </p>
+      </div>
+      <a routerLink="/admin/employees/import"
+         class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold
+                px-5 py-2.5 rounded-md shadow-sm
+                transition-all duration-200
+                hover:bg-primary-hover hover:-translate-y-px
+                active:translate-y-0 active:shadow-sm
+                flex items-center gap-2 cursor-pointer shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Importer
+      </a>
+    </div>
+
+    <!-- ── Messages flash ───────────────────────────────────────── -->
+    @if (successMessage()) {
+      <div class="bg-success-light border border-success/20 rounded-md p-4 flex items-start gap-2.5 transition-all duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success shrink-0 mt-0.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="text-sm font-medium text-success-dark flex-1">{{ successMessage() }}</span>
+        <button (click)="dismissSuccess()" class="text-success-dark/60 hover:text-success-dark cursor-pointer transition-colors shrink-0 p-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="bg-error-light border border-error/20 rounded-md p-4 flex items-start gap-2.5 transition-all duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error shrink-0 mt-0.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span class="text-sm font-medium text-error-dark flex-1">{{ error() }}</span>
+        <button (click)="dismissError()" class="text-error-dark/60 hover:text-error-dark cursor-pointer transition-colors shrink-0 p-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    }
+
+    <!-- ── Barre de filtres ─────────────────────────────────────── -->
+    <div class="bg-surface border border-border rounded-xl shadow-sm p-5 transition-shadow duration-200 hover:shadow-md">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Recherche -->
+        <div class="lg:col-span-2">
+          <label class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text-muted mb-1.5 block">
+            Recherche
+          </label>
+          <div class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              [value]="searchTerm()"
+              (input)="onSearchChange($any($event).target.value)"
+              placeholder="Prénom, nom ou email…"
+              class="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-md
+                     font-sans text-[0.9375rem] text-text
+                     transition-all duration-150
+                     placeholder:text-text-muted placeholder:opacity-70
+                     focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Rôle -->
+        <div>
+          <label class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text-muted mb-1.5 block">
+            Rôle
+          </label>
+          <select
+            [value]="roleFilter()"
+            (change)="onRoleChange(($any($event).target).value)"
+            class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-md
+                   font-sans text-[0.9375rem] text-text
+                   transition-all duration-150
+                   focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
+          >
+            <option value="">Tous les rôles</option>
+            <option value="manager">Manager</option>
+            <option value="employe">Employé</option>
+          </select>
+        </div>
+
+        <!-- Département -->
+        <div>
+          <label class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text-muted mb-1.5 block">
+            Département
+          </label>
+          <input
+            type="text"
+            [value]="departmentFilter()"
+            (input)="onDepartmentChange(($any($event).target).value)"
+            placeholder="Filtrer…"
+            class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-md
+                   font-sans text-[0.9375rem] text-text
+                   transition-all duration-150
+                   placeholder:text-text-muted placeholder:opacity-70
+                   focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
+          />
+        </div>
+
+        <!-- Statut -->
+        <div>
+          <label class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text-muted mb-1.5 block">
+            Statut
+          </label>
+          <select
+            [value]="statusFilter()"
+            (change)="onStatusChange(($any($event).target).value)"
+            class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-md
+                   font-sans text-[0.9375rem] text-text
+                   transition-all duration-150
+                   focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
+          >
+            <option value="">Tous</option>
+            <option value="true">Actif</option>
+            <option value="false">Inactif</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bouton Réinitialiser -->
+      <div class="mt-4 flex justify-end">
+        <button (click)="resetFilters()"
+                class="bg-transparent text-text-secondary border border-border font-sans text-sm font-medium
+                       px-4 py-2 rounded-md
+                       transition-all duration-150
+                       hover:bg-background-alt hover:text-text
+                       cursor-pointer flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          Réinitialiser les filtres
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Contenu principal ────────────────────────────────────── -->
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+        <div class="p-8 flex flex-col items-center justify-center gap-4">
+          <span class="w-8 h-8 border-[3px] border-primary/30 border-t-primary rounded-full animate-spin"></span>
+          <span class="font-sans text-sm text-text-secondary">Chargement des employés…</span>
+        </div>
+      </div>
+    } @else if (error() && employees().length === 0) {
+      <!-- Erreur sans données -->
+      <div class="bg-surface border border-border rounded-xl shadow-sm p-12 flex flex-col items-center justify-center gap-4 text-center">
+        <div class="w-14 h-14 bg-error-light text-error rounded-full flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p class="font-sans text-[0.9375rem] text-text-secondary">{{ error() }}</p>
+        <button (click)="loadEmployees()"
+                class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold
+                       px-5 py-2.5 rounded-md shadow-sm
+                       transition-all duration-200
+                       hover:bg-primary-hover hover:-translate-y-px
+                       cursor-pointer">
+          Réessayer
+        </button>
+      </div>
+    } @else if (employees().length === 0) {
+      <!-- Liste vide -->
+      <div class="bg-surface border border-border rounded-xl shadow-sm p-12 flex flex-col items-center justify-center gap-4 text-center">
+        <div class="w-14 h-14 bg-background-alt text-text-muted rounded-full flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        @if (isFiltered()) {
+          <p class="font-sans text-[0.9375rem] font-medium text-text">Aucun employé trouvé</p>
+          <p class="font-sans text-sm text-text-secondary">Essayez de modifier vos filtres de recherche.</p>
+          <button (click)="resetFilters()"
+                  class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold
+                         px-5 py-2.5 rounded-md shadow-sm
+                         transition-all duration-200
+                         hover:bg-primary-hover hover:-translate-y-px
+                         cursor-pointer">
+            Réinitialiser les filtres
+          </button>
+        } @else {
+          <p class="font-sans text-[0.9375rem] font-medium text-text">Aucun employé importé</p>
+          <p class="font-sans text-sm text-text-secondary">Importez votre premier fichier CSV pour commencer.</p>
+          <a routerLink="/admin/employees/import"
+             class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold
+                    px-5 py-2.5 rounded-md shadow-sm
+                    transition-all duration-200
+                    hover:bg-primary-hover hover:-translate-y-px
+                    cursor-pointer inline-flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Importer des employés
+          </a>
+        }
+      </div>
+    } @else {
+      <!-- Tableau des employés -->
+      <div class="bg-surface border border-border rounded-xl shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
+        <div class="overflow-x-auto">
+          <table class="w-full font-sans text-sm text-left">
+            <thead>
+              <tr class="bg-background-alt border-b border-border">
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Nom complet</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Email</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Rôle</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Poste</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Département</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Date d'embauche</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Statut</th>
+                <th class="px-4 py-3.5 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (employee of employees(); track employee.id) {
+                <tr class="transition-colors duration-150 hover:bg-background-alt/50">
+                  <td class="px-4 py-3.5 whitespace-nowrap">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-full bg-primary-50 text-primary font-semibold text-xs flex items-center justify-center shrink-0">
+                        {{ employee.first_name[0] }}{{ employee.last_name[0] }}
+                      </div>
+                      <span class="font-medium text-text">{{ employee.first_name }} {{ employee.last_name }}</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary">{{ employee.email }}</td>
+                  <td class="px-4 py-3.5 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ getRoleBadgeClass(employee.role) }}">
+                      @if (employee.role === 'administrateur_rh') { Admin RH }
+                      @else if (employee.role === 'manager') { Manager }
+                      @else if (employee.role === 'employe') { Employé }
+                      @else { {{ employee.role }} }
+                    </span>
+                  </td>
+                  <td class="px-4 py-3.5 whitespace-nowrap text-text">{{ employee.job_title }}</td>
+                  <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary">{{ employee.department || '—' }}</td>
+                  <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary tabular-nums">{{ employee.hire_date }}</td>
+                  <td class="px-4 py-3.5 whitespace-nowrap">
+                    @if (employee.is_active) {
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-light text-success-dark text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                        Actif
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background-alt text-text-muted text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-text-muted"></span>
+                        Inactif
+                      </span>
+                    }
+                  </td>
+                  <td class="px-4 py-3.5 whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-1.5">
+                      @if (isAdminRh(employee.role)) {
+                        <!-- Admin RH : actions désactivées -->
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-text-muted cursor-not-allowed"
+                              title="Impossible de modifier l'Administrateur RH">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                            <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                          </svg>
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-text-muted cursor-not-allowed"
+                              title="Impossible de modifier l'Administrateur RH">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </span>
+                      } @else {
+                        <!-- Toggle statut -->
+                        <button (click)="toggleStatus(employee)"
+                                [title]="employee.is_active ? 'Désactiver' : 'Réactiver'"
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md cursor-pointer
+                                       transition-all duration-200 hover:bg-background-alt hover:text-primary
+                                       text-text-muted">
+                          @if (employee.is_active) {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                              <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                            </svg>
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                              <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                          }
+                        </button>
+                        <!-- Supprimer -->
+                        <button (click)="confirmDelete(employee)"
+                                title="Supprimer"
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md cursor-pointer
+                                       transition-all duration-200 hover:bg-error-light hover:text-error
+                                       text-text-muted">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Pagination ─────────────────────────────────────────── -->
+        @if (lastPage() > 1) {
+          <div class="border-t border-border px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="font-sans text-sm text-text-secondary tabular-nums whitespace-nowrap">
+              @if (from() !== null && to() !== null) {
+                {{ from() }}–{{ to() }} sur {{ total() }} résultat{{ total() > 1 ? 's' : '' }}
+              }
+            </span>
+
+            <nav class="flex items-center gap-1.5" aria-label="Pagination">
+              <!-- Précédent -->
+              <button (click)="goToPage(currentPage() - 1)"
+                      [disabled]="currentPage() <= 1"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
+                             transition-all duration-150
+                             disabled:opacity-40 disabled:cursor-not-allowed
+                             hover:bg-background-alt hover:text-text
+                             text-text-muted cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Précédent
+              </button>
+
+              <!-- Numéros de page -->
+              @for (page of pageNumbers(); track $index) {
+                @if (page === -1) {
+                  <span class="px-2 py-1 text-text-muted text-sm select-none">…</span>
+                } @else {
+                  <button (click)="goToPage(page)"
+                          class="w-8 h-8 rounded-md text-sm font-medium
+                                 transition-all duration-150 cursor-pointer
+                                 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                          [class.bg-primary]="page === currentPage()"
+                          [class.text-text-inverse]="page === currentPage()"
+                          [class.text-text-secondary]="page !== currentPage()"
+                          [class.hover:bg-background-alt]="page !== currentPage()"
+                          [class.hover:text-text]="page !== currentPage()">
+                    {{ page }}
+                  </button>
+                }
+              }
+
+              <!-- Suivant -->
+              <button (click)="goToPage(currentPage() + 1)"
+                      [disabled]="currentPage() >= lastPage()"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
+                             transition-all duration-150
+                             disabled:opacity-40 disabled:cursor-not-allowed
+                             hover:bg-background-alt hover:text-text
+                             text-text-muted cursor-pointer">
+                Suivant
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </nav>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

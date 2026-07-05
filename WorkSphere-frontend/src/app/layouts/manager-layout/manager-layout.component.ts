@@ -1,193 +1,95 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-manager-layout',
   standalone: true,
-  imports: [RouterModule, BreadcrumbComponent],
+  imports: [RouterModule, BreadcrumbComponent, CommonModule],
   template: `
-    <div class="layout">
-      <nav class="sidebar">
-        <div class="sidebar-brand">
-          <span class="brand-text">WorkSphere</span>
+    <div class="flex min-h-screen bg-background w-full">
+      
+      <!-- Mobile Header -->
+      <div class="md:hidden bg-surface border-b border-border p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-30">
+        <span class="font-heading text-xl font-bold text-primary">WorkSphere</span>
+        <button (click)="toggleMobileMenu()" class="text-text p-1 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Sidebar Overlay -->
+      @if (isMobileMenuOpen()) {
+        <div class="fixed inset-0 bg-text/50 z-40 md:hidden" (click)="toggleMobileMenu()"></div>
+      }
+
+      <nav class="fixed md:sticky top-0 h-screen z-50 w-64 bg-surface border-r border-border flex flex-col py-6 px-4 shrink-0 transition-transform duration-300 md:translate-x-0"
+           [class.-translate-x-full]="!isMobileMenuOpen()"
+           [class.translate-x-0]="isMobileMenuOpen()">
+        
+        <div class="px-3 mb-8 flex justify-between items-center">
+          <span class="font-heading text-xl font-bold text-primary">WorkSphere</span>
+          <button (click)="toggleMobileMenu()" class="md:hidden text-text-secondary hover:text-text p-1 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
 
-        <ul class="sidebar-nav">
+        <ul class="flex flex-col gap-1 flex-1">
           <li>
-            <a routerLink="/manager/dashboard" routerLinkActive="active" class="nav-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <a routerLink="/manager/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-primary-50 hover:text-primary cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
               Dashboard
             </a>
           </li>
           <li>
-            <a routerLink="/manager/team" routerLinkActive="active" class="nav-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <a routerLink="/manager/team" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-primary-50 hover:text-primary cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Mon équipe
             </a>
           </li>
           <li>
-            <a routerLink="/manager/profile" routerLinkActive="active" class="nav-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <a routerLink="/manager/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-primary-50 hover:text-primary cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               Profil
             </a>
           </li>
         </ul>
 
-        <div class="sidebar-footer">
-          <div class="user-info">
-            <div class="user-avatar">{{ avatarInitials() }}</div>
-            <div class="user-details">
-              <span class="user-name">{{ user()?.name }}</span>
-              <span class="user-role">Manager</span>
+        <div class="border-t border-border pt-4 flex items-center justify-between mt-auto">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-accent text-text-inverse font-semibold text-xs flex items-center justify-center">
+              {{ avatarInitials() }}
+            </div>
+            <div class="flex flex-col">
+              <span class="text-[0.8125rem] font-semibold text-text leading-tight">{{ user()?.name }}</span>
+              <span class="text-[0.6875rem] text-text-secondary">Manager</span>
             </div>
           </div>
-          <button class="btn-logout" (click)="onLogout()" title="Déconnexion">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <button class="bg-transparent border border-border text-text-secondary p-2 rounded-md cursor-pointer flex items-center transition-colors hover:bg-error-light hover:border-error/20 hover:text-error" (click)="onLogout()" title="Déconnexion">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
       </nav>
 
-      <main class="main-content">
-        <app-breadcrumb />
-        <router-outlet />
+      <main class="flex-1 flex flex-col w-full min-w-0 pt-16 md:pt-0">
+        <div class="flex-1 p-6 sm:p-8">
+          <app-breadcrumb />
+          <router-outlet />
+        </div>
       </main>
     </div>
   `,
-  styles: [`
-    .layout {
-      display: flex;
-      min-height: 100vh;
-      background-color: var(--bg-primary);
-    }
-
-    .sidebar {
-      width: 260px;
-      background-color: var(--bg-surface);
-      border-right: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem 1rem;
-      flex-shrink: 0;
-    }
-
-    .sidebar-brand {
-      padding: 0 0.75rem;
-      margin-bottom: 2rem;
-    }
-
-    .brand-text {
-      font-family: var(--font-family-title);
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--color-primary);
-    }
-
-    .sidebar-nav {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      flex: 1;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.625rem 0.75rem;
-      border-radius: var(--radius-md);
-      color: var(--color-text-muted);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all var(--transition-fast);
-    }
-
-    .nav-item:hover {
-      background-color: var(--color-accent-light);
-      color: var(--color-accent);
-    }
-
-    .nav-item.active {
-      background-color: var(--color-accent-light);
-      color: var(--color-accent);
-      font-weight: 600;
-    }
-
-    .sidebar-footer {
-      border-top: 1px solid var(--color-border);
-      padding-top: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.625rem;
-    }
-
-    .user-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background-color: var(--color-accent);
-      color: var(--color-text-inverse);
-      font-weight: 600;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .user-details {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .user-name {
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--color-text-main);
-      line-height: 1.2;
-    }
-
-    .user-role {
-      font-size: 0.6875rem;
-      color: var(--color-text-muted);
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--color-border);
-      color: var(--color-text-muted);
-      padding: 0.5rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: all var(--transition-fast);
-    }
-
-    .btn-logout:hover {
-      background-color: var(--color-error-light);
-      border-color: rgba(239, 68, 68, 0.2);
-      color: var(--color-error);
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 1.5rem 2rem;
-      overflow-y: auto;
-    }
-  `]
+  styles: []
 })
 export class ManagerLayoutComponent {
   private readonly authService = inject(AuthService);
   readonly user = this.authService.currentUser;
+  isMobileMenuOpen = signal(false);
 
   readonly avatarInitials = computed(() => {
     const name = this.user()?.name || '';
@@ -196,6 +98,10 @@ export class ManagerLayoutComponent {
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.slice(0, 2).toUpperCase();
   });
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen.update(v => !v);
+  }
 
   onLogout(): void {
     this.authService.logout().subscribe();

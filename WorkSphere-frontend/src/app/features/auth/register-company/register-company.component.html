@@ -1,236 +1,224 @@
-<div class="auth-container register-container">
-  <div class="card auth-card register-card">
-    <div class="auth-header">
-      <div class="logo-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+<div class="min-h-screen flex items-center justify-center p-6 bg-background">
+  <div class="bg-surface border border-border rounded-xl p-6 sm:p-8 shadow-sm w-full max-w-[580px] transition-all duration-200 hover:shadow-md">
+    <div class="text-center mb-8 flex flex-col items-center">
+      <div class="w-12 h-12 bg-primary-50 text-primary rounded-md flex items-center justify-center mb-4 shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
       </div>
-      <h1 class="auth-title">Inscription Entreprise</h1>
-      <p class="auth-subtitle">Créez votre espace WorkSphere et votre compte Administrateur RH</p>
+      <h1 class="font-heading text-2xl font-bold text-text-heading">Inscription Entreprise</h1>
+      <p class="font-sans text-sm text-text-secondary mt-1">Créez votre espace WorkSphere et votre compte Administrateur RH</p>
     </div>
 
     @if (errorMessage()) {
-      <div class="alert alert-error">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+      <div class="bg-error-light border border-error/20 rounded-md p-4 mb-6 flex items-start gap-2.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error shrink-0 mt-0.5">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        <span>{{ errorMessage() }}</span>
+        <span class="text-sm font-medium text-error-dark">{{ errorMessage() }}</span>
       </div>
     }
 
     @if (successMessage()) {
-      <div class="alert alert-success">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+      <div class="bg-success-light border border-success/20 rounded-md p-4 mb-6 flex items-start gap-2.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success-dark shrink-0 mt-0.5">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        <span>{{ successMessage() }}</span>
+        <span class="text-sm font-medium text-success-dark">{{ successMessage() }}</span>
       </div>
     }
 
     @if (!successMessage()) {
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="flex flex-col">
         
         <!-- Section: Votre entreprise -->
-        <div class="form-section">
-          <h3 class="section-title">Votre entreprise</h3>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-heading text-lg font-semibold text-primary mb-1">Votre entreprise</h3>
           
-          <div class="form-group">
-            <label for="company_name" class="form-label">Nom de l'entreprise *</label>
+          <div class="flex flex-col gap-1.5">
+            <label for="company_name" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Nom de l'entreprise *</label>
             <input
               id="company_name"
               type="text"
               formControlName="company_name"
               placeholder="Ex: Tech Innovations"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('company_name')"
+              class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+              [class.border-border]="!isFieldInvalid('company_name')"
+              [class.focus:border-border-focus]="!isFieldInvalid('company_name')"
+              [class.focus:ring-primary/15]="!isFieldInvalid('company_name')"
+              [class.border-error]="isFieldInvalid('company_name')"
+              [class.focus:border-error]="isFieldInvalid('company_name')"
+              [class.focus:ring-error/15]="isFieldInvalid('company_name')"
             />
             @if (isFieldInvalid('company_name') && !getServerError('company_name')) {
-              <span class="error-text">Le nom de l'entreprise est requis.</span>
+              <span class="text-xs font-medium text-error-dark mt-1">Le nom de l'entreprise est requis.</span>
             }
             @if (getServerError('company_name')) {
-              <span class="error-text">{{ getServerError('company_name') }}</span>
+              <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('company_name') }}</span>
             }
           </div>
 
-          <div class="form-group">
-            <label for="company_email" class="form-label">Email de l'entreprise (Optionnel)</label>
+          <div class="flex flex-col gap-1.5">
+            <label for="company_email" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Email de l'entreprise (Optionnel)</label>
             <input
               id="company_email"
               type="email"
               formControlName="company_email"
               placeholder="contact@entreprise.com"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('company_email')"
+              class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+              [class.border-border]="!isFieldInvalid('company_email')"
+              [class.focus:border-border-focus]="!isFieldInvalid('company_email')"
+              [class.focus:ring-primary/15]="!isFieldInvalid('company_email')"
+              [class.border-error]="isFieldInvalid('company_email')"
+              [class.focus:border-error]="isFieldInvalid('company_email')"
+              [class.focus:ring-error/15]="isFieldInvalid('company_email')"
             />
             @if (isFieldInvalid('company_email') && !getServerError('company_email')) {
-              <span class="error-text">Format d'email invalide.</span>
+              <span class="text-xs font-medium text-error-dark mt-1">Format d'email invalide.</span>
             }
             @if (getServerError('company_email')) {
-              <span class="error-text">{{ getServerError('company_email') }}</span>
+              <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('company_email') }}</span>
             }
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="h-px bg-border my-8"></div>
 
         <!-- Section: Administrateur RH -->
-        <div class="form-section">
-          <h3 class="section-title">Votre compte Administrateur RH</h3>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-heading text-lg font-semibold text-primary mb-1">Votre compte Administrateur RH</h3>
 
-          <div class="form-row">
-            <div class="form-group half-width">
-              <label for="admin_first_name" class="form-label">Prénom *</label>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col gap-1.5 flex-1">
+              <label for="admin_first_name" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Prénom *</label>
               <input
                 id="admin_first_name"
                 type="text"
                 formControlName="admin_first_name"
                 placeholder="Jean"
-                class="form-control"
-                [class.invalid]="isFieldInvalid('admin_first_name')"
+                class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+                [class.border-border]="!isFieldInvalid('admin_first_name')"
+                [class.focus:border-border-focus]="!isFieldInvalid('admin_first_name')"
+                [class.focus:ring-primary/15]="!isFieldInvalid('admin_first_name')"
+                [class.border-error]="isFieldInvalid('admin_first_name')"
+                [class.focus:border-error]="isFieldInvalid('admin_first_name')"
+                [class.focus:ring-error/15]="isFieldInvalid('admin_first_name')"
               />
               @if (isFieldInvalid('admin_first_name') && !getServerError('admin_first_name')) {
-                <span class="error-text">Requis.</span>
+                <span class="text-xs font-medium text-error-dark mt-1">Requis.</span>
               }
               @if (getServerError('admin_first_name')) {
-                <span class="error-text">{{ getServerError('admin_first_name') }}</span>
+                <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('admin_first_name') }}</span>
               }
             </div>
 
-            <div class="form-group half-width">
-              <label for="admin_last_name" class="form-label">Nom *</label>
+            <div class="flex flex-col gap-1.5 flex-1">
+              <label for="admin_last_name" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Nom *</label>
               <input
                 id="admin_last_name"
                 type="text"
                 formControlName="admin_last_name"
                 placeholder="Dupont"
-                class="form-control"
-                [class.invalid]="isFieldInvalid('admin_last_name')"
+                class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+                [class.border-border]="!isFieldInvalid('admin_last_name')"
+                [class.focus:border-border-focus]="!isFieldInvalid('admin_last_name')"
+                [class.focus:ring-primary/15]="!isFieldInvalid('admin_last_name')"
+                [class.border-error]="isFieldInvalid('admin_last_name')"
+                [class.focus:border-error]="isFieldInvalid('admin_last_name')"
+                [class.focus:ring-error/15]="isFieldInvalid('admin_last_name')"
               />
               @if (isFieldInvalid('admin_last_name') && !getServerError('admin_last_name')) {
-                <span class="error-text">Requis.</span>
+                <span class="text-xs font-medium text-error-dark mt-1">Requis.</span>
               }
               @if (getServerError('admin_last_name')) {
-                <span class="error-text">{{ getServerError('admin_last_name') }}</span>
+                <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('admin_last_name') }}</span>
               }
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="admin_name" class="form-label">Nom d'affichage (complet) *</label>
-            <input
-              id="admin_name"
-              type="text"
-              formControlName="admin_name"
-              placeholder="Jean Dupont"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('admin_name')"
-            />
-            @if (isFieldInvalid('admin_name') && !getServerError('admin_name')) {
-              <span class="error-text">Le nom complet est requis.</span>
-            }
-            @if (getServerError('admin_name')) {
-              <span class="error-text">{{ getServerError('admin_name') }}</span>
-            }
-          </div>
 
-          <div class="form-group">
-            <label for="admin_email" class="form-label">Email professionnel *</label>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="admin_email" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Email professionnel *</label>
             <input
               id="admin_email"
               type="email"
               formControlName="admin_email"
               placeholder="jean.dupont@entreprise.com"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('admin_email')"
+              class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+              [class.border-border]="!isFieldInvalid('admin_email')"
+              [class.focus:border-border-focus]="!isFieldInvalid('admin_email')"
+              [class.focus:ring-primary/15]="!isFieldInvalid('admin_email')"
+              [class.border-error]="isFieldInvalid('admin_email')"
+              [class.focus:border-error]="isFieldInvalid('admin_email')"
+              [class.focus:ring-error/15]="isFieldInvalid('admin_email')"
               autocomplete="email"
             />
             @if (isFieldInvalid('admin_email') && !getServerError('admin_email')) {
-              <span class="error-text">Email invalide ou requis.</span>
+              <span class="text-xs font-medium text-error-dark mt-1">Email invalide ou requis.</span>
             }
             @if (getServerError('admin_email')) {
-              <span class="error-text">{{ getServerError('admin_email') }}</span>
+              <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('admin_email') }}</span>
             }
           </div>
 
-          <div class="form-group">
-            <label for="admin_password" class="form-label">Mot de passe *</label>
+          <div class="flex flex-col gap-1.5">
+            <label for="admin_password" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Mot de passe *</label>
             <input
               id="admin_password"
               type="password"
               formControlName="admin_password"
               placeholder="Saisissez un mot de passe fort"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('admin_password')"
+              class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+              [class.border-border]="!isFieldInvalid('admin_password')"
+              [class.focus:border-border-focus]="!isFieldInvalid('admin_password')"
+              [class.focus:ring-primary/15]="!isFieldInvalid('admin_password')"
+              [class.border-error]="isFieldInvalid('admin_password')"
+              [class.focus:border-error]="isFieldInvalid('admin_password')"
+              [class.focus:ring-error/15]="isFieldInvalid('admin_password')"
               autocomplete="new-password"
             />
             @if (getServerError('admin_password')) {
-              <span class="error-text">{{ getServerError('admin_password') }}</span>
+              <span class="text-xs font-medium text-error-dark mt-1">{{ getServerError('admin_password') }}</span>
             }
             
-            <!-- Indicateur de force du mot de passe en temps réel -->
-            @if (passwordValue()) {
-              <div class="strength-meter-wrapper">
-                <div class="strength-meter-bar">
-                  <div 
-                    class="strength-meter-progress" 
-                    [class]="passwordStrengthLabel().class"
-                    [style.width.%]="passwordStrengthPercent()"
-                  ></div>
-                </div>
-                <div class="flex justify-between" style="font-size: 0.75rem; margin-top: 0.25rem;">
-                  <span style="color: var(--color-text-muted);">Sécurité :</span>
-                  <span [class]="passwordStrengthLabel().class" style="font-weight: 600;">
-                    {{ passwordStrengthLabel().text }}
-                  </span>
-                </div>
-              </div>
-            }
-
-            <div class="password-rules-checklist">
-              <div class="rule-item" [class.met]="passwordRequirements().minLength">
-                <span class="rule-bullet"></span><span>Au moins 8 caractères</span>
-              </div>
-              <div class="rule-item" [class.met]="passwordRequirements().hasUpper">
-                <span class="rule-bullet"></span><span>Une majuscule (A-Z)</span>
-              </div>
-              <div class="rule-item" [class.met]="passwordRequirements().hasLower">
-                <span class="rule-bullet"></span><span>Une minuscule (a-z)</span>
-              </div>
-              <div class="rule-item" [class.met]="passwordRequirements().hasNumber">
-                <span class="rule-bullet"></span><span>Un chiffre (0-9)</span>
-              </div>
-              <div class="rule-item" [class.met]="passwordRequirements().hasSymbol">
-                <span class="rule-bullet"></span><span>Un symbole (!@#$...)</span>
-              </div>
-            </div>
+            <!-- Indicateur de force du mot de passe (composant partagé) -->
+            <app-password-strength
+              [password]="passwordValue()"
+              [confirmPassword]="confirmPasswordValue()"
+            />
           </div>
 
-          <div class="form-group">
-            <label for="admin_password_confirmation" class="form-label">Confirmez le mot de passe *</label>
+          <div class="flex flex-col gap-1.5">
+            <label for="admin_password_confirmation" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Confirmez le mot de passe *</label>
             <input
               id="admin_password_confirmation"
               type="password"
               formControlName="admin_password_confirmation"
               placeholder="Confirmez votre mot de passe"
-              class="form-control"
-              [class.invalid]="isFieldInvalid('admin_password_confirmation')"
+              class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+              [class.border-border]="!isFieldInvalid('admin_password_confirmation')"
+              [class.focus:border-border-focus]="!isFieldInvalid('admin_password_confirmation')"
+              [class.focus:ring-primary/15]="!isFieldInvalid('admin_password_confirmation')"
+              [class.border-error]="isFieldInvalid('admin_password_confirmation')"
+              [class.focus:border-error]="isFieldInvalid('admin_password_confirmation')"
+              [class.focus:ring-error/15]="isFieldInvalid('admin_password_confirmation')"
               autocomplete="new-password"
             />
             
             @if (confirmPasswordValue()) {
-              <div class="match-indicator flex items-center gap-1" style="font-size: 0.75rem; margin-top: 0.25rem;">
+              <div class="flex items-center gap-1 text-xs mt-1">
                 @if (passwordsMatch()) {
-                  <span style="color: var(--color-success); font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span class="text-success font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Les mots de passe correspondent.
                   </span>
                 } @else {
-                  <span style="color: var(--color-error); font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <span class="text-error font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     Les mots de passe ne correspondent pas.
                   </span>
                 }
@@ -241,11 +229,11 @@
 
         <button 
           type="submit" 
-          class="btn btn-primary w-full mt-4" 
+          class="w-full bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold px-6 py-3 rounded-md shadow-sm transition-all duration-200 hover:bg-primary-hover hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-6" 
           [disabled]="isLoading() || registerForm.invalid"
         >
           @if (isLoading()) {
-            <span class="spinner"></span>
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
             Création en cours...
           } @else {
             Créer l'entreprise
@@ -254,8 +242,8 @@
       </form>
     }
     
-    <div class="flex justify-center" style="margin-top: 1.5rem;">
-      <a routerLink="/login" class="link-accent" style="font-size: 0.875rem;">Vous avez déjà un compte ? Connectez-vous</a>
+    <div class="flex justify-center mt-6">
+      <a routerLink="/login" class="font-sans text-sm font-medium text-primary hover:text-primary-hover transition-colors duration-150 cursor-pointer">Vous avez déjà un compte ? Connectez-vous</a>
     </div>
   </div>
 </div>

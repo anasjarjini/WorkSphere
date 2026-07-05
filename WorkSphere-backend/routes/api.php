@@ -3,7 +3,9 @@
 use App\Http\Controllers\AccountActivationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyRegistrationController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
+use App\Http\Controllers\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,12 @@ Route::post('/activate', [AccountActivationController::class, 'store']);
 // throttle:5,1 = max 5 tentatives par minute par IP → HTTP 429 à la 6e tentative
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
+// Mot de passe oublié — demande d'email de réinitialisation (rate-limité comme le login)
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('throttle:5,1');
+
+// Réinitialisation du mot de passe avec le token reçu par email (rate-limité)
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1');
+
 // ═══════════════════════════════════════════════════════════════════
 // PROTECTED ROUTES — auth:sanctum requis
 // ═══════════════════════════════════════════════════════════════════
@@ -37,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes scoped par rôle RH
     Route::middleware('role:administrateur_rh')->group(function () {
         Route::post('/employees/import', [EmployeeImportController::class, 'store']);
+        Route::get('/employees', [EmployeeController::class, 'index']);
+        Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus']);
+        Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
     });
 
 });

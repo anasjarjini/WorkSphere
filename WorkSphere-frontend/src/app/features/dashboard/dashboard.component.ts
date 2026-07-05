@@ -6,27 +6,27 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [],
   template: `
-    <div class="dashboard-layout">
+    <div class="min-h-screen flex flex-col bg-background">
       <!-- Navbar Haute -->
-      <nav class="navbar">
-        <div class="nav-container">
-          <div class="nav-brand">
-            <span class="brand-text">WorkSphere</span>
+      <nav class="bg-surface border-b border-border h-16 flex items-center px-4 md:px-8 shadow-sm">
+        <div class="flex justify-between items-center w-full max-w-7xl mx-auto">
+          <div class="flex items-center gap-3">
+            <span class="font-heading text-xl font-bold text-primary tracking-tight">WorkSphere</span>
             @if (user()?.company) {
-              <span class="company-badge">{{ user()?.company?.name }}</span>
+              <span class="bg-accent/10 text-accent text-xs font-semibold px-2.5 py-1 rounded-full border border-accent/10 hidden sm:inline-block">{{ user()?.company?.name }}</span>
             }
           </div>
           
-          <div class="nav-user flex items-center gap-3">
-            <div class="user-avatar">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-primary text-text-inverse font-semibold text-sm flex items-center justify-center shadow-sm">
               {{ avatarInitials() }}
             </div>
-            <div class="user-info flex-col">
-              <span class="user-name">{{ user()?.name }}</span>
-              <span class="user-role">{{ roleName() }}</span>
+            <div class="hidden sm:flex flex-col text-left">
+              <span class="text-sm font-semibold text-text leading-tight">{{ user()?.name }}</span>
+              <span class="text-xs text-text-muted">{{ roleName() }}</span>
             </div>
-            <button (click)="onLogout()" class="btn btn-logout" title="Se déconnecter">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logout-icon">
+            <button (click)="onLogout()" class="bg-transparent border border-border text-text-muted p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-error-light hover:border-error/20 hover:text-error" title="Se déconnecter">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -37,35 +37,35 @@ import { AuthService } from '../../core/services/auth.service';
       </nav>
 
       <!-- Zone Principale -->
-      <main class="dashboard-content">
-        <div class="welcome-card">
-          <div class="welcome-header">
-            <h1 class="welcome-title">Bienvenue, {{ user()?.name }} !</h1>
-            <p class="welcome-subtitle">Ravi de vous revoir sur votre espace WorkSphere.</p>
+      <main class="flex-1 py-8 md:py-12 px-4 md:px-8 w-full max-w-4xl mx-auto">
+        <div class="bg-surface border border-border rounded-xl p-6 sm:p-12 shadow-sm text-left">
+          <div class="mb-8 md:mb-10">
+            <h1 class="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-primary tracking-tight mb-2">Bienvenue, {{ user()?.name }} !</h1>
+            <p class="text-text-secondary text-sm md:text-base">Ravi de vous revoir sur votre espace WorkSphere.</p>
           </div>
 
-          <div class="info-grid">
-            <div class="info-box">
-              <span class="box-label">Adresse Email</span>
-              <span class="box-value">{{ user()?.email }}</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+            <div class="border border-border p-4 md:p-5 rounded-md bg-slate-50 flex flex-col gap-1 transition-colors hover:border-primary/30">
+              <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Adresse Email</span>
+              <span class="text-sm md:text-base font-medium text-text">{{ user()?.email }}</span>
             </div>
             
-            <div class="info-box">
-              <span class="box-label">Statut du Compte</span>
-              <span class="box-value badge-success">
+            <div class="border border-border p-4 md:p-5 rounded-md bg-slate-50 flex flex-col gap-1 transition-colors hover:border-primary/30">
+              <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Statut du Compte</span>
+              <span class="text-sm md:text-base font-semibold" [class.text-success]="user()?.is_active" [class.text-error]="!user()?.is_active">
                 {{ user()?.is_active ? 'Actif' : 'Inactif' }}
               </span>
             </div>
 
             @if (user()?.employee; as emp) {
-              <div class="info-box">
-                <span class="box-label">Poste</span>
-                <span class="box-value">{{ emp.job_title || 'Non renseigné' }}</span>
+              <div class="border border-border p-4 md:p-5 rounded-md bg-slate-50 flex flex-col gap-1 transition-colors hover:border-primary/30">
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Poste</span>
+                <span class="text-sm md:text-base font-medium text-text">{{ emp.job_title || 'Non renseigné' }}</span>
               </div>
 
-              <div class="info-box">
-                <span class="box-label">Département</span>
-                <span class="box-value">{{ emp.department || 'Non renseigné' }}</span>
+              <div class="border border-border p-4 md:p-5 rounded-md bg-slate-50 flex flex-col gap-1 transition-colors hover:border-primary/30">
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Département</span>
+                <span class="text-sm md:text-base font-medium text-text">{{ emp.department || 'Non renseigné' }}</span>
               </div>
             }
           </div>
@@ -73,192 +73,7 @@ import { AuthService } from '../../core/services/auth.service';
       </main>
     </div>
   `,
-  styles: [`
-    .dashboard-layout {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-primary);
-    }
-
-    .navbar {
-      background-color: var(--bg-surface);
-      border-bottom: 1px solid var(--color-border);
-      height: 64px;
-      display: flex;
-      align-items: center;
-      padding: 0 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-
-    .nav-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-text {
-      font-family: var(--font-family-title);
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      letter-spacing: -0.02em;
-    }
-
-    .company-badge {
-      background-color: var(--color-accent-light);
-      color: var(--color-accent);
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.25rem 0.625rem;
-      border-radius: var(--radius-full);
-      border: 1px solid rgba(37, 99, 235, 0.1);
-    }
-
-    .user-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background-color: var(--color-primary);
-      color: var(--color-text-inverse);
-      font-weight: 600;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .user-info {
-      text-align: left;
-    }
-
-    .user-name {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-text-main);
-      display: block;
-      line-height: 1.2;
-    }
-
-    .user-role {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      display: block;
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--color-border);
-      color: var(--color-text-muted);
-      padding: 0.5rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--transition-fast);
-    }
-
-    .btn-logout:hover {
-      background-color: var(--color-error-light);
-      border-color: rgba(239, 68, 68, 0.2);
-      color: var(--color-error);
-    }
-
-    .logout-icon {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Contenu du Dashboard */
-    .dashboard-content {
-      flex: 1;
-      padding: 3rem 2rem;
-      max-width: 800px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .welcome-card {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 3rem;
-      box-shadow: var(--shadow-soft-ui);
-      text-align: left;
-    }
-
-    .welcome-header {
-      margin-bottom: 2.5rem;
-    }
-
-    .welcome-title {
-      font-family: var(--font-family-title);
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      letter-spacing: -0.03em;
-      margin-bottom: 0.5rem;
-    }
-
-    .welcome-subtitle {
-      color: var(--color-text-muted);
-      font-size: 1rem;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 600px) {
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .info-box {
-      border: 1px solid var(--color-border);
-      padding: 1.25rem;
-      border-radius: var(--radius-md);
-      background-color: #fafbfc;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .box-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .box-value {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--color-text-main);
-    }
-
-    .badge-success {
-      color: var(--color-success);
-      font-weight: 600;
-    }
-
-    .gap-3 { gap: 0.75rem; }
-  `]
+  styles: []
 })
 export class DashboardComponent {
   private readonly authService = inject(AuthService);

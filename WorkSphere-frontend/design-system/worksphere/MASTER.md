@@ -1,0 +1,480 @@
+# Design System Master File — WorkSphere
+
+> **LOGIC:** When building a specific page, first check `design-system/worksphere/pages/[page-name].md`.
+> If that file exists, its rules **override** this Master file.
+> If not, strictly follow the rules below.
+
+---
+
+**Project:** WorkSphere
+**Type:** SaaS RH multi-tenant, B2B, professionnel
+**Generated:** 2026-07-04
+**Category:** HR Management / Analytics Dashboard
+**Style:** Trust & Authority — Data-Dense, Corporate, Accessible
+**Perf:** ⚡ Excellent | **A11y:** ✓ WCAG AAA
+
+---
+
+## Conventions
+
+**Stack : Angular (standalone components) + Tailwind CSS v4.**
+
+- Utiliser **exclusivement des classes utilitaires Tailwind** pour le style.
+- Éviter le CSS custom sauf animations complexes non couvrables par Tailwind.
+- Les couleurs du design system sont déclarées comme **variables CSS personnalisées** ET
+  mappées dans la configuration Tailwind v4 via `@theme` pour être utilisables via des
+  classes comme `bg-primary`, `text-accent`, `border-surface`, etc.
+- Les composants Angular doivent être **standalone** (`standalone: true`).
+- Pas de `ViewEncapsulation.None` sauf justification — utiliser les classes Tailwind globalement.
+- Les icônes doivent être des **SVG** (Heroicons, Lucide) — jamais d'emojis.
+- Privilégier `@if` / `@for` (nouvelle syntaxe de contrôle Angular) plutôt que `*ngIf` / `*ngFor`.
+- **Aucun effet glassmorphism / backdrop-blur** — rester flat, sobre, professionnel.
+
+---
+
+## Tailwind v4 Configuration (CSS-first via `@theme`)
+
+Toutes les couleurs, polices et tokens sont déclarés dans `src/styles.scss` via `@theme`.
+Cela rend les classes utilitaires Tailwind automatiquement disponibles.
+
+```scss
+@import "tailwindcss";
+
+@theme {
+  /* ── Colors ── */
+  --color-primary: #6366F1;
+  --color-primary-hover: #4F46E5;
+  --color-primary-light: #818CF8;
+  --color-primary-dark: #4338CA;
+  --color-primary-50: #EEF2FF;
+  --color-primary-100: #E0E7FF;
+
+  --color-secondary: #818CF8;
+  --color-secondary-light: #A5B4FC;
+
+  --color-accent: #10B981;
+  --color-accent-hover: #059669;
+  --color-accent-light: #D1FAE5;
+  --color-accent-dark: #047857;
+
+  --color-surface: #FFFFFF;
+  --color-background: #F8FAFC;
+  --color-background-alt: #F1F5F9;
+  --color-background-elevated: #FFFFFF;
+
+  --color-text: #1E1B4B;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-text-inverse: #FFFFFF;
+  --color-text-heading: #1E1B4B;
+
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-border-focus: #818CF8;
+
+  --color-success: #10B981;
+  --color-success-light: #ECFDF5;
+  --color-success-dark: #065F46;
+  --color-error: #EF4444;
+  --color-error-light: #FEF2F2;
+  --color-error-dark: #991B1B;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FFFBEB;
+  --color-warning-dark: #92400E;
+  --color-info: #6366F1;
+  --color-info-light: #EEF2FF;
+
+  /* ── Fonts ── */
+  --font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: 'Lexend', 'Source Sans 3', sans-serif;
+
+  /* ── Border Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+```
+
+### Classes Tailwind disponibles
+
+Ce mapping rend les classes suivantes automatiquement disponibles :
+
+| Type | Exemples |
+|------|----------|
+| **Backgrounds** | `bg-primary`, `bg-accent`, `bg-surface`, `bg-background`, `bg-background-alt`, `bg-success-light`, `bg-error-light` |
+| **Text** | `text-primary`, `text-text`, `text-text-muted`, `text-text-heading`, `text-accent`, `text-error` |
+| **Borders** | `border-border`, `border-primary`, `border-border-focus`, `border-error` |
+| **Fonts** | `font-sans`, `font-heading` |
+| **Radius** | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` |
+| **Opacity variants** | `bg-primary/10`, `border-accent/20`, `text-primary/80` |
+
+---
+
+## Color Palette
+
+| Role | Hex | Tailwind Class | Usage |
+|------|-----|----------------|-------|
+| **Primary** | `#6366F1` | `bg-primary` | Boutons principaux, liens actifs, accents forts, navigation active |
+| **Primary Hover** | `#4F46E5` | `bg-primary-hover` | Hover state des boutons primary |
+| **Primary Light** | `#818CF8` | `bg-primary-light` | Hover léger, badges actifs, selection |
+| **Primary Dark** | `#4338CA` | `bg-primary-dark` | Texte sur fond clair, headers |
+| **Primary 50** | `#EEF2FF` | `bg-primary-50` | Fond subtil d'éléments primary |
+| **Primary 100** | `#E0E7FF` | `bg-primary-100` | Fond de badges, chips primary |
+| **Secondary** | `#818CF8` | `bg-secondary` | Indicateurs secondaires, tags |
+| **Secondary Light** | `#A5B4FC` | `bg-secondary-light` | Hover sur éléments secondaires |
+| **Accent (CTA)** | `#10B981` | `bg-accent` | Call-to-action, confirmation, statut actif |
+| **Accent Hover** | `#059669` | `bg-accent-hover` | CTA hover |
+| **Accent Light** | `#D1FAE5` | `bg-accent-light` | Fond CTA subtil, badges succès |
+| **Accent Dark** | `#047857` | `bg-accent-dark` | Texte CTA sur fond clair |
+| **Surface** | `#FFFFFF` | `bg-surface` | Cards, modales, panneaux, inputs |
+| **Background** | `#F8FAFC` | `bg-background` | Body, arrière-plan principal |
+| **Background Alt** | `#F1F5F9` | `bg-background-alt` | Rangées alternées, sidebar, hover subtil |
+| **Text** | `#1E1B4B` | `text-text` | Texte principal body (Indigo profond) |
+| **Text Secondary** | `#475569` | `text-text-secondary` | Texte secondaire, descriptions |
+| **Text Muted** | `#64748B` | `text-text-muted` | Labels tertiaires, placeholders, captions |
+| **Text Inverse** | `#FFFFFF` | `text-text-inverse` | Texte sur fond foncé (boutons, headers) |
+| **Text Heading** | `#1E1B4B` | `text-text-heading` | Headings h1-h4 |
+| **Border** | `#E2E8F0` | `border-border` | Bordures cards, inputs, dividers, tables |
+| **Border Light** | `#F1F5F9` | `border-border-light` | Bordures très subtiles |
+| **Border Focus** | `#818CF8` | `border-border-focus` | Focus ring inputs/boutons |
+| **Success** | `#10B981` | `text-success` / `bg-success` | Succès, statut actif, validation |
+| **Success Light** | `#ECFDF5` | `bg-success-light` | Fond d'alerte/badge succès |
+| **Error** | `#EF4444` | `text-error` / `bg-error` | Erreurs, suppression, validation |
+| **Error Light** | `#FEF2F2` | `bg-error-light` | Fond d'alerte/badge erreur |
+| **Warning** | `#F59E0B` | `text-warning` / `bg-warning` | Avertissements, attention |
+| **Warning Light** | `#FFFBEB` | `bg-warning-light` | Fond d'alerte/badge warning |
+| **Info** | `#6366F1` | `text-info` / `bg-info` | Messages informatifs |
+| **Info Light** | `#EEF2FF` | `bg-info-light` | Fond d'alerte/badge info |
+
+**Stratégie Couleurs :** Indigo corporate (confiance, sérieux, modernité) + Émeraude pour les CTA (action positive, succès). Pas de violet/rose AI. Pas de couleurs flashy.
+
+---
+
+## Typography
+
+| Element | Font | Weight | Size | Line Height | Tailwind Classes |
+|---------|------|--------|------|-------------|-----------------|
+| **H1** | Lexend | 700 | 2rem / 32px | 1.2 | `font-heading text-[2rem] font-bold leading-tight text-text-heading` |
+| **H2** | Lexend | 600 | 1.5rem / 24px | 1.25 | `font-heading text-2xl font-semibold leading-snug text-text-heading` |
+| **H3** | Lexend | 600 | 1.25rem / 20px | 1.3 | `font-heading text-xl font-semibold text-text-heading` |
+| **H4** | Lexend | 500 | 1.125rem / 18px | 1.4 | `font-heading text-lg font-medium text-text` |
+| **Body** | Source Sans 3 | 400 | 0.9375rem / 15px | 1.6 | `font-sans text-[0.9375rem] leading-relaxed text-text` |
+| **Body Small** | Source Sans 3 | 400 | 0.875rem / 14px | 1.5 | `font-sans text-sm text-text-secondary` |
+| **Caption** | Source Sans 3 | 500 | 0.75rem / 12px | 1.4 | `font-sans text-xs font-medium text-text-muted` |
+| **Label** | Source Sans 3 | 600 | 0.8125rem / 13px | 1.2 | `font-sans text-[0.8125rem] font-semibold uppercase tracking-wider` |
+| **Button** | Source Sans 3 | 600 | 0.9375rem / 15px | 1 | `font-sans text-[0.9375rem] font-semibold` |
+| **Data/Table** | Source Sans 3 | 400 | 0.875rem / 14px | 1.4 | `font-sans text-sm text-text` |
+| **KPI Value** | Lexend | 700 | 1.75rem / 28px | 1.1 | `font-heading text-[1.75rem] font-bold text-text-heading` |
+
+**Mood :** corporate, trustworthy, accessible, readable, professional, clean
+
+**Google Fonts Import:**
+```css
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+```
+
+### Pourquoi Lexend + Source Sans 3 ?
+- **Lexend** : conçue pour améliorer la vitesse de lecture et la compréhension. Parfaite pour les headings de dashboards RH où l'utilisateur scanne rapidement.
+- **Source Sans 3** : police Adobe Open Source, excellente lisibilité en petit corps (tables de données, formulaires). Optimisée pour les longs textes et les interfaces denses.
+
+---
+
+## Spacing Scale
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| 3xs | 2px | `gap-0.5` | Micro-gaps |
+| 2xs | 4px | `p-1`, `gap-1` | Icon-text tight |
+| xs | 8px | `p-2`, `gap-2` | Icon gaps, inline spacing |
+| sm | 12px | `p-3`, `gap-3` | Compact padding (data-dense) |
+| md | 16px | `p-4`, `gap-4` | Standard padding |
+| lg | 24px | `p-6`, `gap-6` | Section padding, card padding |
+| xl | 32px | `p-8`, `gap-8` | Large gaps |
+| 2xl | 48px | `p-12` | Section margins |
+| 3xl | 64px | `p-16` | Page-level padding |
+
+---
+
+## Shadows
+
+| Level | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| Subtle | `0 1px 2px rgba(0,0,0,0.05)` | `shadow-sm` | Inputs au repos |
+| Card | `0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)` | `shadow` | Cards standard |
+| Elevated | `0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05)` | `shadow-md` | Cards hover, dropdowns |
+| High | `0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04)` | `shadow-lg` | Modales, popovers |
+
+> **Pas de shadow-xl / shadow-2xl** — rester sobre. Pas de box-shadow exagéré.
+
+---
+
+## Border Radius
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| sm | 6px | `rounded-sm` | Chips, badges, small tags |
+| md | 8px | `rounded-md` | Inputs, boutons, small cards |
+| lg | 12px | `rounded-lg` | Cards, modales, panels |
+| xl | 16px | `rounded-xl` | Hero cards, containers principaux |
+| full | 9999px | `rounded-full` | Avatars, pills, toggles |
+
+---
+
+## Transitions & Motion
+
+> **Principe : Sobre et discret.** Pas de bounce, pas de spring, pas de parallax, pas de backdrop-blur.
+> Animations uniquement pour feedback utilisateur (hover, focus, loading).
+
+| Effect | Duration | Easing | Tailwind |
+|--------|----------|--------|----------|
+| Hover color/opacity | 150ms | ease | `transition-colors duration-150` |
+| Hover transform | 200ms | ease-out | `transition-transform duration-200 ease-out` |
+| All properties | 200ms | ease | `transition-all duration-200` |
+| Focus ring | 150ms | ease-in-out | `transition-shadow duration-150` |
+| Skeleton pulse | 1.5s | ease-in-out | `animate-pulse` |
+
+**Obligatoire :** Respecter `prefers-reduced-motion` via `motion-safe:` prefix Tailwind.
+
+---
+
+## Component Specs (Tailwind Classes)
+
+### Buttons
+
+```html
+<!-- Primary -->
+<button class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold
+               px-6 py-3 rounded-md shadow-sm
+               transition-all duration-200
+               hover:bg-primary-hover hover:shadow-md hover:-translate-y-px
+               active:translate-y-0 active:shadow-sm
+               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+               cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+  Action
+</button>
+
+<!-- Secondary (Outlined) -->
+<button class="bg-transparent text-primary border border-primary font-sans text-[0.9375rem] font-semibold
+               px-6 py-3 rounded-md
+               transition-all duration-200
+               hover:bg-primary-50 hover:border-primary-hover
+               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+               cursor-pointer">
+  Secondary
+</button>
+
+<!-- Accent / CTA -->
+<button class="bg-accent text-text-inverse font-sans text-[0.9375rem] font-semibold
+               px-6 py-3 rounded-md shadow-sm
+               transition-all duration-200
+               hover:bg-accent-hover hover:shadow-md hover:-translate-y-px
+               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
+               cursor-pointer">
+  Confirmer
+</button>
+
+<!-- Ghost -->
+<button class="bg-transparent text-text-secondary font-sans text-sm font-medium
+               px-4 py-2 rounded-md
+               transition-colors duration-150
+               hover:bg-background-alt hover:text-text
+               cursor-pointer">
+  Annuler
+</button>
+```
+
+### Cards
+
+```html
+<div class="bg-surface border border-border rounded-lg p-6 shadow-sm
+            transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+  <!-- Content -->
+</div>
+```
+
+### Inputs
+
+```html
+<input class="w-full px-4 py-3 bg-surface border border-border rounded-md
+              font-sans text-[0.9375rem] text-text
+              transition-all duration-150
+              placeholder:text-text-muted placeholder:opacity-70
+              focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none
+              disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed" />
+```
+
+### Alerts
+
+```html
+<!-- Error -->
+<div class="bg-error-light border border-error/20 rounded-md p-4
+            flex items-start gap-2.5">
+  <svg class="w-5 h-5 text-error shrink-0 mt-0.5"><!-- Lucide alert-circle --></svg>
+  <span class="text-sm font-medium text-error-dark">Message d'erreur</span>
+</div>
+
+<!-- Success -->
+<div class="bg-success-light border border-success/20 rounded-md p-4
+            flex items-start gap-2.5">
+  <svg class="w-5 h-5 text-success shrink-0 mt-0.5"><!-- Lucide check-circle --></svg>
+  <span class="text-sm font-medium text-success-dark">Opération réussie</span>
+</div>
+
+<!-- Warning -->
+<div class="bg-warning-light border border-warning/20 rounded-md p-4
+            flex items-start gap-2.5">
+  <svg class="w-5 h-5 text-warning shrink-0 mt-0.5"><!-- Lucide alert-triangle --></svg>
+  <span class="text-sm font-medium text-warning-dark">Attention requise</span>
+</div>
+
+<!-- Info -->
+<div class="bg-info-light border border-info/20 rounded-md p-4
+            flex items-start gap-2.5">
+  <svg class="w-5 h-5 text-info shrink-0 mt-0.5"><!-- Lucide info --></svg>
+  <span class="text-sm font-medium text-primary-dark">Information</span>
+</div>
+```
+
+### KPI Cards (Dashboard)
+
+```html
+<div class="bg-surface border border-border rounded-lg p-5 shadow-sm
+            flex flex-col gap-1.5">
+  <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">
+    Total Employés
+  </span>
+  <span class="font-heading text-[1.75rem] font-bold leading-tight text-text-heading">
+    1,234
+  </span>
+  <span class="text-xs font-medium text-success flex items-center gap-1">
+    <svg class="w-3.5 h-3.5"><!-- Lucide trending-up --></svg>
+    +12% vs mois dernier
+  </span>
+</div>
+```
+
+### Data Tables
+
+```html
+<table class="w-full font-sans text-sm text-left">
+  <thead>
+    <tr class="bg-background-alt border-b border-border">
+      <th class="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">
+        Nom
+      </th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-border">
+    <tr class="transition-colors duration-150 hover:bg-background-alt cursor-pointer">
+      <td class="px-4 py-3 text-sm text-text">Jean Dupont</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### Badges / Status
+
+```html
+<!-- Active -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+             bg-success-light text-success-dark text-xs font-semibold">
+  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+  Actif
+</span>
+
+<!-- Pending -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+             bg-warning-light text-warning-dark text-xs font-semibold">
+  <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+  En attente
+</span>
+
+<!-- Inactive -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+             bg-background-alt text-text-muted text-xs font-semibold">
+  <span class="w-1.5 h-1.5 rounded-full bg-text-muted"></span>
+  Inactif
+</span>
+```
+
+### Sidebar Navigation
+
+```html
+<!-- Active item -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-md
+          bg-primary-50 text-primary font-medium text-sm
+          transition-colors duration-150 cursor-pointer">
+  <svg class="w-5 h-5"><!-- icon --></svg>
+  Dashboard
+</a>
+
+<!-- Inactive item -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-md
+          text-text-secondary text-sm
+          transition-colors duration-150 cursor-pointer
+          hover:bg-background-alt hover:text-text">
+  <svg class="w-5 h-5"><!-- icon --></svg>
+  Employés
+</a>
+```
+
+---
+
+## Style Guidelines
+
+**Style :** Trust & Authority — Data-Dense, Corporate, Accessible
+**Mood :** corporate, trustworthy, accessible, readable, professional, clean, sober
+**Best For :** HR dashboards, employee management, analytics, multi-tenant admin panels
+
+**Key Visual Principles:**
+- Flat design, pas de glassmorphism ni de backdrop-blur
+- Profondeur via ombres subtiles et bordures, pas via transparence
+- Haute densité de données : padding compact sur les tables et KPI
+- Lisibilité maximale : contraste WCAG AAA, polices optimisées lecture
+
+**Key Effects:**
+- Row highlighting on hover (`hover:bg-background-alt`)
+- Badge hover effects (subtle color shift)
+- Skeleton loading (`animate-pulse`) pour les données asynchrones
+- Smooth stat reveal (simple fade-in)
+- Focus ring visible sur tous les éléments interactifs
+
+---
+
+## Anti-Patterns (Do NOT Use)
+
+- ❌ **Glassmorphism / backdrop-blur** — Trop flashy, impact perf, contraste faible
+- ❌ **Emojis as icons** — SVG uniquement (Heroicons, Lucide)
+- ❌ **Missing cursor:pointer** — Tous les éléments cliquables doivent l'avoir
+- ❌ **Layout-shifting hovers** — Pas de `scale` qui déplace le contenu voisin
+- ❌ **Low contrast text** — Minimum 4.5:1 (viser 7:1 WCAG AAA)
+- ❌ **Instant state changes** — Toujours `transition-*` (150-200ms)
+- ❌ **Invisible focus states** — Focus visible obligatoire pour a11y clavier
+- ❌ **Playful/whimsical design** — Rester sobre et corporate
+- ❌ **AI purple/pink gradients** — Pas de couleurs tendance non-corporate
+- ❌ **CSS custom classes** — Tailwind utilities sauf animations complexes
+- ❌ **Inconsistent spacing** — Uniquement les tokens définis ci-dessus
+- ❌ **Shadow excessif** — Maximum `shadow-lg`, pas de shadow-xl/2xl
+
+---
+
+## Pre-Delivery Checklist
+
+Before delivering any UI code, verify:
+
+- [ ] No emojis used as icons (SVG: Heroicons/Lucide)
+- [ ] All icons from consistent icon set, fixed viewBox 24×24, `w-5 h-5`
+- [ ] `cursor-pointer` on all clickable elements
+- [ ] Hover states with smooth transitions (150-200ms)
+- [ ] Light mode: text contrast ≥ 4.5:1 (WCAG AAA target: 7:1)
+- [ ] Focus states visible for keyboard navigation (`focus-visible:outline-*`)
+- [ ] `prefers-reduced-motion` respected via `motion-safe:` prefix
+- [ ] Responsive: 375px, 768px, 1024px, 1440px
+- [ ] No content hidden behind fixed navbars
+- [ ] No horizontal scroll on mobile
+- [ ] All styles use Tailwind utility classes (no custom CSS)
+- [ ] Colors reference design system tokens (`bg-primary`, not `#6366F1`)
+- [ ] Angular standalone components throughout
+- [ ] Fonts: Lexend for headings, Source Sans 3 for body
+- [ ] No glassmorphism, no backdrop-blur, no heavy shadows
