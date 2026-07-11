@@ -1,49 +1,70 @@
-import { Component, inject } from '@angular/core';
+/**
+ * Dashboard de l'espace Manager.
+ * Affiche les KPI de l'équipe (effectif, actifs, départements)
+ * et la liste des membres de l'équipe.
+ */
+
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { EmployeeService } from '../../../core/services/employee.service';
+import { Employee } from '../../../core/models/employee.model';
 
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
   imports: [RouterModule],
-  template: `
-    <div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
-        <div>
-          <h1 class="font-heading text-2xl font-bold text-primary">Tableau de bord Manager</h1>
-          <p class="font-sans text-[0.9375rem] text-text-secondary mt-1">Bienvenue, <span class="font-semibold text-text">{{ user()?.name }}</span>. Voici l'aperçu de votre équipe.</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-surface border border-border rounded-xl p-6 shadow-sm transition-shadow duration-200 hover:shadow-md group">
-          <div class="flex items-center justify-between mb-4">
-            <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">Membres de l'équipe</span>
-            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-          </div>
-          <div class="text-3xl font-heading font-bold text-text-heading">--</div>
-        </div>
-        
-        <div class="bg-surface border border-border rounded-xl p-6 shadow-sm transition-shadow duration-200 hover:shadow-md group">
-          <div class="flex items-center justify-between mb-4">
-            <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">Congés en cours</span>
-            <div class="w-10 h-10 rounded-full bg-primary-50 text-primary flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            </div>
-          </div>
-          <div class="text-3xl font-heading font-bold text-text-heading">--</div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: []
+  templateUrl: './dashboard.component.html'
 })
-export class ManagerDashboardComponent {
+export class ManagerDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
-  readonly user = this.authService.currentUser;
+  private readonly employeeService = inject(EmployeeService);
 
+  readonly user = this.authService.currentUser;
+  readonly userName = computed(() => this.authService.displayName(this.user()));
+  loading = signal(true);
+  teamMembers = signal<Employee[]>([]);
+
+  activeCount = computed(() => this.teamMembers().filter((e) => e.status === 'ACTIVE').length);
+
+  departmentsCount = computed(() => {
+    const depts = new Set(this.teamMembers().filter((e) => e.department).map((e) => e.department));
+    return depts.size;
+  });
+
+  ngOnInit(): void {
+    this.loadTeam();
+  }
+
+  /**
+   * Extrait les initiales d'un employé.
+   */
+  getInitials(first: string, last: string): string {
+    return `${(first?.[0] || '').toUpperCase()}${(last?.[0] || '').toUpperCase()}`;
+  }
+
+  /**
+   * Charge les membres de l'équipe depuis l'API.
+   */
+  loadTeam(): void {
+    this.loading.set(true);
+    this.employeeService.getManagerTeam({ per_page: 100 }).subscribe({
+      next: (response) => {
+        // Filtrer les administrateurs_rh (le manager ne doit pas se voir lui-même comme admin)
+        this.teamMembers.set(response.data.filter((e) => e.role !== 'HR_ADMIN'));
+        this.loading.set(false);
+      },
+      error: (err: unknown) => {
+        this.teamMembers.set([]);
+        this.loading.set(false);
+        console.error('Erreur chargement équipe (dashboard):', err);
+      },
+    });
+  }
+
+  /**
+   * Déconnecte l'utilisateur.
+   */
   onLogout(): void {
     this.authService.logout().subscribe();
   }

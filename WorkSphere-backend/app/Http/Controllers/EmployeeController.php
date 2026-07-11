@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
+use App\Http\Resources\EmployeeCollection;
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,24 +12,25 @@ use Illuminate\Support\Facades\DB;
 class EmployeeController extends Controller
 {
     /**
-     * Display a paginated, filterable listing of employees.
+     * Affiche la liste paginée et filtrable des employés (utilisateurs de l'entreprise).
      *
      * Query params:
-     * - search      : recherche LIKE insensible à la casse sur first_name, last_name, email
-     * - role        : filtre exact sur le rôle Spatie (manager|employe)
-     * - department  : filtre exact sur le département
-     * - is_active   : filtre exact (true/false) sur le statut du User associé
+     * - search      : recherche LIKE sur first_name, last_name, email
+     * - role        : filtre exact sur le rôle ENUM (MANAGER|EMPLOYEE)
+     * - department  : filtre exact sur le département (nom)
+     * - is_active   : filtre exact (true/false)
      * - per_page    : nombre d'éléments par page (défaut: 15)
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): EmployeeCollection
     {
-        $query = Employee::query()
-            ->with(['user' => function ($q) {
-                $q->with('roles');
-            }]);
+        $companyId = $request->user()->company_id;
+
+        $query = User::where('company_id', $companyId);
+
+        // Exclure l'Admin RH de la liste des employés
+        $query->where('role', '!=', 'HR_ADMIN');
 
         // ── Recherche full-text sur first_name, last_name, email ──
-        // Portabilité : PostgreSQL nécessite ILIKE, MySQL/SQLite utilisent LIKE
         $driver = DB::connection()->getDriverName();
         $likeOperator = $driver === 'pgsql' ? 'ilike' : 'like';
 
@@ -36,117 +39,87 @@ class EmployeeController extends Controller
             $query->where(function ($q) use ($search, $likeOperator) {
                 $q->where('first_name', $likeOperator, "%{$search}%")
                   ->orWhere('last_name', $likeOperator, "%{$search}%")
-                  ->orWhereHas('user', function ($uq) use ($search, $likeOperator) {
-                      $uq->where('email', $likeOperator, "%{$search}%");
-                  });
+                  ->orWhere('email', $likeOperator, "%{$search}%");
             });
         }
 
-        // ── Filtre par département ──
+        // ── Filtre par département (nom) ──
         if ($request->filled('department')) {
-            $query->where('department', $request->department);
-        }
-
-        // ── Filtre par statut actif/inactif (sur le User) ──
-        if ($request->filled('is_active')) {
-            $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($isActive !== null) {
-                $query->whereHas('user', function ($q) use ($isActive) {
-                    $q->where('is_active', $isActive);
-                });
-            }
-        }
-
-        // ── Filtre par rôle Spatie (manager | employe) ──
-        if ($request->filled('role')) {
-            $role = $request->role;
-            $query->whereHas('user', function ($q) use ($role) {
-                $q->role($role);
+            $query->whereHas('department', function ($q) use ($request) {
+                $q->where('name', $request->department);
             });
         }
 
-        $perPage = max(1, min(100, (int) ($request->per_page ?? 15)));
-        $employees = $query->paginate($perPage);
+        // ── Filtre par statut ──
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-        // Transformer la réponse pour exposer les données du User au même niveau
-        $employees->getCollection()->transform(function (Employee $employee) {
-            return [
-                'id'          => $employee->id,
-                'first_name'  => $employee->first_name,
-                'last_name'   => $employee->last_name,
-                'email'       => $employee->user?->email,
-                'role'        => $employee->user?->roles?->first()?->name,
-                'job_title'   => $employee->job_title,
-                'department'  => $employee->department,
-                'hire_date'   => $employee->hire_date?->format('Y-m-d'),
-                'salary'      => $employee->salary,
-                'is_active'   => $employee->user?->is_active,
-            ];
-        });
+        // ── Filtre par rôle (nouvel ENUM: MANAGER|EMPLOYEE) ──
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
 
-        return response()->json($employees);
+        $perPage = max(1, min(100, (int) ($request->per_page ?? 10)));
+        $users = $query->with('department')->paginate($perPage);
+
+        return new EmployeeCollection($users);
     }
 
     /**
-     * Toggle the active status of an employee's user account.
-     * Interdit pour l'administrateur_rh (retourne 403).
+     * Bascule le statut actif/inactif d'un utilisateur.
+     * Interdit pour HR_ADMIN (retourne 403).
      */
-    public function toggleStatus(Employee $employee): JsonResponse
+    public function toggleStatus(User $employee, Request $request): JsonResponse
     {
-        $user = $employee->user;
+        $user = $employee;
 
-        if (! $user) {
-            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
+        if ($user->company_id !== $request->user()->company_id) {
+            return response()->json([
+                'message' => 'Action non autorisée.',
+            ], 403);
         }
 
         // ── Garde-fou : interdiction de désactiver l'Admin RH ──
-        if ($user->hasRole('administrateur_rh')) {
+        if ($user->role === 'HR_ADMIN') {
             return response()->json([
                 'message' => 'Impossible de désactiver le compte Administrateur RH',
             ], 403);
         }
 
-        $user->is_active = ! $user->is_active;
+        $user->status = $user->status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
         $user->save();
 
-        $status = $user->is_active ? 'activé' : 'désactivé';
+        $statusLabel = $user->status === 'ACTIVE' ? 'activé' : 'désactivé';
 
         return response()->json([
-            'message'   => "Employé {$status} avec succès.",
-            'employee'  => [
-                'id'         => $employee->id,
-                'first_name' => $employee->first_name,
-                'last_name'  => $employee->last_name,
-                'email'      => $user->email,
-                'is_active'  => $user->is_active,
-            ],
+            'message'  => "Employé {$statusLabel} avec succès.",
+            'employee' => new UserResource($user),
         ]);
     }
 
     /**
-     * Soft delete an employee and their associated user.
-     * Interdit pour l'administrateur_rh (retourne 403).
-     * Les deux suppressions sont faites dans une même transaction.
+     * Soft delete un utilisateur.
+     * Interdit pour HR_ADMIN (retourne 403).
      */
-    public function destroy(Employee $employee): JsonResponse
+    public function destroy(User $employee, Request $request): JsonResponse
     {
-        $user = $employee->user;
+        $user = $employee;
 
-        if (! $user) {
-            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
+        if ($user->company_id !== $request->user()->company_id) {
+            return response()->json([
+                'message' => 'Action non autorisée.',
+            ], 403);
         }
 
         // ── Garde-fou : interdiction de supprimer l'Admin RH ──
-        if ($user->hasRole('administrateur_rh')) {
+        if ($user->role === 'HR_ADMIN') {
             return response()->json([
                 'message' => 'Impossible de supprimer le compte Administrateur RH',
             ], 403);
         }
 
-        DB::transaction(function () use ($employee, $user) {
-            $employee->delete();    // soft delete
-            $user->delete();        // soft delete
-        });
+        $user->delete(); // soft delete
 
         return response()->json([
             'message' => 'Employé supprimé avec succès.',

@@ -1,3 +1,8 @@
+/**
+ * EmployeeService - Opérations CRUD sur les employés : liste paginée avec filtres,
+ * toggle de statut, suppression logique, import CSV. Utilise la table users
+ * qui contient désormais les données employé (plus de table employees dédiée).
+ */
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -12,8 +17,10 @@ export class EmployeeService {
   private readonly apiUrl = environment.apiUrl;
 
   /**
-   * Liste paginée des employés avec filtres.
-   * Construit les query params dynamiquement, en omettant les champs vides.
+   * Récupère la liste paginée des employés de l'entreprise avec filtres.
+   * Construit dynamiquement les query params en ignorant les valeurs vides.
+   * @param params - Filtres optionnels (search, role, department, is_active, page, per_page)
+   * @returns Observable contenant les employés paginés
    */
   getEmployees(params?: EmployeeQueryParams): Observable<PaginatedResponse<Employee>> {
     let httpParams = new HttpParams();
@@ -31,7 +38,30 @@ export class EmployeeService {
   }
 
   /**
-   * Bascule l'état actif/inactif d'un employé.
+   * Récupère la liste de l'équipe visible par le manager connecté.
+   * Les administrateurs RH sont exclus du résultat côté frontend.
+   * @param params - Filtres optionnels
+   * @returns Observable avec les membres de l'équipe paginés
+   */
+  getManagerTeam(params?: EmployeeQueryParams): Observable<PaginatedResponse<Employee>> {
+    let httpParams = new HttpParams();
+
+    if (params) {
+      const entries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== '' && v !== null);
+      for (const [key, value] of entries) {
+        httpParams = httpParams.set(key, String(value));
+      }
+    }
+
+    return this.http.get<PaginatedResponse<Employee>>(`${this.apiUrl}/manager/team`, {
+      params: httpParams
+    });
+  }
+
+  /**
+   * Bascule le statut actif/inactif d'un employé (via le nouveau champ status).
+   * @param id - ID de l'employé
+   * @returns Observable avec le message et l'employé mis à jour
    */
   toggleStatus(id: number): Observable<{ message: string; employee: Employee }> {
     return this.http.patch<{ message: string; employee: Employee }>(
@@ -41,14 +71,19 @@ export class EmployeeService {
   }
 
   /**
-   * Supprime (soft delete) un employé.
+   * Supprime logiquement (soft delete) un employé.
+   * @param id - ID de l'employé
+   * @returns Observable avec le message de confirmation
    */
   deleteEmployee(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/employees/${id}`);
   }
 
   /**
-   * Importe des employés via un fichier CSV.
+   * Importe des employés depuis un fichier CSV.
+   * Envoie le fichier en FormData pour une gestion multipart.
+   * @param file - Fichier CSV à importer
+   * @returns Observable avec le résultat (imported, failed, errors[])
    */
   importEmployees(file: File): Observable<ImportResult> {
     const formData = new FormData();

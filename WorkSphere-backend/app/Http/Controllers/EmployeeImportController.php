@@ -19,7 +19,7 @@ class EmployeeImportController extends Controller
         $company = $user->company;
 
         if (! $company) {
-            return response()->json(['message' => 'No company associated with your account.'], 403);
+            return response()->json(['message' => 'Aucune entreprise associée à votre compte.'], 403);
         }
 
         $report = $this->importService->import($request->file('file'), $company);

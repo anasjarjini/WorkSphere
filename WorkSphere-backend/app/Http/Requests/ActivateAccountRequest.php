@@ -44,7 +44,7 @@ class ActivateAccountRequest extends FormRequest
         ];
     }
 
-    /**
+    /**te employé via token reçu par emailte employé via token reçu par email
      * Messages d'erreur personnalisés en français.
      */
     public function messages(): array

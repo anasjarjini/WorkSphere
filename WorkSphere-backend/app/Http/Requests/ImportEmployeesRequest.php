@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportEmployeesRequest extends FormRequest
@@ -24,6 +23,15 @@ class ImportEmployeesRequest extends FormRequest
     {
         return [
             'file' => ['required', 'mimes:csv,txt', 'max:10240'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'file.required' => 'Le fichier CSV est requis.',
+            'file.mimes' => 'Le fichier doit être au format CSV.',
+            'file.max' => 'Le fichier ne peut pas dépasser 10 Mo.',
         ];
     }
 }

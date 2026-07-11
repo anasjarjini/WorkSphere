@@ -3,11 +3,18 @@ import {
   BrowserGetTestability,
   BrowserModule,
   By,
+  DomEventsPlugin,
+  DomRendererFactory2,
   DomSanitizer,
   DomSanitizerImpl,
+  EVENT_MANAGER_PLUGINS,
+  EventManager,
+  EventManagerPlugin,
   HydrationFeatureKind,
   KeyEventsPlugin,
   Meta,
+  REMOVE_STYLES_ON_COMPONENT_DESTROY,
+  SharedStylesHost,
   Title,
   VERSION,
   bootstrapApplication,
@@ -23,25 +30,16 @@ import {
   withIncrementalHydration,
   withNoHttpTransferCache,
   withNoIncrementalHydration
-} from "./chunk-T2VLRMYF.js";
-import "./chunk-KYETK75A.js";
-import {
-  DomEventsPlugin,
-  DomRendererFactory2,
-  EVENT_MANAGER_PLUGINS,
-  EventManager,
-  EventManagerPlugin,
-  REMOVE_STYLES_ON_COMPONENT_DESTROY,
-  SharedStylesHost
-} from "./chunk-3JRPATPK.js";
-import "./chunk-GWPCHIMB.js";
+} from "./chunk-EYXGMTXL.js";
+import "./chunk-7RLCM3SE.js";
+import "./chunk-BU4K4RV7.js";
 import {
   getDOM
-} from "./chunk-RUT4XS34.js";
+} from "./chunk-HCWZQ3CN.js";
 import "./chunk-ZGKELGVK.js";
 import "./chunk-COPXD2BJ.js";
-import "./chunk-J46EEYGT.js";
 import "./chunk-4YCCEXQQ.js";
+import "./chunk-J46EEYGT.js";
 import "./chunk-U7EDC2PH.js";
 export {
   BrowserModule,

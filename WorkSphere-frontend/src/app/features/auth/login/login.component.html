@@ -1,5 +1,6 @@
+<!-- ═══ Page de Connexion ═══ -->
 <div class="min-h-screen flex items-center justify-center p-6 bg-background">
-  <div class="bg-surface border border-border rounded-xl p-6 sm:p-8 shadow-sm w-full max-w-md transition-all duration-200 hover:shadow-md">
+  <div class="bg-surface border border-border shadow-sm rounded-md p-[24px] w-full max-w-md transition-colors hover:bg-surface-raised">
     <div class="text-center mb-8 flex flex-col items-center">
       <div class="w-12 h-12 bg-primary-50 text-primary rounded-md flex items-center justify-center mb-4 shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
@@ -9,40 +10,47 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
       </div>
-      <h1 class="font-heading text-2xl font-bold text-text-heading">WorkSphere</h1>
-      <p class="font-sans text-sm text-text-secondary mt-1">Plateforme RH SaaS Intelligente</p>
+      <!-- Hero : logo + titre WorkSphere -->
+      <h1 class="font-heading text-[24px] font-bold leading-[32px] text-text-heading">WorkSphere</h1>
+      <p class="font-sans text-[14px] leading-[22px] text-text-secondary mt-1">Plateforme RH SaaS Intelligente</p>
     </div>
 
+    <!-- Affichage des erreurs API (identifiants invalides, compte inactif...) -->
     @if (errorMessage()) {
-      <div class="bg-error-light border border-error/20 rounded-md p-4 mb-6 flex items-start gap-2.5">
+      <div class="bg-error-light border border-error rounded-md p-[16px] mb-6 flex items-start gap-2.5">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error shrink-0 mt-0.5">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        <span class="text-sm font-medium text-error-dark">{{ errorMessage() }}</span>
+        <span class="font-sans text-[14px] font-medium text-error-dark">{{ errorMessage() }}</span>
       </div>
     }
 
+    <!-- ═══ Formulaire de Connexion ═══ -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
-      <div class="flex flex-col gap-1.5">
-        <label for="email" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Adresse Email</label>
+      <!-- Champ Email -->
+      <div class="flex flex-col">
+        <label for="email" class="font-sans font-medium text-[14px] text-primary mb-[4px]">Adresse Email</label>
         <input
           id="email"
           type="email"
           formControlName="email"
           placeholder="nom@entreprise.com"
-          class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+          class="w-full h-[40px] px-[12px] py-[8px] bg-surface border rounded-md shadow-none font-sans text-[14px] text-text transition-colors placeholder:text-text-muted focus:outline-none disabled:border-border disabled:bg-surface-raised disabled:cursor-not-allowed"
           [class.border-border]="!isFieldInvalid('email')"
-          [class.focus:border-border-focus]="!isFieldInvalid('email')"
-          [class.focus:ring-primary/15]="!isFieldInvalid('email')"
+          [class.hover:border-primary-light]="!isFieldInvalid('email')"
+          [class.focus:border-primary]="!isFieldInvalid('email')"
+          [class.focus:ring-[3px]]="!isFieldInvalid('email')"
+          [class.focus:ring-primary/25]="!isFieldInvalid('email')"
           [class.border-error]="isFieldInvalid('email')"
-          [class.focus:border-error]="isFieldInvalid('email')"
-          [class.focus:ring-error/15]="isFieldInvalid('email')"
+          [class.bg-error-light]="isFieldInvalid('email')"
+          [class.focus:ring-[3px]]="isFieldInvalid('email')"
+          [class.focus:ring-error/25]="isFieldInvalid('email')"
           autocomplete="email"
         />
         @if (isFieldInvalid('email')) {
-          <span class="text-xs font-medium text-error-dark mt-1 flex items-center gap-1">
+          <span class="font-sans font-normal text-[12px] text-error mt-[4px] flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -53,10 +61,11 @@
         }
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <div class="flex justify-between items-center">
-          <label for="password" class="font-sans text-[0.8125rem] font-semibold uppercase tracking-wider text-text">Mot de passe</label>
-          <a routerLink="/forgot-password" class="font-sans text-xs font-medium text-primary hover:text-primary-hover transition-colors duration-150 cursor-pointer">
+      <!-- Champ Mot de Passe -->
+      <div class="flex flex-col">
+        <div class="flex justify-between items-center mb-[4px]">
+          <label for="password" class="font-sans font-medium text-[14px] text-primary">Mot de passe</label>
+          <a routerLink="/forgot-password" class="font-sans text-[12px] font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer">
             Mot de passe oublié ?
           </a>
         </div>
@@ -65,17 +74,20 @@
           type="password"
           formControlName="password"
           placeholder="••••••••"
-          class="w-full px-4 py-3 bg-surface border rounded-md font-sans text-[0.9375rem] text-text transition-all duration-150 placeholder:text-text-muted placeholder:opacity-70 focus:outline-none focus:ring-2 disabled:bg-background-alt disabled:text-text-muted disabled:cursor-not-allowed"
+          class="w-full h-[40px] px-[12px] py-[8px] bg-surface border rounded-md shadow-none font-sans text-[14px] text-text transition-colors placeholder:text-text-muted focus:outline-none disabled:border-border disabled:bg-surface-raised disabled:cursor-not-allowed"
           [class.border-border]="!isFieldInvalid('password')"
-          [class.focus:border-border-focus]="!isFieldInvalid('password')"
-          [class.focus:ring-primary/15]="!isFieldInvalid('password')"
+          [class.hover:border-primary-light]="!isFieldInvalid('password')"
+          [class.focus:border-primary]="!isFieldInvalid('password')"
+          [class.focus:ring-[3px]]="!isFieldInvalid('password')"
+          [class.focus:ring-primary/25]="!isFieldInvalid('password')"
           [class.border-error]="isFieldInvalid('password')"
-          [class.focus:border-error]="isFieldInvalid('password')"
-          [class.focus:ring-error/15]="isFieldInvalid('password')"
+          [class.bg-error-light]="isFieldInvalid('password')"
+          [class.focus:ring-[3px]]="isFieldInvalid('password')"
+          [class.focus:ring-error/25]="isFieldInvalid('password')"
           autocomplete="current-password"
         />
         @if (isFieldInvalid('password')) {
-          <span class="text-xs font-medium text-error-dark mt-1 flex items-center gap-1">
+          <span class="font-sans font-normal text-[12px] text-error mt-[4px] flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -86,7 +98,8 @@
         }
       </div>
 
-      <button type="submit" class="w-full bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold px-6 py-3 rounded-md shadow-sm transition-all duration-200 hover:bg-primary-hover hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-2" [disabled]="isLoading() || loginForm.invalid">
+      <!-- Bouton de soumission avec état de chargement -->
+      <button type="submit" class="w-full bg-primary text-text-inverse font-sans text-[14px] px-[16px] py-[8px] h-[40px] rounded-md transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-2 cursor-pointer" [disabled]="isLoading() || loginForm.invalid">
         @if (isLoading()) {
           <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
           Connexion en cours...
@@ -96,8 +109,9 @@
       </button>
     </form>
     
+    <!-- Lien création de compte entreprise -->
     <div class="flex justify-center mt-6">
-      <a routerLink="/register-company" class="font-sans text-sm font-medium text-primary hover:text-primary-hover transition-colors duration-150 cursor-pointer">Créer un compte entreprise</a>
+      <a routerLink="/register-company" class="font-sans text-[14px] font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer">Créer un compte entreprise</a>
     </div>
   </div>
 </div>

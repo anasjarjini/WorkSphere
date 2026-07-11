@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +16,7 @@ class AuthController extends Controller
      * Ordre des vérifications (important pour la sécurité) :
      *  1. User introuvable par email  ──┐
      *  2. Password incorrect          ──┴── 401 identique → empêche l'user enumeration attack
-     *  3. is_active = false           ──── 403 compte non activé
+     *  3. status !== 'ACTIVE'        ──── 403 compte non activé
      *  4. Tout OK                     ──── 200 + token Sanctum
      *
      * Le rate limiting (throttle:5,1) est appliqué directement sur la route dans api.php,
@@ -36,7 +37,7 @@ class AuthController extends Controller
         // Cette vérification arrive APRÈS la validation email+password pour ne pas révéler
         // qu'un email existe dans la base (si on vérifiait is_active en premier avec un message
         // différent, un attaquant pourrait déduire l'existence du compte).
-        if (! $user->is_active) {
+        if ($user->status !== 'ACTIVE') {
             return response()->json([
                 'message' => "Votre compte n'est pas encore activé. Vérifiez votre email pour le lien d'activation.",
                 'error'   => 'account_inactive',
@@ -44,15 +45,15 @@ class AuthController extends Controller
         }
 
         // ─── Étape 4 : Authentification réussie ──────────────────────────────────────────────────────
-        // Charger les relations utiles pour le frontend (roles via Spatie, employee, company)
-        $user->load('employee', 'roles', 'company');
+        // Charger les relations utiles pour le frontend (employee, company)
+        $user->load('company');
 
         // Générer le token Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Connexion réussie.',
-            'user'    => $user,
+            'user'    => new UserResource($user),
             'token'   => $token,
         ], 200);
     }
@@ -86,10 +87,10 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user()->load('employee', 'roles', 'company');
+        $user = $request->user()->load('company', 'department');
 
         return response()->json([
-            'user' => $user,
+            'user' => new UserResource($user),
         ], 200);
     }
 }

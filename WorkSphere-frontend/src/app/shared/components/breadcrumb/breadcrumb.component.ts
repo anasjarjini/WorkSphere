@@ -1,3 +1,8 @@
+/**
+ * Composant de fil d'Ariane (breadcrumb) généré dynamiquement
+ * à partir de la structure des routes et des données 'breadcrumb' définies dans app.routes.ts.
+ */
+
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterModule, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -13,25 +18,15 @@ interface Breadcrumb {
   selector: 'app-breadcrumb',
   standalone: true,
   imports: [RouterModule],
-  template: `
-    <nav aria-label="Fil d'Ariane" class="flex items-center gap-2 text-[0.8125rem] py-3 flex-wrap mb-4">
-      <a routerLink="/" class="text-text-muted no-underline font-medium transition-colors duration-200 hover:text-accent cursor-pointer">Accueil</a>
-      @for (crumb of breadcrumbs(); track crumb.path; let last = $last) {
-        <span class="text-border font-light">/</span>
-        @if (last) {
-          <span class="text-text font-semibold">{{ crumb.label }}</span>
-        } @else {
-          <a [routerLink]="crumb.path" class="text-text-muted no-underline font-medium transition-colors duration-200 hover:text-accent cursor-pointer">{{ crumb.label }}</a>
-        }
-      }
-    </nav>
-  `,
-  styles: []
+  templateUrl: './breadcrumb.component.html'
 })
 export class BreadcrumbComponent {
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
 
+  /**
+   * Signal contenant la liste des breadcrumbs mise à jour à chaque NavigationEnd.
+   */
   readonly breadcrumbs = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
@@ -40,6 +35,13 @@ export class BreadcrumbComponent {
     { initialValue: [] as Breadcrumb[] }
   );
 
+  /**
+   * Parcourt récursivement l'arbre de routes pour construire la liste des breadcrumbs.
+   * @param route Route active courante
+   * @param path Chemin accumulé depuis la racine
+   * @param breadcrumbs Liste des crumbs accumulés
+   * @returns Tableau des breadcrumbs triés
+   */
   private buildBreadcrumbs(route: ActivatedRoute, path: string = '', breadcrumbs: Breadcrumb[] = []): Breadcrumb[] {
     const children = route.children;
 

@@ -1,3 +1,9 @@
+/**
+ * Page de connexion (login).
+ * Formulaire email/mot de passe avec gestion des erreurs API (401, 403)
+ * et redirection vers le dashboard adapté au rôle.
+ */
+
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -16,11 +22,9 @@ export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  // Signaux pour gérer le chargement et les erreurs d'API
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
 
-  // Formulaire Réactif de Connexion
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]]
@@ -44,7 +48,7 @@ export class LoginComponent {
       next: () => {
         this.isLoading.set(false);
         const user = this.authService.currentUser();
-        const role = user?.roles && user.roles.length > 0 ? user.roles[0].name : '';
+        const role = user?.role || '';
         const redirectPath = this.authService.getRedirectPathForRole(role);
         this.router.navigate([redirectPath]);
       },
@@ -64,7 +68,11 @@ export class LoginComponent {
     });
   }
 
-  // Helpers pour l'affichage des erreurs de validation dans le HTML
+  /**
+   * Vérifie si un champ est invalide pour afficher les messages d'erreur.
+   * @param fieldName Nom du champ à vérifier
+   * @returns true si le champ est invalide et a été touché
+   */
   isFieldInvalid(fieldName: 'email' | 'password'): boolean {
     const control = this.loginForm.get(fieldName);
     return !!(control && control.invalid && (control.dirty || control.touched));

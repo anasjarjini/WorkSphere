@@ -18,8 +18,8 @@ class PasswordResetController extends Controller
      *   mais inactif, email inexistant) pour ne pas révéler si un email est inscrit.
      *
      * Cas réellement traités :
-     *   a) Email existe + is_active = true  → génère un token + envoie l'email
-     *   b) Email existe + is_active = false → NE FAIT RIEN (silencieux)
+     *   a) Email existe + status = ACTIVE  → génère un token + envoie l'email
+     *   b) Email existe + status ≠ ACTIVE  → NE FAIT RIEN (silencieux)
      *   c) Email n'existe pas               → NE FAIT RIEN (silencieux)
      *
      * Dans tous les cas → message de succès générique.
@@ -29,7 +29,7 @@ class PasswordResetController extends Controller
         $user = User::where('email', $request->email)->first();
 
         // Seulement si l'utilisateur existe ET est actif → générer le token + envoyer l'email
-        if ($user && $user->is_active) {
+        if ($user && $user->status === 'ACTIVE') {
             // Generate the plain-text token via Laravel's built-in Password broker
             $token = Password::createToken($user);
 
@@ -54,7 +54,7 @@ class PasswordResetController extends Controller
      *   2. Token invalide / expiré
      *      → Erreur claire : "Ce lien de réinitialisation est invalide ou a expiré."
      *
-     *   3. Compte inactif (is_active = false)
+     *   3. Compte inactif (status ≠ ACTIVE)
      *      → Retourne une erreur avant même d'appeler Password::reset()
      */
     public function resetPassword(ResetPasswordRequest $request)
@@ -62,7 +62,7 @@ class PasswordResetController extends Controller
         $user = User::where('email', $request->email)->first();
 
         // ─── Vérification : compte inactif → refus explicite ──────────────────────────────────────
-        if ($user && ! $user->is_active) {
+        if ($user && $user->status !== 'ACTIVE') {
             return response()->json([
                 'message' => "Ce compte n'est pas encore activé. Vérifiez votre email pour le lien d'activation initial.",
                 'error'   => 'account_inactive',

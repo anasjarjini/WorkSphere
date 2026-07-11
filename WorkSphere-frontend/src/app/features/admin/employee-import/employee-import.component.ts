@@ -1,4 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+/**
+ * Page d'import CSV d'employés (Administrateur RH).
+ * Drag & drop ou sélection de fichier, validation format/taille,
+ * téléchargement du modèle CSV, et affichage du résultat d'import.
+ */
+
+import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -13,8 +19,8 @@ import { ImportResult } from '../../../core/models/employee.model';
 })
 export class EmployeeImportComponent {
   private readonly employeeService = inject(EmployeeService);
+  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
-  // ── État du composant ──────────────────────────────────────────
   readonly selectedFile = signal<File | null>(null);
   readonly isUploading = signal<boolean>(false);
   readonly importResult = signal<ImportResult | null>(null);
@@ -42,9 +48,12 @@ export class EmployeeImportComponent {
   }
 
   // ── Téléchargement du modèle CSV ───────────────────────────────
+  /**
+   * Télécharge un modèle CSV vierge (avec un exemple) pour guider l'utilisateur.
+   */
   downloadTemplate(): void {
     const headers = 'first_name,last_name,email,role,job_title,department,hire_date,salary';
-    const exampleRow = 'Ahmed,Bennani,ahmed@example.com,employe,Développeur,IT,15/03/2023,8000';
+    const exampleRow = 'Ahmed,Bennani,ahmed@example.com,EMPLOYEE,Développeur,IT,15/03/2023,8000';
     const commentLine = '# first_name,last_name,email,role,job_title,department,hire_date,salary';
     const content = `${headers}\n${commentLine}\n${exampleRow}\n`;
 
@@ -61,6 +70,9 @@ export class EmployeeImportComponent {
   }
 
   // ── Gestion du fichier (drag & drop + input file) ──────────────
+  /**
+   * Gère la sélection manuelle d'un fichier via l'input.
+   */
   onFileSelected(event: Event): void {
     this.resetErrors();
     const input = event.target as HTMLInputElement;
@@ -70,6 +82,9 @@ export class EmployeeImportComponent {
     input.value = '';
   }
 
+  /**
+   * Gère le survol d'un élément glissé (effet visuel).
+   */
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -82,6 +97,9 @@ export class EmployeeImportComponent {
     this.isDragOver.set(false);
   }
 
+  /**
+   * Gère le dépôt d'un fichier par glisser-déposer.
+   */
   onDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -92,9 +110,21 @@ export class EmployeeImportComponent {
     this.validateAndSetFile(event.dataTransfer.files[0]);
   }
 
+  /**
+   * Retire le fichier sélectionné et réinitialise les erreurs.
+   */
   removeFile(): void {
     this.selectedFile.set(null);
     this.resetErrors();
+  }
+
+  /**
+   * Ouvre la boîte de dialogue de sélection de fichier.
+   */
+  triggerFileInput(): void {
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.click();
+    }
   }
 
   private validateAndSetFile(file: File): void {
@@ -123,6 +153,9 @@ export class EmployeeImportComponent {
   }
 
   // ── Envoi du fichier à l'API ───────────────────────────────────
+  /**
+   * Envoie le fichier CSV à l'API et affiche le résultat de l'import.
+   */
   onSubmit(): void {
     const file = this.selectedFile();
     if (!file) return;
@@ -153,6 +186,9 @@ export class EmployeeImportComponent {
   }
 
   // ── Réinitialisation ───────────────────────────────────────────
+  /**
+   * Réinitialise complètement l'état de l'import (fichier, résultats, erreurs).
+   */
   resetImport(): void {
     this.selectedFile.set(null);
     this.importResult.set(null);

@@ -15,9 +15,11 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::table('employees', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (Schema::hasTable('employees')) {
+            Schema::table('employees', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -29,8 +31,10 @@ return new class extends Migration
             $table->dropSoftDeletes();
         });
 
-        Schema::table('employees', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        if (Schema::hasTable('employees')) {
+            Schema::table('employees', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 };

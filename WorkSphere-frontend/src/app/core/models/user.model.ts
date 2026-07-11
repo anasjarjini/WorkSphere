@@ -1,56 +1,39 @@
-export interface Company {
-  id: number;
-  name: string;
-  slug: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  logo?: string;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
+/**
+ * Modèles de données pour le domaine utilisateur.
+ * Définit les structures User, Company, Department, Role et les types d'énumérations associés.
+ */
 
-export interface Employee {
-  id: number;
-  user_id: number;
-  company_id: number;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  address?: string;
-  job_title?: string;
-  department?: string;
-  hire_date?: string;
-  salary?: string;
-  created_at?: string;
-  updated_at?: string;
-}
 
-export interface Role {
-  id: number;
-  name: string;
-  guard_name: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Company } from "./company.model";
+import { Department } from "./department.model";
+import { Role } from "./role.model";
+
+export type UserRole = 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE';
+
+export type UserStatus = 'PENDING_ACTIVATION' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 export interface User {
   id: number;
   name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   company_id?: number;
   is_active: boolean;
+  role: UserRole;
+  status: UserStatus;
+  job_title?: string;
+  hire_date?: string;
+  department_id?: number;
+  manager_id?: number;
+  avatar?: string;
+  avatar_url?: string | null;
   email_verified_at?: string;
   company?: Company;
-  employee?: Employee;
+  department?: Department;
   roles?: Role[];
   created_at?: string;
   updated_at?: string;
 }
 
-export interface AuthResponse {
-  message: string;
-  user: User;
-  token: string;
-}
+

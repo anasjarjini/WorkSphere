@@ -1,3 +1,10 @@
+/**
+ * Configuration des routes de l'application.
+ * Définit les chemins publics (login, register, activation, reset),
+ * les espaces protégés par rôle (admin, manager, employee) avec guards,
+ * et une route wildcard 404.
+ */
+
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -31,7 +38,7 @@ export const routes: Routes = [
     path: 'admin',
     loadComponent: () => import('./layouts/admin-layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['administrateur_rh'] },
+    data: { roles: ['HR_ADMIN'] },
     children: [
       {
         path: 'dashboard',
@@ -47,6 +54,11 @@ export const routes: Routes = [
         path: 'employees/import',
         loadComponent: () => import('./features/admin/employee-import/employee-import.component').then((m) => m.EmployeeImportComponent),
         data: { breadcrumb: 'Import employés' }
+      },
+      {
+        path: 'company',
+        loadComponent: () => import('./features/admin/company-settings/company-settings.component').then((m) => m.CompanySettingsComponent),
+        data: { breadcrumb: 'Entreprise' }
       },
       {
         path: 'settings',
@@ -65,7 +77,7 @@ export const routes: Routes = [
     path: 'manager',
     loadComponent: () => import('./layouts/manager-layout/manager-layout.component').then((m) => m.ManagerLayoutComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['manager'] },
+    data: { roles: ['MANAGER'] },
     children: [
       {
         path: 'dashboard',
@@ -89,7 +101,7 @@ export const routes: Routes = [
     path: 'employee',
     loadComponent: () => import('./layouts/employee-layout/employee-layout.component').then((m) => m.EmployeeLayoutComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['employe'] },
+    data: { roles: ['EMPLOYEE'] },
     children: [
       {
         path: 'dashboard',

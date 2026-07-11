@@ -1,7 +1,8 @@
+<!-- ═══ Page : Liste des employés (Admin RH) ═══ -->
 <div class="min-h-screen bg-background py-8 px-6">
   <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
-    <!-- ── Header ───────────────────────────────────────────────── -->
+    <!-- ═══ Header : Titre + Bouton Importer ═══ -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="font-heading text-2xl font-bold text-text-heading">Employés</h1>
@@ -25,7 +26,7 @@
       </a>
     </div>
 
-    <!-- ── Messages flash ───────────────────────────────────────── -->
+    <!-- ═══ Messages flash (succès / erreur) ═══ -->
     @if (successMessage()) {
       <div class="bg-success-light border border-success/20 rounded-md p-4 flex items-start gap-2.5 transition-all duration-200">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success shrink-0 mt-0.5">
@@ -57,7 +58,7 @@
       </div>
     }
 
-    <!-- ── Barre de filtres ─────────────────────────────────────── -->
+    <!-- ═══ Barre de filtres : Recherche, Rôle, Département, Statut ═══ -->
     <div class="bg-surface border border-border rounded-xl shadow-sm p-5 transition-shadow duration-200 hover:shadow-md">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <!-- Recherche -->
@@ -97,8 +98,8 @@
                    focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
           >
             <option value="">Tous les rôles</option>
-            <option value="manager">Manager</option>
-            <option value="employe">Employé</option>
+            <option value="MANAGER">Manager</option>
+            <option value="EMPLOYEE">Employé</option>
           </select>
         </div>
 
@@ -134,8 +135,8 @@
                    focus:border-border-focus focus:ring-2 focus:ring-primary/15 focus:outline-none"
           >
             <option value="">Tous</option>
-            <option value="true">Actif</option>
-            <option value="false">Inactif</option>
+            <option value="ACTIVE">Actif</option>
+            <option value="INACTIVE">Inactif</option>
           </select>
         </div>
       </div>
@@ -157,7 +158,7 @@
       </div>
     </div>
 
-    <!-- ── Contenu principal ────────────────────────────────────── -->
+    <!-- ═══ Contenu principal : Loading / Erreur / Vide / Tableau ═══ -->
 
     <!-- Loading -->
     @if (loading()) {
@@ -223,6 +224,10 @@
     } @else {
       <!-- Tableau des employés -->
       <div class="bg-surface border border-border rounded-xl shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
+        <!-- ═══ Pagination en haut ═══ -->
+       
+
+
         <div class="overflow-x-auto">
           <table class="w-full font-sans text-sm text-left">
             <thead>
@@ -242,26 +247,28 @@
                 <tr class="transition-colors duration-150 hover:bg-background-alt/50">
                   <td class="px-4 py-3.5 whitespace-nowrap">
                     <div class="flex items-center gap-2.5">
-                      <div class="w-8 h-8 rounded-full bg-primary-50 text-primary font-semibold text-xs flex items-center justify-center shrink-0">
-                        {{ employee.first_name[0] }}{{ employee.last_name[0] }}
-                      </div>
+                      <app-avatar
+                        [imageUrl]="imageUrlService.resolve(employee.avatar_url)"
+                        [name]="employee.first_name + ' ' + employee.last_name"
+                        size="sm"
+                      />
                       <span class="font-medium text-text">{{ employee.first_name }} {{ employee.last_name }}</span>
                     </div>
                   </td>
                   <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary">{{ employee.email }}</td>
                   <td class="px-4 py-3.5 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ getRoleBadgeClass(employee.role) }}">
-                      @if (employee.role === 'administrateur_rh') { Admin RH }
-                      @else if (employee.role === 'manager') { Manager }
-                      @else if (employee.role === 'employe') { Employé }
+                    <span [class]="'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ' + getRoleBadgeClass(employee.role)">
+                      @if (employee.role === 'HR_ADMIN') { Admin RH }
+                      @else if (employee.role === 'MANAGER') { Manager }
+                      @else if (employee.role === 'EMPLOYEE') { Employé }
                       @else { {{ employee.role }} }
                     </span>
                   </td>
                   <td class="px-4 py-3.5 whitespace-nowrap text-text">{{ employee.job_title }}</td>
-                  <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary">{{ employee.department || '—' }}</td>
+                  <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary">{{ employee.department.name }}</td>
                   <td class="px-4 py-3.5 whitespace-nowrap text-text-secondary tabular-nums">{{ employee.hire_date }}</td>
                   <td class="px-4 py-3.5 whitespace-nowrap">
-                    @if (employee.is_active) {
+                    @if (employee.status === 'ACTIVE') {
                       <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-light text-success-dark text-xs font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
                         Actif
@@ -292,11 +299,11 @@
                       } @else {
                         <!-- Toggle statut -->
                         <button (click)="toggleStatus(employee)"
-                                [title]="employee.is_active ? 'Désactiver' : 'Réactiver'"
+                                [title]="employee.status === 'ACTIVE' ? 'Désactiver' : 'Réactiver'"
                                 class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md cursor-pointer
                                        transition-all duration-200 hover:bg-background-alt hover:text-primary
                                        text-text-muted">
-                          @if (employee.is_active) {
+                          @if (employee.status === 'ACTIVE') {
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                               <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                             </svg>
@@ -325,65 +332,65 @@
           </table>
         </div>
 
-        <!-- ── Pagination ─────────────────────────────────────────── -->
-        @if (lastPage() > 1) {
-          <div class="border-t border-border px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span class="font-sans text-sm text-text-secondary tabular-nums whitespace-nowrap">
-              @if (from() !== null && to() !== null) {
-                {{ from() }}–{{ to() }} sur {{ total() }} résultat{{ total() > 1 ? 's' : '' }}
+        <!-- ═══ Pagination avec numéros et navigation ═══ -->
+        <div class="border-t border-border px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span class="font-sans text-sm text-text-secondary tabular-nums whitespace-nowrap">
+            @if (from() !== null && to() !== null) {
+              {{ from() }}–{{ to() }} sur {{ total() }} résultat{{ total() > 1 ? 's' : '' }}
+            }
+          </span>
+
+          <nav class="flex items-center gap-1.5" aria-label="Pagination">
+            <!-- Précédent -->
+            <button (click)="goToPage(currentPage() - 1)"
+                    [disabled]="currentPage() <= 1"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
+                           transition-all duration-150
+                           disabled:opacity-40 disabled:cursor-not-allowed
+                           hover:bg-background-alt hover:text-text
+                           text-text-muted cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Précédent
+            </button>
+
+            <!-- Numéros de page -->
+            @for (page of pageNumbers(); track $index) {
+              @if (page === -1) {
+                <span class="px-2 py-1 text-text-muted text-sm select-none">…</span>
+              } @else {
+                <button (click)="goToPage(page)"
+                        class="w-8 h-8 rounded-md text-sm font-medium
+                               transition-all duration-150 cursor-pointer
+                               focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                        [class.bg-primary]="page === currentPage()"
+                        [class.text-text-inverse]="page === currentPage()"
+                        [class.text-text-secondary]="page !== currentPage()"
+                        [class.hover:bg-background-alt]="page !== currentPage()"
+                        [class.hover:text-text]="page !== currentPage()">
+                  {{ page }}
+                </button>
               }
-            </span>
+            }
 
-            <nav class="flex items-center gap-1.5" aria-label="Pagination">
-              <!-- Précédent -->
-              <button (click)="goToPage(currentPage() - 1)"
-                      [disabled]="currentPage() <= 1"
-                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
-                             transition-all duration-150
-                             disabled:opacity-40 disabled:cursor-not-allowed
-                             hover:bg-background-alt hover:text-text
-                             text-text-muted cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                Précédent
-              </button>
+            <!-- Suivant -->
+            <button (click)="goToPage(currentPage() + 1)"
+                    [disabled]="currentPage() >= lastPage()"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
+                           transition-all duration-150
+                           disabled:opacity-40 disabled:cursor-not-allowed
+                           hover:bg-background-alt hover:text-text
+                           text-text-muted cursor-pointer">
+              Suivant
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </nav>
+        </div>
 
-              <!-- Numéros de page -->
-              @for (page of pageNumbers(); track $index) {
-                @if (page === -1) {
-                  <span class="px-2 py-1 text-text-muted text-sm select-none">…</span>
-                } @else {
-                  <button (click)="goToPage(page)"
-                          class="w-8 h-8 rounded-md text-sm font-medium
-                                 transition-all duration-150 cursor-pointer
-                                 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-                          [class.bg-primary]="page === currentPage()"
-                          [class.text-text-inverse]="page === currentPage()"
-                          [class.text-text-secondary]="page !== currentPage()"
-                          [class.hover:bg-background-alt]="page !== currentPage()"
-                          [class.hover:text-text]="page !== currentPage()">
-                    {{ page }}
-                  </button>
-                }
-              }
-
-              <!-- Suivant -->
-              <button (click)="goToPage(currentPage() + 1)"
-                      [disabled]="currentPage() >= lastPage()"
-                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium
-                             transition-all duration-150
-                             disabled:opacity-40 disabled:cursor-not-allowed
-                             hover:bg-background-alt hover:text-text
-                             text-text-muted cursor-pointer">
-                Suivant
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
-            </nav>
-          </div>
-        }
+     
       </div>
     }
   </div>

@@ -1,26 +1,36 @@
+/**
+ * Page de liste des employés (Administrateur RH).
+ * Fonctionnalités : recherche avec debounce, filtres (rôle, département, statut),
+ * pagination, toggle de statut et suppression logique.
+ */
+
 import { Component, OnInit, inject, signal, computed, OnDestroy } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { AvatarComponent } from '../../../shared/components/avatar/avatar.component';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee, PaginatedResponse, EmployeeQueryParams } from '../../../core/models/employee.model';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, FormsModule, AvatarComponent],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.scss',
 })
 export class EmployeeListComponent implements OnInit, OnDestroy {
   private readonly employeeService = inject(EmployeeService);
+  readonly imageUrlService = inject(ImageUrlService);
 
   // ── État des données ──────────────────────────────────────────
   readonly employees = signal<Employee[]>([]);
   readonly total = signal(0);
   readonly currentPage = signal(1);
   readonly lastPage = signal(0);
-  readonly perPage = signal(15);
+  readonly perPage = signal(10);
   readonly from = signal<number | null>(null);
   readonly to = signal<number | null>(null);
   readonly loading = signal(false);
@@ -37,7 +47,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   private readonly searchSubject = new Subject<string>();
   private readonly subscriptions: Subscription[] = [];
 
-  // ── Computed : la liste est-elle vide après filtrage ? ────────
+  // ── Computed : au moins un filtre est-il actif ? ────────────
   readonly isFiltered = computed(() =>
     !!this.searchTerm() || !!this.roleFilter() || !!this.departmentFilter() || !!this.statusFilter()
   );
@@ -70,6 +80,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   });
 
   // ── Initialisation ────────────────────────────────────────────
+  /**
+   * Initialise le debounce de la recherche et charge la première page.
+   */
   ngOnInit(): void {
     const searchSub = this.searchSubject.pipe(
       debounceTime(400),
@@ -83,16 +96,54 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.loadEmployees();
   }
 
+  /**
+   * Nettoie les souscriptions pour éviter les fuites mémoire.
+   */
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  /**
+   * Construit la requête API à partir de la page et des filtres actifs.
+   */
+  private buildQueryParams(page: number): EmployeeQueryParams {
+    const params: EmployeeQueryParams = {
+      page,
+      per_page: this.perPage(),
+    };
+
+    if (this.searchTerm()) params.search = this.searchTerm();
+    if (this.roleFilter()) params.role = this.roleFilter();
+    if (this.departmentFilter()) params.department = this.departmentFilter();
+    if (this.statusFilter()) params.status = this.statusFilter();
+
+    return params;
+  }
+
+  /**
+   * Synchronise l'état de pagination à partir de la réponse API.
+   */
+  private applyPaginationMeta(response: PaginatedResponse<Employee>): void {
+    this.total.set(response.meta.total);
+    this.currentPage.set(response.meta.current_page);
+    this.lastPage.set(response.meta.last_page);
+    this.perPage.set(response.meta.per_page);
+    this.from.set(response.meta.from);
+    this.to.set(response.meta.to);
+  }
+
   // ── Gestion des changements de filtres ────────────────────────
+  /**
+   * Met à jour le terme de recherche avec debounce (400ms).
+   */
   onSearchChange(value: string): void {
     this.searchTerm.set(value);
     this.searchSubject.next(value);
   }
 
+  /**
+   * Filtre par rôle (recharge depuis la page 1).
+   */
   onRoleChange(value: string): void {
     this.roleFilter.set(value);
     this.currentPage.set(1);
@@ -105,12 +156,18 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.loadEmployees();
   }
 
+  /**
+   * Filtre par statut (actif/inactif). Recharge depuis la page 1.
+   */
   onStatusChange(value: string): void {
     this.statusFilter.set(value);
     this.currentPage.set(1);
     this.loadEmployees();
   }
 
+  /**
+   * Réinitialise tous les filtres et recharge la liste.
+   */
   resetFilters(): void {
     this.searchTerm.set('');
     this.roleFilter.set('');
@@ -121,31 +178,21 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ── Chargement de la liste (appel API) ────────────────────────
+  /**
+   * Charge la liste des employés via l'API avec les filtres actifs.
+   * Remplace la liste courante.
+   * @param page Numéro de page optionnel
+   */
   loadEmployees(page?: number): void {
     const pageToLoad = page ?? this.currentPage();
     this.loading.set(true);
     this.error.set(null);
     this.successMessage.set(null);
 
-    const params: EmployeeQueryParams = {
-      page: pageToLoad,
-      per_page: this.perPage(),
-    };
-
-    if (this.searchTerm()) params.search = this.searchTerm();
-    if (this.roleFilter()) params.role = this.roleFilter();
-    if (this.departmentFilter()) params.department = this.departmentFilter();
-    if (this.statusFilter()) params.is_active = this.statusFilter();
-
-    this.employeeService.getEmployees(params).subscribe({
+    this.employeeService.getEmployees(this.buildQueryParams(pageToLoad)).subscribe({
       next: (response: PaginatedResponse<Employee>) => {
         this.employees.set(response.data);
-        this.total.set(response.total);
-        this.currentPage.set(response.current_page);
-        this.lastPage.set(response.last_page);
-        this.perPage.set(response.per_page);
-        this.from.set(response.from);
-        this.to.set(response.to);
+        this.applyPaginationMeta(response);
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
@@ -161,6 +208,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ── Pagination ────────────────────────────────────────────────
+  /**
+   * Navigue vers une page spécifique de la pagination.
+   * @param page Numéro de page cible
+   */
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage() || page === this.currentPage()) return;
     this.currentPage.set(page);
@@ -168,6 +219,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ── Toggle statut ─────────────────────────────────────────────
+  /**
+   * Bascule le statut actif/inactif d'un employé.
+   */
   toggleStatus(employee: Employee): void {
     this.loading.set(true);
     this.error.set(null);
@@ -191,6 +245,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ── Suppression avec confirmation ─────────────────────────────
+  /**
+   * Affiche une confirmation de suppression puis appelle l'API.
+   */
   confirmDelete(employee: Employee): void {
     const fullName = `${employee.first_name} ${employee.last_name}`;
     const confirmed = window.confirm(
@@ -221,17 +278,23 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ── Helpers ───────────────────────────────────────────────────
+  /**
+   * Vérifie si le rôle est HR_ADMIN (actions désactivées).
+   */
   isAdminRh(role: string): boolean {
-    return role === 'administrateur_rh';
+    return role === 'HR_ADMIN';
   }
 
+  /**
+   * Retourne la classe CSS du badge de rôle selon le type.
+   */
   getRoleBadgeClass(role: string): string {
     switch (role) {
-      case 'administrateur_rh':
+      case 'HR_ADMIN':
         return 'bg-primary-100 text-primary-dark';
-      case 'manager':
+      case 'MANAGER':
         return 'bg-accent-light text-accent-dark';
-      case 'employe':
+      case 'EMPLOYEE':
         return 'bg-info-light text-primary-dark';
       default:
         return 'bg-background-alt text-text-muted';

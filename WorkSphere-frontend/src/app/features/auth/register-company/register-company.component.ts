@@ -1,9 +1,14 @@
+/**
+ * Page de création d'un compte entreprise (inscription).
+ * Formulaire complet avec validation, mapping des erreurs API 422 sur les champs,
+ * et redirection automatique après succès.
+ */
+
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 import { PasswordStrengthComponent } from '../../../shared/components/password-strength/password-strength.component';
 
 /**
@@ -20,7 +25,7 @@ const passwordMatchValidator: ValidatorFn = (control: AbstractControl): Validati
 @Component({
   selector: 'app-register-company',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, CommonModule, PasswordStrengthComponent],
+  imports: [ReactiveFormsModule, RouterModule, PasswordStrengthComponent],
   templateUrl: './register-company.component.html',
   styleUrl: './register-company.component.scss'
 })
@@ -29,12 +34,10 @@ export class RegisterCompanyComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  // Signaux d'état
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
-  // Signaux pour la saisie du mot de passe en temps réel
   readonly passwordValue = signal<string>('');
   readonly confirmPasswordValue = signal<string>('');
 
@@ -62,6 +65,9 @@ export class RegisterCompanyComponent implements OnInit {
 
   // La logique de force du mot de passe est maintenant dans le composant partagé PasswordStrengthComponent
 
+  /**
+   * Initialise les écouteurs de changement pour les signaux de mot de passe (force en temps réel).
+   */
   ngOnInit(): void {
     // Écoute des changements pour les signaux du mot de passe
     this.registerForm.controls.admin_password.valueChanges.subscribe(val => {
@@ -73,6 +79,9 @@ export class RegisterCompanyComponent implements OnInit {
     });
   }
 
+  /**
+   * Soumet le formulaire d'inscription à l'API. Gère les erreurs de validation 422 avec mapping par champ.
+   */
   onSubmit(): void {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
@@ -104,7 +113,7 @@ export class RegisterCompanyComponent implements OnInit {
         
         setTimeout(() => {
           const user = this.authService.currentUser();
-          const role = user?.roles && user.roles.length > 0 ? user.roles[0].name : '';
+          const role = user?.role || '';
           const redirectPath = this.authService.getRedirectPathForRole(role);
           this.router.navigate([redirectPath]);
         }, 1500);
@@ -155,8 +164,10 @@ export class RegisterCompanyComponent implements OnInit {
     return control.invalid && (control.dirty || control.touched);
   }
   
-  /**
-   * Helper pour récupérer le message d'erreur serveur d'un champ
+/**
+   * Récupère le message d'erreur serveur d'un champ (mapping 422).
+   * @param fieldName Nom du champ
+   * @returns Message d'erreur ou null
    */
   getServerError(fieldName: string): string | null {
       const control = this.registerForm.get(fieldName);

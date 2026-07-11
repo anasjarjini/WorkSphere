@@ -5,10 +5,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyRegistrationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
-use App\Http\Controllers\PasswordResetController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManagerTeamController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProfileController;
 // ═══════════════════════════════════════════════════════════════════
 // PUBLIC ROUTES — Aucune authentification requise
 // ═══════════════════════════════════════════════════════════════════
@@ -18,7 +20,7 @@ Route::post('/register-company', [CompanyRegistrationController::class, 'store']
 
 // Activation du compte employé via token reçu par email
 Route::post('/activate', [AccountActivationController::class, 'store']);
-// TODO: Route::post('/activate/resend', [AccountActivationController::class, 'resend']); // À implémenter plus tard
+Route::post('/activate/resend', [AccountActivationController::class, 'resend']);
 
 // Login avec rate limiting anti-brute-force :
 // throttle:5,1 = max 5 tentatives par minute par IP → HTTP 429 à la 6e tentative
@@ -42,12 +44,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // Utilisateur connecté avec ses relations (pour le bootstrap Angular)
     Route::get('/me', [AuthController::class, 'me']);
 
+    // Informations entreprise (accessibles aux rôles connectés, avec données limitées hors RH)
+    Route::get('/company', [CompanySettingsController::class, 'show']);
+
     // Routes scoped par rôle RH
-    Route::middleware('role:administrateur_rh')->group(function () {
+    Route::middleware('check_role:HR_ADMIN')->group(function () {
         Route::post('/employees/import', [EmployeeImportController::class, 'store']);
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
+
+        // Paramètres entreprise
+        Route::put('/company', [CompanySettingsController::class, 'update']);
+        Route::post('/company/logo', [CompanySettingsController::class, 'uploadLogo']);
+
+        // Dashboard admin RH
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     });
+
+    Route::middleware('check_role:MANAGER')->group(function () {
+        Route::get('/manager/team', [ManagerTeamController::class, 'index']);
+    });
+
+    // Profil utilisateur (tous rôles connectés)
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
 
 });

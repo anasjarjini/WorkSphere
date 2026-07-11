@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ActivateAccountRequest;
+use App\Http\Requests\ResendActivationRequest;
+use App\Http\Resources\UserResource;
 use App\Models\ActivationToken;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class AccountActivationController extends Controller
 {
@@ -32,7 +35,7 @@ class AccountActivationController extends Controller
         // ─── Étape 1 : Récupérer le token avec son User (+ employee + roles pour la réponse finale) ───
         // On sait que le token existe grâce à la règle 'exists:activation_tokens,token' du FormRequest.
         /** @var ActivationToken $activationToken */
-        $activationToken = ActivationToken::with(['user.employee', 'user.roles'])
+        $activationToken = ActivationToken::with(['user'])
             ->where('token', $request->token)
             ->first();
 
@@ -59,8 +62,8 @@ class AccountActivationController extends Controller
 
             // 4a. Activer l'utilisateur
             $user->update([
-                'password'  => Hash::make($request->password),
-                'is_active' => true,
+                'password' => Hash::make($request->password),
+                'status'   => 'ACTIVE',
             ]);
 
             // 4b. Marquer le token comme utilisé
@@ -73,13 +76,48 @@ class AccountActivationController extends Controller
         });
 
         // ─── Étape 5 : Réponse de succès ─────────────────────────────────────────────────────────────
-        // Rafraîchir le user pour inclure les données mises à jour (is_active = true)
+        // Rafraîchir le user pour inclure les données mises à jour (status = ACTIVE)
         $user->refresh();
 
         return response()->json([
             'message' => 'Compte activé avec succès.',
-            'user'    => $user->load('employee', 'roles'),
+            'user'    => new UserResource($user),
             'token'   => $sanctumToken,
+        ], 200);
+    }
+
+    /**
+     * Régénérer un nouveau token d'activation lorsque l'ancien est expiré.
+     */
+    public function resend(ResendActivationRequest $request)
+    {
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            // Pour des raisons de sécurité, on ne révèle pas que l'email n'existe pas.
+            return response()->json(['message' => 'Si cet email correspond à un compte en attente, un nouveau lien d\'activation vous sera envoyé.'], 200);
+        }
+
+        if ($user->status === 'ACTIVE') {
+            return response()->json([
+                'message' => 'Ce compte est déjà actif. Vous pouvez vous connecter.',
+                'error'   => 'account_already_active'
+            ], 400);
+        }
+
+        // Créer un nouveau token d'activation
+        $activationToken = \App\Models\ActivationToken::create([
+            'user_id'    => $user->id,
+            'token'      => \Illuminate\Support\Str::random(64),
+            'expires_at' => now()->addDays(7),
+            'used_at'    => null,
+        ]);
+
+        // Envoyer le nouvel email
+        \App\Jobs\SendActivationEmailJob::dispatch($user, $activationToken);
+
+        return response()->json([
+            'message' => 'Si cet email correspond à un compte en attente, un nouveau lien d\'activation vous sera envoyé.'
         ], 200);
     }
 }

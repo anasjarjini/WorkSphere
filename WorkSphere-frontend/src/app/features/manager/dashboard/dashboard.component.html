@@ -1,0 +1,117 @@
+<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
+    <div>
+      <h1 class="font-heading text-2xl font-bold text-primary">Tableau de bord Manager</h1>
+      <p class="font-sans text-[0.9375rem] text-text-secondary mt-1">Bienvenue, <span class="font-semibold text-text">{{ userName() }}</span>. Voici l'aperçu de votre équipe.</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      @for (item of [1, 2]; track item) {
+        <div class="bg-surface border border-border rounded-xl p-6 animate-pulse">
+          <div class="flex items-center justify-between mb-4">
+            <div class="h-3 w-32 bg-border rounded"></div>
+            <div class="w-10 h-10 rounded-full bg-border"></div>
+          </div>
+          <div class="h-9 w-16 bg-border rounded"></div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-surface border border-border rounded-xl p-6 shadow-sm transition-shadow duration-200 hover:shadow-md group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">Membres de l'équipe</span>
+          <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+        </div>
+        <div class="text-3xl font-heading font-bold text-text-heading">{{ teamMembers().length }}</div>
+      </div>
+
+      <div class="bg-surface border border-border rounded-xl p-6 shadow-sm transition-shadow duration-200 hover:shadow-md group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">Actifs</span>
+          <div class="w-10 h-10 rounded-full bg-success-light text-[#065f46] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+        </div>
+        <div class="text-3xl font-heading font-bold text-text-heading">{{ activeCount() }}</div>
+      </div>
+
+      <div class="bg-surface border border-border rounded-xl p-6 shadow-sm transition-shadow duration-200 hover:shadow-md group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-sans text-xs font-semibold text-text-muted uppercase tracking-wider">Départements</span>
+          <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </div>
+        </div>
+        <div class="text-3xl font-heading font-bold text-text-heading">{{ departmentsCount() }}</div>
+      </div>
+    </div>
+  }
+
+  @if (!loading() && teamMembers().length > 0) {
+    <div class="bg-surface border border-border rounded-xl shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <div class="flex items-center justify-between px-6 pt-6 pb-4">
+        <h2 class="font-heading text-[16px] font-semibold text-text-heading">Membres de l'équipe</h2>
+        <a routerLink="/manager/team" class="font-sans text-[13px] font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer">
+          Voir tout
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full font-sans text-[14px]">
+          <thead>
+            <tr class="border-t border-border">
+              <th class="text-left px-6 py-3 font-semibold text-[12px] text-text-muted uppercase tracking-wider">Employé</th>
+              <th class="text-left px-6 py-3 font-semibold text-[12px] text-text-muted uppercase tracking-wider">Poste</th>
+              <th class="text-left px-6 py-3 font-semibold text-[12px] text-text-muted uppercase tracking-wider">Département</th>
+              <th class="text-left px-6 py-3 font-semibold text-[12px] text-text-muted uppercase tracking-wider">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (emp of teamMembers(); track emp.id) {
+              <tr class="border-t border-border hover:bg-surface/80 transition-colors">
+                <td class="px-6 py-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold text-xs flex items-center justify-center shrink-0">
+                      {{ getInitials(emp.first_name, emp.last_name) }}
+                    </div>
+                    <div>
+                      <span class="font-medium text-text-heading">{{ emp.first_name }} {{ emp.last_name }}</span>
+                      <span class="text-text-muted text-[12px] block">{{ emp.email }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-3 text-text-secondary">{{ emp.job_title || '—' }}</td>
+                <td class="px-6 py-3">
+                  @if (emp.department) {
+                    <span class="inline-flex items-center px-[10px] py-[3px] bg-accent/10 text-accent rounded-full font-sans text-[12px] font-medium">
+                      {{ emp.department }}
+                    </span>
+                  } @else {
+                    <span class="text-text-muted">—</span>
+                  }
+                </td>
+                <td class="px-6 py-3">
+                  @if (emp.status === 'ACTIVE') {
+                    <span class="inline-flex items-center gap-1.5 font-sans text-[12px] font-medium text-success">
+                      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                      Actif
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1.5 font-sans text-[12px] font-medium text-warning">
+                      <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                      Inactif
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

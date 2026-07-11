@@ -1,0 +1,30 @@
+<a [routerLink]="homeRoute" class="flex min-w-0 flex-1 items-center gap-3 transition-opacity duration-200 hover:opacity-80">
+  @if (isLoading()) {
+    <div class="flex w-full items-center gap-3">
+      <div class="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-background-alt"></div>
+      <div class="flex-1 min-w-0 space-y-1">
+        <div class="h-3 w-24 rounded bg-background-alt animate-pulse"></div>
+        <div class="h-2.5 w-28 rounded bg-background-alt animate-pulse"></div>
+      </div>
+    </div>
+  } @else {
+    <div class="flex min-w-0 items-center gap-3">
+      @if (imageUrl() && !imageError()) {
+        <img
+          [src]="imageUrl()"
+          [alt]="companyName() + ' logo'"
+          class="h-10 w-auto max-w-[9rem] shrink-0 rounded-md object-contain transition-all duration-300"
+          (error)="onImageError()"
+        />
+      } @else {
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/10 font-heading text-sm font-semibold">
+          {{ companyInitial() }}
+        </div>
+      }
+      <div class="flex min-w-0 flex-col">
+        <span class="truncate font-heading text-sm font-semibold text-primary">{{ companyName() }}</span>
+        <span class="truncate text-[11px] leading-none text-text-secondary">{{ contextLabel }}</span>
+      </div>
+    </div>
+  }
+</a>

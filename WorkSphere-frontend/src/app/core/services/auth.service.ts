@@ -1,11 +1,17 @@
+/**
+ * AuthService - Gère l'authentification de l'utilisateur (login, logout,
+ * activation de compte, reset password) et maintient l'état de session
+ * via des Signals. Central point de contact pour toute la gestion des
+ * tokens Sanctum et des informations utilisateur courant.
+ */
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, User } from '../models/user.model';
-
+import {  User } from '../models/user.model';
+import { AuthResponse } from '../models/uthResponse.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -15,36 +21,42 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private readonly tokenKey = 'auth_token';
 
-  // Signals pour l'état d'authentification
+  /** Signal contenant l'utilisateur actuellement connecté, ou null */
   readonly currentUser = signal<User | null>(null);
+  /** Signal true quand l'état d'auth a fini de se restaurer au démarrage */
   readonly authReady = signal(false);
-  
-  // Computed Signal basé sur la présence du token ET de l'utilisateur connecté
+  /** Computed : vrai uniquement si un token existe ET qu'un user est chargé */
   readonly isAuthenticated = computed(() => {
     return this.hasToken() && this.currentUser() !== null;
   });
 
   /**
-   * Vérifie si un token existe localement
+   * Vérifie si un token existe dans le sessionStorage.
+   * @returns true si un token est stocké
    */
   hasToken(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+    return !!sessionStorage.getItem(this.tokenKey);
   }
 
   /**
-   * Récupère le token actuel depuis le localStorage
+   * Récupère le token Sanctum depuis le sessionStorage.
+   * @returns le token ou null
    */
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return sessionStorage.getItem(this.tokenKey);
   }
 
   /**
-   * Connexion de l'utilisateur
+   * Connecte l'utilisateur avec email/mot de passe.
+   * Stocke le token Sanctum et met à jour currentUser.
+   * @param email - Email de l'utilisateur
+   * @param password - Mot de passe
+   * @returns Observable avec la réponse (user + token)
    */
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
       tap((response) => {
-        localStorage.setItem(this.tokenKey, response.token);
+        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -52,7 +64,11 @@ export class AuthService {
   }
 
   /**
-   * Activation du compte et connexion automatique
+   * Active un compte employé via le token reçu par email et connecte automatiquement.
+   * @param token - Token d'activation reçu par email
+   * @param password - Nouveau mot de passe choisi par l'utilisateur
+   * @param password_confirmation - Confirmation du mot de passe
+   * @returns Observable avec la réponse (user + token)
    */
   activateAccount(token: string, password: string, password_confirmation: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/activate`, {
@@ -61,7 +77,7 @@ export class AuthService {
       password_confirmation
     }).pipe(
       tap((response) => {
-        localStorage.setItem(this.tokenKey, response.token);
+        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -69,12 +85,23 @@ export class AuthService {
   }
 
   /**
-   * Création d'une entreprise et d'un compte Administrateur RH
+   * Demande un nouveau token d'activation par email.
+   * @param email - Email du compte à activer
+   * @returns Observable avec le message de confirmation
+   */
+  resendActivation(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/activate/resend`, { email });
+  }
+
+  /**
+   * Crée une entreprise et son Administrateur RH en une seule requête.
+   * @param payload - Données du formulaire d'inscription (company + admin)
+   * @returns Observable avec la réponse (company + user + token)
    */
   registerCompany(payload: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register-company`, payload).pipe(
       tap((response) => {
-        localStorage.setItem(this.tokenKey, response.token);
+        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -82,27 +109,31 @@ export class AuthService {
   }
 
   /**
-   * Demander un email de réinitialisation de mot de passe.
-   * PAS de stockage de token — on transmet juste l'appel à l'API.
+   * Demande un email de réinitialisation de mot de passe.
+   * Ne stocke pas de token — simple déclencheur d'email.
+   * @param email - Email du compte
+   * @returns Observable avec le message de confirmation
    */
   forgotPassword(email: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
   }
 
   /**
-   * Réinitialiser le mot de passe avec le token reçu par email.
-   * PAS de stockage de token ni de mise à jour de currentUser —
-   * l'utilisateur devra se reconnecter manuellement après.
+   * Réinitialise le mot de passe avec le token reçu par email.
+   * L'utilisateur devra se reconnecter manuellement après.
+   * @param payload - Contient token, email, password, password_confirmation
+   * @returns Observable avec le message de confirmation
    */
   resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, payload);
   }
 
   /**
-   * Déconnexion de l'utilisateur
+   * Déconnecte l'utilisateur : appelle l'API puis vide la session locale.
+   * En cas d'erreur API, la session est quand même vidée.
+   * @returns Observable (généralement null après traitement)
    */
   logout(): Observable<any> {
-    // Si pas de token, on reset juste l'état local et redirige
     if (!this.hasToken()) {
       this.clearSession();
       this.router.navigate(['/login']);
@@ -111,7 +142,6 @@ export class AuthService {
 
     return this.http.post(`${this.apiUrl}/logout`, {}).pipe(
       catchError((error) => {
-        // En cas d'erreur API, on vide quand même la session locale
         return of(null);
       }),
       tap(() => {
@@ -122,7 +152,9 @@ export class AuthService {
   }
 
   /**
-   * Restaure la session de l'utilisateur au démarrage de l'app si un token existe
+   * Restaure la session au démarrage de l'application.
+   * Vérifie la validité du token auprès de l'API GET /me.
+   * @returns Observable true si la session est valide, false sinon
    */
   checkAuth(): Observable<boolean> {
     this.authReady.set(false);
@@ -140,7 +172,6 @@ export class AuthService {
         return true;
       }),
       catchError((error) => {
-        // Token invalide ou expiré, on nettoie
         this.clearSession();
         this.authReady.set(true);
         return of(false);
@@ -149,15 +180,17 @@ export class AuthService {
   }
 
   /**
-   * Retourne le chemin de redirection correspondant au rôle donné
+   * Retourne la route de redirection après connexion selon le rôle.
+   * @param role - Rôle utilisateur (HR_ADMIN, MANAGER, EMPLOYEE)
+   * @returns Chemin de redirection
    */
   getRedirectPathForRole(role: string): string {
     switch (role) {
-      case 'administrateur_rh':
+      case 'HR_ADMIN':
         return '/admin/dashboard';
-      case 'manager':
+      case 'MANAGER':
         return '/manager/dashboard';
-      case 'employe':
+      case 'EMPLOYEE':
         return '/employee/dashboard';
       default:
         return '/login';
@@ -165,10 +198,25 @@ export class AuthService {
   }
 
   /**
-   * Nettoie les données d'authentification locales
+   * Construit le nom affichable à partir du user.
+   * Priorité à first_name + last_name, fallback sur le champ name générique.
+   * @param user - L'utilisateur ou null
+   * @returns Le nom formaté ou chaîne vide
+   */
+  displayName(user: User | null): string {
+    if (!user) return '';
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    return user.name || '';
+  }
+
+  /**
+   * Vide le token et les signaux d'authentification. Appelée après logout
+   * ou quand le token est invalide/expiré.
    */
   private clearSession(): void {
-    localStorage.removeItem(this.tokenKey);
+    sessionStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.authReady.set(true);
   }
