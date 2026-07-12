@@ -5,7 +5,7 @@
  */
 
 import { Component, computed, input, Signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 export type PasswordStrengthClass = 'strength-none' | 'strength-weak' | 'strength-medium' | 'strength-strong';
 
@@ -26,7 +26,7 @@ export interface PasswordRequirements {
 @Component({
   selector: 'app-password-strength',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './password-strength.component.html'
 })
 export class PasswordStrengthComponent {

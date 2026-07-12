@@ -3,11 +3,12 @@
  * à partir de la structure des routes et des données 'breadcrumb' définies dans app.routes.ts.
  */
 
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterModule, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface Breadcrumb {
   label: string;
@@ -23,6 +24,17 @@ interface Breadcrumb {
 export class BreadcrumbComponent {
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
+
+  readonly homeRoute = computed(() => {
+    const user = this.authService.currentUser();
+    switch (user?.role) {
+      case 'HR_ADMIN': return '/admin/dashboard';
+      case 'MANAGER': return '/manager/dashboard';
+      case 'EMPLOYEE': return '/employee/dashboard';
+      default: return '/';
+    }
+  });
 
   /**
    * Signal contenant la liste des breadcrumbs mise à jour à chaque NavigationEnd.

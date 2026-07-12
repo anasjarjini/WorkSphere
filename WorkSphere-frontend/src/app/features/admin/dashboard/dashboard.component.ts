@@ -17,8 +17,25 @@ import { BaseChartDirective } from 'ng2-charts';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 
-const CHART_COLORS = ['#7C3AED', '#0D9488', '#F97316', '#A78BFA', '#5EEAD4', '#FBBF24', '#8B5CF6', '#14B8A6'];
-const DONUT_COLORS = ['#7C3AED', '#0D9488'];
+const CSS_VAR = (name: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+const CSS_COLORS = (): string[] => [
+  CSS_VAR('--color-primary') || '#1E40AF',
+  CSS_VAR('--color-secondary') || '#475569',
+  CSS_VAR('--color-tertiary') || '#F59E0B',
+  CSS_VAR('--color-primary-light') || '#60A5FA',
+  CSS_VAR('--color-secondary-light') || '#94A3B8',
+  CSS_VAR('--color-warning') || '#D97706',
+  '#3B82F6',
+  '#10B981',
+];
+
+const CHART_TOOLTIP_BG = (): string => CSS_VAR('--color-tooltip') || '#1E293B';
+const CHART_GRID_COLOR = (): string => CSS_VAR('--color-border') || '#E2E8F0';
+const CHART_TICK_MUTED = (): string => CSS_VAR('--color-text-muted') || '#64748B';
+const CHART_TICK_SECONDARY = (): string => CSS_VAR('--color-text-secondary') || '#475569';
+const CHART_BORDER_LIGHT = (): string => CSS_VAR('--color-border-light') || '#E2E8F0';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -44,87 +61,91 @@ export class AdminDashboardComponent implements OnInit {
   /** Bar chart data for department distribution */
   barChartData = signal<ChartConfiguration<'bar'>['data'] | null>(null);
   /** Bar chart options */
-  barChartOptions: ChartConfiguration<'bar'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: 'y',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1E1B4B',
-        titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
-        bodyFont: { family: 'DM Sans', size: 12 },
-        padding: 10,
-        cornerRadius: 4,
-        callbacks: {
-          label: (context) => {
-            const parsed = context.parsed;
-            if (parsed === null || parsed.x === null) return '';
-            const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
-            const value = parsed.x;
-            const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-            return ` ${value} employé(s) (${pct}%)`;
+  get barChartOptions(): ChartConfiguration<'bar'>['options'] {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: CHART_TOOLTIP_BG(),
+          titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
+          bodyFont: { family: 'DM Sans', size: 12 },
+          padding: 10,
+          cornerRadius: 4,
+          callbacks: {
+            label: (context) => {
+              const parsed = context.parsed;
+              if (parsed === null || parsed.x === null) return '';
+              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+              const value = parsed.x;
+              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+              return ` ${value} employé(s) (${pct}%)`;
+            },
           },
         },
       },
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-        grid: { color: '#F3F4F6' },
-        ticks: {
-          font: { family: 'DM Sans', size: 11 },
-          color: '#6B7280',
-          stepSize: 1,
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: CHART_GRID_COLOR() },
+          ticks: {
+            font: { family: 'DM Sans', size: 11 },
+            color: CHART_TICK_MUTED(),
+            stepSize: 1,
+          },
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            font: { family: 'DM Sans', size: 12 },
+            color: CHART_TICK_SECONDARY(),
+          },
         },
       },
-      y: {
-        grid: { display: false },
-        ticks: {
-          font: { family: 'DM Sans', size: 12 },
-          color: '#4B5563',
-        },
-      },
-    },
-  };
+    };
+  }
 
   /** Donut chart data for role distribution */
   donutChartData = signal<ChartConfiguration<'doughnut'>['data'] | null>(null);
   /** Donut chart options */
-  donutChartOptions: ChartConfiguration<'doughnut'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '60%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          font: { family: 'DM Sans', size: 12 },
-          padding: 16,
-          usePointStyle: true,
-          pointStyle: 'circle',
-          color: '#4B5563',
+  get donutChartOptions(): ChartConfiguration<'doughnut'>['options'] {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { family: 'DM Sans', size: 12 },
+            padding: 16,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            color: CHART_TICK_SECONDARY(),
+          },
         },
-      },
-      tooltip: {
-        backgroundColor: '#1E1B4B',
-        titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
-        bodyFont: { family: 'DM Sans', size: 12 },
-        padding: 10,
-        cornerRadius: 4,
-        callbacks: {
-          label: (context) => {
-            const parsed = context.parsed;
-            if (parsed === null) return '';
-            const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
-            const value = parsed;
-            const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-            return ` ${context.label} : ${value} (${pct}%)`;
+        tooltip: {
+          backgroundColor: CHART_TOOLTIP_BG(),
+          titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
+          bodyFont: { family: 'DM Sans', size: 12 },
+          padding: 10,
+          cornerRadius: 4,
+          callbacks: {
+            label: (context) => {
+              const parsed = context.parsed;
+              if (parsed === null) return '';
+              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+              const value = parsed;
+              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+              return ` ${context.label} : ${value} (${pct}%)`;
+            },
           },
         },
       },
-    },
-  };
+    };
+  }
 
   /** Total des managers + employés (hors admin) pour le donut */
   totalRolesCount = computed(() => {
@@ -160,6 +181,7 @@ export class AdminDashboardComponent implements OnInit {
         this.stats.set(stats);
 
         // Prepare bar chart data
+        const chartColors = CSS_COLORS();
         if (stats.department_distribution.length > 0) {
           this.barChartData.set({
             labels: stats.department_distribution.map((d) => d.department),
@@ -167,10 +189,10 @@ export class AdminDashboardComponent implements OnInit {
               {
                 data: stats.department_distribution.map((d) => d.count),
                 backgroundColor: stats.department_distribution.map(
-                  (_, i) => CHART_COLORS[i % CHART_COLORS.length]
+                  (_, i) => chartColors[i % chartColors.length]
                 ),
                 borderColor: stats.department_distribution.map(
-                  (_, i) => CHART_COLORS[i % CHART_COLORS.length]
+                  (_, i) => chartColors[i % chartColors.length]
                 ),
                 borderWidth: 1,
                 borderRadius: 4,
@@ -183,14 +205,16 @@ export class AdminDashboardComponent implements OnInit {
         // Prepare donut chart data for role distribution
         const totalNonAdmin =
           stats.managers_count + stats.regular_employees_count;
+        const primary = CSS_VAR('--color-primary') || '#1E40AF';
+        const secondary = CSS_VAR('--color-secondary') || '#475569';
         if (totalNonAdmin > 0) {
           this.donutChartData.set({
             labels: ['Managers', 'Employés'],
             datasets: [
               {
                 data: [stats.managers_count, stats.regular_employees_count],
-                backgroundColor: DONUT_COLORS,
-                borderColor: ['#FFFFFF', '#FFFFFF'],
+                backgroundColor: [primary, secondary],
+                borderColor: [CSS_VAR('--color-surface') || '#FFFFFF', CSS_VAR('--color-surface') || '#FFFFFF'],
                 borderWidth: 3,
                 hoverOffset: 8,
               },

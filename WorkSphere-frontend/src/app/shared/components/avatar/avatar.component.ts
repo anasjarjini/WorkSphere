@@ -1,18 +1,12 @@
 import { Component, input, computed } from '@angular/core';
 
-/**
- * Composant d'avatar générique : affiche une image ou, à défaut,
- * les initiales de l'utilisateur sur un fond de couleur déterministe.
- */
-
-// Palette de 6 couleurs harmonieuses avec le design system Indigo/Émeraude
-const AVATAR_COLORS: { bg: string; text: string }[] = [
-  { bg: '#6366F1', text: '#FFFFFF' },  // Primary
-  { bg: '#10B981', text: '#FFFFFF' },  // Accent
-  { bg: '#8B5CF6', text: '#FFFFFF' },  // Violet
-  { bg: '#F59E0B', text: '#FFFFFF' },   // Warning/Amber
-  { bg: '#EC4899', text: '#FFFFFF' },  // Pink
-  { bg: '#06B6D4', text: '#FFFFFF' },  // Cyan
+const AVATAR_CLASSES = [
+  'bg-primary text-text-inverse',
+  'bg-accent text-text-inverse',
+  'bg-tertiary text-text-inverse',
+  'bg-secondary text-text-inverse',
+  'bg-info text-text-inverse',
+  'bg-primary-light text-primary-dark',
 ];
 
 @Component({
@@ -25,9 +19,6 @@ export class AvatarComponent {
   readonly name = input<string>('');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
 
-  /**
-   * Génération des initiales à partir du nom : 2 premières lettres des 2 premiers mots.
-   */
   readonly initials = computed(() => {
     const n = this.name();
     if (!n) return '??';
@@ -38,18 +29,21 @@ export class AvatarComponent {
     return n.slice(0, 2).toUpperCase();
   });
 
-  /**
-   * Couleur déterministe calculée à partir du nom (même nom = même couleur à chaque fois).
-   * Hash simple pour choisir un index dans la palette.
-   */
-  readonly colorInfo = computed(() => {
+  readonly avatarClass = computed(() => {
     const n = this.name();
-    if (!n) return AVATAR_COLORS[0];
+    if (!n) return AVATAR_CLASSES[0];
     let hash = 0;
     for (let i = 0; i < n.length; i++) {
       hash = n.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const index = Math.abs(hash) % AVATAR_COLORS.length;
-    return AVATAR_COLORS[index];
+    return AVATAR_CLASSES[Math.abs(hash) % AVATAR_CLASSES.length];
+  });
+
+  readonly sizeClass = computed(() => {
+    switch (this.size()) {
+      case 'sm': return 'w-8 h-8 text-xs';
+      case 'md': return 'w-10 h-10 text-sm';
+      case 'lg': return 'w-16 h-16 text-xl';
+    }
   });
 }

@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employees/import', [EmployeeImportController::class, 'store']);
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus']);
+        Route::delete('/employees/bulk', [EmployeeController::class, 'bulkDestroy']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
 
         // Paramètres entreprise

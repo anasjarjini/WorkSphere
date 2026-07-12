@@ -19,7 +19,7 @@ import { ImportResult } from '../../../core/models/employee.model';
 })
 export class EmployeeImportComponent {
   private readonly employeeService = inject(EmployeeService);
-  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('fileInput', { static: true }) fileInput?: ElementRef<HTMLInputElement>;
 
   readonly selectedFile = signal<File | null>(null);
   readonly isUploading = signal<boolean>(false);

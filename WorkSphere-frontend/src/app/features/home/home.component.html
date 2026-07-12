@@ -3,7 +3,7 @@
   <header class="sticky top-0 z-50 bg-surface/90 border-b border-border">
     <div class="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2 text-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7" aria-hidden="true">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
           <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -13,15 +13,19 @@
       </div>
       
       <nav class="hidden md:flex gap-8">
-        <a (click)="scrollTo('pourquoi')" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary">Pourquoi nous ?</a>
-        <a (click)="scrollTo('fonctionnalites')" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary">Fonctionnalités</a>
-        <a (click)="scrollTo('comment-ca-marche')" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary">Comment ça marche</a>
-        <a (click)="scrollTo('avis')" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary">Avis</a>
+        <button (click)="scrollTo('pourquoi')" type="button" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Pourquoi nous ?</button>
+        <button (click)="scrollTo('fonctionnalites')" type="button" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Fonctionnalités</button>
+        <button (click)="scrollTo('comment-ca-marche')" type="button" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Comment ça marche</button>
+        <button (click)="scrollTo('avis')" type="button" class="font-sans text-[14px] text-text cursor-pointer transition-colors hover:text-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Avis</button>
       </nav>
 
       <div class="flex gap-4 items-center">
-        <a routerLink="/login" class="bg-transparent text-text-muted font-sans text-[14px] px-[16px] py-[8px] h-[40px] flex items-center justify-center rounded-md transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">Se connecter</a>
-        <a routerLink="/register-company" class="bg-primary text-text-inverse font-sans text-[14px] px-[16px] py-[8px] h-[40px] flex items-center justify-center rounded-md transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">Créer mon entreprise</a>
+        @if (isAuthenticated()) {
+          <a [routerLink]="dashboardRoute()" class="bg-primary text-text-inverse font-sans text-[14px] px-[16px] py-[8px] h-[40px] flex items-center justify-center rounded-md transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">Tableau de bord</a>
+        } @else {
+          <a routerLink="/login" class="bg-transparent text-text-secondary font-sans text-[14px] px-[16px] py-[8px] h-[40px] flex items-center justify-center rounded-md transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">Se connecter</a>
+          <a routerLink="/register-company" class="bg-primary text-text-inverse font-sans text-[14px] px-[16px] py-[8px] h-[40px] flex items-center justify-center rounded-md transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">Créer mon entreprise</a>
+        }
       </div>
     </div>
   </header>
@@ -80,9 +84,9 @@
           <h3 class="font-heading text-[20px] font-semibold leading-[28px] text-text-heading mb-[8px]">Espace Administrateur RH</h3>
           <p class="font-sans text-[14px] leading-[22px] text-text-secondary mb-[24px]">Le centre de contrôle absolu pour gérer toute l'entreprise.</p>
           <ul class="flex flex-col gap-[12px] font-sans text-[14px] leading-[22px] text-text">
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Importation d'employés par CSV</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Gestion de la structure organisationnelle</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Accès à toutes les données</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Importation d'employés par CSV</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Gestion de la structure organisationnelle</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Accès à toutes les données</li>
           </ul>
         </div>
 
@@ -90,9 +94,9 @@
           <h3 class="font-heading text-[20px] font-semibold leading-[28px] text-text-heading mb-[8px]">Espace Manager</h3>
           <p class="font-sans text-[14px] leading-[22px] text-text-secondary mb-[24px]">Des outils pour animer et suivre efficacement ses équipes.</p>
           <ul class="flex flex-col gap-[12px] font-sans text-[14px] leading-[22px] text-text">
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Vue globale sur son département</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Validation des congés (à venir)</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Suivi des performances</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Vue globale sur son département</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Validation des congés (à venir)</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Suivi des performances</li>
           </ul>
         </div>
 
@@ -100,9 +104,9 @@
           <h3 class="font-heading text-[20px] font-semibold leading-[28px] text-text-heading mb-[8px]">Espace Employé</h3>
           <p class="font-sans text-[14px] leading-[22px] text-text-secondary mb-[24px]">Le portail individuel pour plus d'autonomie au quotidien.</p>
           <ul class="flex flex-col gap-[12px] font-sans text-[14px] leading-[22px] text-text">
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Mise à jour des informations personnelles</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Accès à l'annuaire d'entreprise</li>
-            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0"><polyline points="20 6 9 17 4 12"></polyline></svg> Demandes de congés (à venir)</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Mise à jour des informations personnelles</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Accès à l'annuaire d'entreprise</li>
+            <li class="flex items-center gap-[12px]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-success shrink-0" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Demandes de congés (à venir)</li>
           </ul>
         </div>
       </div>
@@ -144,7 +148,11 @@
       <h2 class="font-heading text-[24px] md:text-[32px] font-bold leading-[32px] md:leading-[40px] text-text-heading text-center mb-[64px] tracking-tight">Ils nous font confiance</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
         <div class="bg-surface border border-border shadow-sm rounded-md p-[24px]">
-          <div class="text-tertiary tracking-[2px] mb-[16px] text-[20px]">★★★★★</div>
+          <div class="flex gap-0.5 mb-[16px]" aria-label="5 étoiles sur 5">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-tertiary" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            }
+          </div>
           <p class="font-sans text-[14px] leading-[22px] text-text mb-[32px] italic">"WorkSphere a complètement transformé notre onboarding. L'import CSV nous fait gagner des heures chaque mois."</p>
           <div class="flex items-center gap-[16px]">
             <div class="w-[40px] h-[40px] rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold text-[14px]">MS</div>
@@ -156,7 +164,11 @@
         </div>
         
         <div class="bg-surface border border-border shadow-sm rounded-md p-[24px]">
-          <div class="text-tertiary tracking-[2px] mb-[16px] text-[20px]">★★★★★</div>
+          <div class="flex gap-0.5 mb-[16px]" aria-label="5 étoiles sur 5">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-tertiary" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            }
+          </div>
           <p class="font-sans text-[14px] leading-[22px] text-text mb-[32px] italic">"La séparation des rôles est très claire. Nos managers adorent l'autonomie que ça leur donne sur leurs équipes."</p>
           <div class="flex items-center gap-[16px]">
             <div class="w-[40px] h-[40px] rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold text-[14px]">JL</div>
@@ -168,7 +180,11 @@
         </div>
 
         <div class="bg-surface border border-border shadow-sm rounded-md p-[24px]">
-          <div class="text-tertiary tracking-[2px] mb-[16px] text-[20px]">★★★★★</div>
+          <div class="flex gap-0.5 mb-[16px]" aria-label="5 étoiles sur 5">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-tertiary" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            }
+          </div>
           <p class="font-sans text-[14px] leading-[22px] text-text mb-[32px] italic">"Un design épuré, une interface rapide et intuitive. Nos collaborateurs ont adopté l'outil immédiatement."</p>
           <div class="flex items-center gap-[16px]">
             <div class="w-[40px] h-[40px] rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold text-[14px]">SK</div>
@@ -192,11 +208,11 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-[#1E1B4B] text-text-muted py-[64px] px-8">
+  <footer class="bg-tooltip text-text-muted py-[64px] px-8">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-[48px] border-b border-white/10 pb-[48px] mb-[32px]">
       <div class="max-w-xs">
         <div class="flex items-center gap-[8px] text-text-inverse mb-[16px]">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -208,15 +224,15 @@
       </div>
       
       <div class="flex flex-col gap-[16px]">
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] cursor-pointer">Mentions légales</a>
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] cursor-pointer">Politique de confidentialité</a>
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] cursor-pointer">Contact</a>
+        <button type="button" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] text-left cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Mentions légales</button>
+        <button type="button" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] text-left cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Politique de confidentialité</button>
+        <button type="button" class="text-text-muted hover:text-text-inverse transition-colors text-[14px] text-left cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Contact</button>
       </div>
       
       <div class="flex gap-[16px]">
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>
-        <a href="#" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+        <a href="#" aria-label="Facebook" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+        <a href="#" aria-label="Twitter" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" aria-hidden="true"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>
+        <a href="#" aria-label="LinkedIn" class="text-text-muted hover:text-text-inverse transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
       </div>
     </div>
     <div class="text-center font-sans text-[12px] leading-[18px]">

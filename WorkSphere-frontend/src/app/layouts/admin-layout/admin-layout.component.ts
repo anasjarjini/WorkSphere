@@ -10,11 +10,12 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcru
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { CompanyBrandComponent } from '../../shared/components/company-brand/company-brand.component';
 import { ImageUrlService } from '../../core/services/image-url.service';
+import { ThemeSwitcherComponent } from '../../shared/components/theme-switcher/theme-switcher.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent],
+  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent, ThemeSwitcherComponent],
   templateUrl: './admin-layout.component.html',
   styles: []
 })

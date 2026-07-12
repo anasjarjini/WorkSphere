@@ -1,9 +1,8 @@
 <div class="min-h-screen bg-background py-8 px-6">
   <div class="max-w-3xl mx-auto flex flex-col gap-6">
 
-    <!-- ── Header ──────────────────────────────────────────────── -->
     <div class="text-center mb-2 flex flex-col items-center">
-      <div class="w-12 h-12 bg-primary-50 text-primary rounded-lg flex items-center justify-center mb-4 shadow-sm">
+      <div class="w-12 h-12 bg-primary-50 text-primary rounded-lg flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
@@ -12,20 +11,19 @@
           <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
       </div>
-      <h1 class="font-heading text-2xl font-bold text-text-heading tracking-tight mb-2">Importer des employés</h1>
-      <p class="font-sans text-[0.9375rem] text-text-secondary max-w-[540px] mx-auto leading-relaxed">
+      <h1 class="font-heading text-2xl font-bold text-text-heading mb-2">Importer des employés</h1>
+      <p class="font-sans text-[0.9375rem] text-text-secondary max-w-[540px] mx-auto">
         Importez vos employés en masse via un fichier CSV.
         Téléchargez d'abord le modèle pour respecter le format attendu,
         puis glissez-déposez votre fichier ci-dessous.
       </p>
     </div>
 
-    <!-- ── Section : Modèle CSV ────────────────────────────────── -->
-    <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 hover:shadow-md">
+    <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 ease-out hover:shadow-md">
       <div class="flex flex-col sm:flex-row items-start justify-between gap-6">
         <div class="flex-1">
           <h2 class="font-heading text-lg font-semibold text-text-heading mb-2">Modèle CSV</h2>
-          <p class="font-sans text-sm text-text-secondary leading-relaxed">
+          <p class="font-sans text-sm text-text-secondary">
             Colonnes attendues :
             <code class="text-[0.8125rem] bg-background-alt text-primary px-1.5 py-0.5 rounded-sm font-mono">first_name</code>,
             <code class="text-[0.8125rem] bg-background-alt text-primary px-1.5 py-0.5 rounded-sm font-mono">last_name</code>,
@@ -37,7 +35,7 @@
             <code class="text-[0.8125rem] bg-background-alt text-primary px-1.5 py-0.5 rounded-sm font-mono">salary</code>
           </p>
         </div>
-        <button class="shrink-0 bg-transparent text-primary border border-primary font-sans font-semibold px-4 py-2 rounded-md flex items-center gap-2 transition-all duration-200 hover:bg-primary-50 hover:-translate-y-px active:translate-y-0 cursor-pointer" (click)="downloadTemplate()">
+        <button class="shrink-0 bg-transparent text-primary border border-primary font-sans font-semibold px-4 py-2 rounded-md flex items-center gap-2 transition-all duration-200 ease-out hover:bg-primary-50 hover:-translate-y-px active:translate-y-0 cursor-pointer" (click)="downloadTemplate()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -46,7 +44,7 @@
           Télécharger le modèle CSV
         </button>
       </div>
-      <div class="mt-4 p-3 bg-warning-light border border-warning/20 rounded-md flex items-start gap-2 text-[0.8125rem] text-warning-dark leading-relaxed">
+      <div class="mt-4 p-3 bg-warning-light border border-warning/20 rounded-md flex items-start gap-2 text-[0.8125rem] text-warning-dark">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-warning shrink-0 mt-0.5">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -56,16 +54,13 @@
       </div>
     </div>
 
-    <!-- ── Section : Zone d'upload ─────────────────────────────── -->
-    <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 hover:shadow-md">
+    <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 ease-out hover:shadow-md">
       <h2 class="font-heading text-lg font-semibold text-text-heading mb-2">Fichier CSV</h2>
 
       <div
-        class="mt-4 border-2 border-dashed rounded-xl p-10 text-center transition-all duration-200 cursor-pointer relative"
+        class="mt-4 border-2 border-dashed rounded-xl p-10 text-center transition-all duration-200 ease-out relative cursor-pointer"
         [class.border-primary]="isDragOver()"
         [class.bg-primary-50]="isDragOver()"
-        [class.scale-[1.01]]="isDragOver()"
-        [class.shadow-[0_0_0_4px_rgba(124,58,237,0.1)]]="isDragOver()"
         [class.border-solid]="selectedFile() !== null"
         [class.border-success]="selectedFile() !== null"
         [class.bg-success-light]="selectedFile() !== null"
@@ -93,14 +88,7 @@
               <strong class="text-primary font-semibold">Cliquez pour sélectionner</strong> ou glissez-déposez votre fichier CSV ici
             </p>
             <p class="font-sans text-[0.8125rem] text-text-secondary">Taille maximale : 10 Mo — Format : .csv</p>
-            <input
-              type="file"
-              accept=".csv"
-              class="absolute w-px h-px overflow-hidden whitespace-nowrap border-0 opacity-0"
-              (change)="onFileSelected($event)"
-              #fileInput
-            />
-            <button class="bg-primary text-text-inverse font-sans text-[0.8125rem] font-semibold px-4 py-2 rounded-md shadow-sm transition-all duration-200 hover:bg-primary-hover flex items-center gap-2 mt-2 cursor-pointer" (click)="triggerFileInput()">
+            <button class="bg-primary text-text-inverse font-sans text-[0.8125rem] font-semibold px-4 py-2 rounded-md shadow-sm transition-all duration-200 ease-out hover:bg-primary-hover flex items-center gap-2 mt-2 cursor-pointer" (click)="triggerFileInput(); $event.stopPropagation()">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -108,7 +96,8 @@
               Parcourir
             </button>
           </div>
-        } @else {
+        }
+        @if (selectedFile()) {
           <div class="flex items-center justify-between gap-4 w-full">
             <div class="flex items-center gap-3.5">
               <div class="w-10 h-10 bg-primary-50 text-primary rounded-md flex items-center justify-center shrink-0">
@@ -124,7 +113,7 @@
                 <span class="font-sans text-xs text-text-secondary">{{ fileSize() }}</span>
               </div>
             </div>
-            <button class="bg-transparent text-text-secondary border border-border font-sans text-[0.8125rem] px-4 py-2 rounded-md flex items-center gap-2 transition-all duration-200 hover:bg-background-alt hover:text-text cursor-pointer shrink-0" (click)="removeFile()" title="Retirer le fichier">
+            <button class="bg-transparent text-text-secondary border border-border font-sans text-[0.8125rem] px-4 py-2 rounded-md flex items-center gap-2 transition-all duration-200 ease-out hover:bg-background-alt hover:text-text cursor-pointer shrink-0" (click)="removeFile()" title="Retirer le fichier">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -133,6 +122,13 @@
             </button>
           </div>
         }
+        <input
+          type="file"
+          accept=".csv"
+          class="hidden"
+          (change)="onFileSelected($event)"
+          #fileInput
+        />
       </div>
 
       @if (frontendError()) {
@@ -159,28 +155,26 @@
 
       <div class="mt-6 flex justify-end">
         <button
-          class="bg-primary text-text-inverse font-sans text-base font-semibold px-8 py-3.5 rounded-md shadow-sm transition-all duration-200 hover:bg-primary-hover hover:-translate-y-px active:translate-y-0 active:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          class="bg-primary text-text-inverse font-sans text-base font-semibold px-8 py-3.5 rounded-md shadow-sm transition-all duration-200 ease-out hover:bg-primary-hover hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           [disabled]="!selectedFile() || isUploading()"
           (click)="onSubmit()"
         >
           @if (isUploading()) {
             <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
             Import en cours...
-          } @else {
+        }
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             Importer
-          }
         </button>
       </div>
     </div>
 
-    <!-- ── Section : Résultat de l'import ──────────────────────── -->
     @if (importResult(); as result) {
-      <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 hover:shadow-md">
+      <div class="bg-surface border border-border rounded-xl shadow-sm p-6 sm:p-8 transition-shadow duration-200 ease-out hover:shadow-md">
         <h2 class="font-heading text-lg font-semibold text-text-heading mb-5">Résultat de l'import</h2>
 
         <div class="flex flex-wrap gap-4 mb-5">
@@ -224,7 +218,7 @@
               </thead>
               <tbody>
                 @for (error of result.errors; track $index) {
-                  <tr class="hover:bg-background-alt/50 border-b border-border last:border-0 transition-colors">
+                  <tr class="hover:bg-background-alt/50 border-b border-border last:border-0 transition-colors duration-150 ease-out">
                     <td class="px-4 py-3 font-semibold text-text-muted w-20 tabular-nums align-top">{{ error.line }}</td>
                     <td class="px-4 py-3 font-medium break-all align-top">{{ error.email }}</td>
                     <td class="px-4 py-3 text-error-dark align-top">{{ error.reason }}</td>
@@ -236,14 +230,14 @@
         }
 
         <div class="mt-6 flex flex-wrap gap-3">
-          <button class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold px-4 py-2 rounded-md shadow-sm transition-all duration-200 hover:bg-primary-hover hover:-translate-y-px active:translate-y-0 active:shadow-sm cursor-pointer flex items-center gap-2" (click)="resetImport()">
+          <button class="bg-primary text-text-inverse font-sans text-[0.9375rem] font-semibold px-4 py-2 rounded-md shadow-sm transition-all duration-200 ease-out hover:bg-primary-hover hover:-translate-y-px active:translate-y-0 cursor-pointer flex items-center gap-2" (click)="resetImport()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
               <polyline points="23 4 23 10 17 10"></polyline>
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
             </svg>
             Nouvel import
           </button>
-          <a routerLink="/admin/dashboard" class="bg-transparent text-text-secondary border border-border font-sans text-[0.9375rem] font-semibold px-4 py-2 rounded-md transition-all duration-200 hover:bg-background-alt hover:text-text cursor-pointer flex items-center gap-2">
+          <a routerLink="/admin/dashboard" class="bg-transparent text-text-secondary border border-border font-sans text-[0.9375rem] font-semibold px-4 py-2 rounded-md transition-all duration-200 ease-out hover:bg-background-alt hover:text-text cursor-pointer flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>

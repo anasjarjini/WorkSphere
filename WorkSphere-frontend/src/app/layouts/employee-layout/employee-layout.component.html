@@ -27,20 +27,20 @@
        [class.translate-x-0]="mobileMenuOpen">
     <div class="px-3 mb-8 flex justify-between items-center">
       <app-company-brand [homeRoute]="'/employee'" [contextLabel]="'Espace Employé'" class="flex-1 min-w-0"></app-company-brand>
-      <button (click)="toggleMobileMenu()" class="md:hidden text-text-secondary hover:text-text p-1 cursor-pointer">
+      <button (click)="toggleMobileMenu()" class="md:hidden text-text-secondary hover:text-text p-1 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
 
     <ul class="flex flex-col gap-1 flex-1">
       <li>
-        <a routerLink="/employee/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-primary-50 hover:text-primary cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+        <a routerLink="/employee/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Dashboard
         </a>
       </li>
       <li>
-        <a routerLink="/employee/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-primary-50 hover:text-primary cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+        <a routerLink="/employee/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Profil
         </a>
@@ -52,6 +52,8 @@
     <div class="hidden md:flex items-center justify-between h-16 px-8 bg-surface border-b border-border shrink-0">
       <app-breadcrumb />
       <div class="flex items-center gap-4">
+        <!-- Sélecteur de thème -->
+        <app-theme-switcher />
         <div class="relative">
           <button class="relative flex items-center justify-center w-10 h-10 rounded-full text-text-secondary transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 cursor-pointer"
                   title="Notifications"

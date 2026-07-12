@@ -99,6 +99,37 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Suppression par lot (soft delete) d'employés.
+     * Reçoit un tableau d'IDs dans le body JSON.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $companyId = $request->user()->company_id;
+
+        $users = User::where('company_id', $companyId)
+            ->whereIn('id', $request->ids)
+            ->where('role', '!=', 'HR_ADMIN')
+            ->get();
+
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'Aucun employé trouvé.'], 404);
+        }
+
+        foreach ($users as $user) {
+            $user->delete();
+        }
+
+        return response()->json([
+            'message' => count($users) . ' employé(s) supprimé(s) avec succès.',
+        ]);
+    }
+
+    /**
      * Soft delete un utilisateur.
      * Interdit pour HR_ADMIN (retourne 403).
      */

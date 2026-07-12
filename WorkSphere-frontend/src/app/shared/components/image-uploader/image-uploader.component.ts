@@ -72,7 +72,13 @@ export class ImageUploaderComponent implements OnDestroy {
    * Gère le dépôt d'un fichier par glisser-déposer.
    */
   onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
     this.isDragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      this.validateAndEmit(file);
+    }
   }
 
   /**

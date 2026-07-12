@@ -1,9 +1,3 @@
-/**
- * Page de liste des employés (Administrateur RH).
- * Fonctionnalités : recherche avec debounce, filtres (rôle, département, statut),
- * pagination, toggle de statut et suppression logique.
- */
-
 import { Component, OnInit, inject, signal, computed, OnDestroy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +19,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   private readonly employeeService = inject(EmployeeService);
   readonly imageUrlService = inject(ImageUrlService);
 
-  // ── État des données ──────────────────────────────────────────
   readonly employees = signal<Employee[]>([]);
   readonly total = signal(0);
   readonly currentPage = signal(1);
@@ -37,33 +30,38 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   readonly error = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
-  // ── État des filtres ──────────────────────────────────────────
   readonly searchTerm = signal('');
   readonly roleFilter = signal('');
   readonly departmentFilter = signal('');
   readonly statusFilter = signal('');
 
-  // ── Subject pour le debounce de la recherche ───────────────────
+  readonly selectedIds = signal<Set<number>>(new Set());
+
   private readonly searchSubject = new Subject<string>();
   private readonly subscriptions: Subscription[] = [];
 
-  // ── Computed : au moins un filtre est-il actif ? ────────────
   readonly isFiltered = computed(() =>
     !!this.searchTerm() || !!this.roleFilter() || !!this.departmentFilter() || !!this.statusFilter()
   );
 
-  // ── Computed : numéros de page à afficher dans la pagination ──
+  readonly allSelected = computed(() => {
+    const emp = this.employees();
+    const sel = this.selectedIds();
+    return emp.length > 0 && emp.every(e => sel.has(e.id));
+  });
+
+  readonly selectedCount = computed(() => this.selectedIds().size);
+
   readonly pageNumbers = computed(() => {
     const current = this.currentPage();
     const last = this.lastPage();
     if (last <= 7) {
       return Array.from({ length: last }, (_, i) => i + 1);
     }
-
     const pages: number[] = [];
     if (current <= 4) {
       for (let i = 1; i <= 5; i++) pages.push(i);
-      pages.push(-1); // ellipsis sentinel
+      pages.push(-1);
       pages.push(last);
     } else if (current >= last - 3) {
       pages.push(1);
@@ -79,10 +77,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     return pages;
   });
 
-  // ── Initialisation ────────────────────────────────────────────
-  /**
-   * Initialise le debounce de la recherche et charge la première page.
-   */
   ngOnInit(): void {
     const searchSub = this.searchSubject.pipe(
       debounceTime(400),
@@ -91,38 +85,23 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       this.currentPage.set(1);
       this.loadEmployees();
     });
-
     this.subscriptions.push(searchSub);
     this.loadEmployees();
   }
 
-  /**
-   * Nettoie les souscriptions pour éviter les fuites mémoire.
-   */
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  /**
-   * Construit la requête API à partir de la page et des filtres actifs.
-   */
   private buildQueryParams(page: number): EmployeeQueryParams {
-    const params: EmployeeQueryParams = {
-      page,
-      per_page: this.perPage(),
-    };
-
+    const params: EmployeeQueryParams = { page, per_page: this.perPage() };
     if (this.searchTerm()) params.search = this.searchTerm();
     if (this.roleFilter()) params.role = this.roleFilter();
     if (this.departmentFilter()) params.department = this.departmentFilter();
     if (this.statusFilter()) params.status = this.statusFilter();
-
     return params;
   }
 
-  /**
-   * Synchronise l'état de pagination à partir de la réponse API.
-   */
   private applyPaginationMeta(response: PaginatedResponse<Employee>): void {
     this.total.set(response.meta.total);
     this.currentPage.set(response.meta.current_page);
@@ -132,18 +111,11 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.to.set(response.meta.to);
   }
 
-  // ── Gestion des changements de filtres ────────────────────────
-  /**
-   * Met à jour le terme de recherche avec debounce (400ms).
-   */
   onSearchChange(value: string): void {
     this.searchTerm.set(value);
     this.searchSubject.next(value);
   }
 
-  /**
-   * Filtre par rôle (recharge depuis la page 1).
-   */
   onRoleChange(value: string): void {
     this.roleFilter.set(value);
     this.currentPage.set(1);
@@ -156,18 +128,12 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.loadEmployees();
   }
 
-  /**
-   * Filtre par statut (actif/inactif). Recharge depuis la page 1.
-   */
   onStatusChange(value: string): void {
     this.statusFilter.set(value);
     this.currentPage.set(1);
     this.loadEmployees();
   }
 
-  /**
-   * Réinitialise tous les filtres et recharge la liste.
-   */
   resetFilters(): void {
     this.searchTerm.set('');
     this.roleFilter.set('');
@@ -177,17 +143,12 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.loadEmployees();
   }
 
-  // ── Chargement de la liste (appel API) ────────────────────────
-  /**
-   * Charge la liste des employés via l'API avec les filtres actifs.
-   * Remplace la liste courante.
-   * @param page Numéro de page optionnel
-   */
   loadEmployees(page?: number): void {
     const pageToLoad = page ?? this.currentPage();
     this.loading.set(true);
     this.error.set(null);
     this.successMessage.set(null);
+    this.selectedIds.set(new Set());
 
     this.employeeService.getEmployees(this.buildQueryParams(pageToLoad)).subscribe({
       next: (response: PaginatedResponse<Employee>) => {
@@ -207,26 +168,58 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Pagination ────────────────────────────────────────────────
-  /**
-   * Navigue vers une page spécifique de la pagination.
-   * @param page Numéro de page cible
-   */
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage() || page === this.currentPage()) return;
     this.currentPage.set(page);
     this.loadEmployees(page);
   }
 
-  // ── Toggle statut ─────────────────────────────────────────────
-  /**
-   * Bascule le statut actif/inactif d'un employé.
-   */
+  toggleSelectAll(): void {
+    if (this.allSelected()) {
+      this.selectedIds.set(new Set());
+    } else {
+      this.selectedIds.set(new Set(this.employees().map(e => e.id)));
+    }
+  }
+
+  toggleSelect(id: number): void {
+    const sel = new Set(this.selectedIds());
+    if (sel.has(id)) {
+      sel.delete(id);
+    } else {
+      sel.add(id);
+    }
+    this.selectedIds.set(sel);
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  bulkDelete(): void {
+    const count = this.selectedCount();
+    if (count === 0) return;
+    const confirmed = window.confirm(`Supprimer ${count} employé${count > 1 ? 's' : ''} ?`);
+    if (!confirmed) return;
+    this.loading.set(true);
+    const ids = Array.from(this.selectedIds());
+    this.employeeService.bulkDeleteEmployees(ids).subscribe({
+      next: (response) => {
+        this.successMessage.set(response.message || `${ids.length} employé(s) supprimé(s).`);
+        this.loading.set(false);
+        this.loadEmployees();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.error.set(err.error?.message || 'Une erreur est survenue lors de la suppression.');
+      }
+    });
+  }
+
   toggleStatus(employee: Employee): void {
     this.loading.set(true);
     this.error.set(null);
     this.successMessage.set(null);
-
     this.employeeService.toggleStatus(employee.id).subscribe({
       next: () => {
         this.successMessage.set('Statut de l\'employé mis à jour avec succès.');
@@ -244,22 +237,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Suppression avec confirmation ─────────────────────────────
-  /**
-   * Affiche une confirmation de suppression puis appelle l'API.
-   */
   confirmDelete(employee: Employee): void {
     const fullName = `${employee.first_name} ${employee.last_name}`;
-    const confirmed = window.confirm(
-      `Êtes-vous sûr de vouloir supprimer ${fullName} ?\nCette action est réversible (suppression logique).`
-    );
-
+    const confirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer ${fullName} ?`);
     if (!confirmed) return;
-
     this.loading.set(true);
     this.error.set(null);
     this.successMessage.set(null);
-
     this.employeeService.deleteEmployee(employee.id).subscribe({
       next: (response) => {
         this.successMessage.set(response.message);
@@ -277,17 +261,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
-  /**
-   * Vérifie si le rôle est HR_ADMIN (actions désactivées).
-   */
   isAdminRh(role: string): boolean {
     return role === 'HR_ADMIN';
   }
 
-  /**
-   * Retourne la classe CSS du badge de rôle selon le type.
-   */
   getRoleBadgeClass(role: string): string {
     switch (role) {
       case 'HR_ADMIN':

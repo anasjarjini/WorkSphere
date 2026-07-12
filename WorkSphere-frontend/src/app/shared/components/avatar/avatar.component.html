@@ -3,27 +3,14 @@
     [src]="imageUrl()"
     [alt]="'Avatar de ' + name()"
     class="shrink-0 rounded-full object-cover"
-    [class.w-8]="size() === 'sm'"
-    [class.h-8]="size() === 'sm'"
-    [class.w-10]="size() === 'md'"
-    [class.h-10]="size() === 'md'"
-    [class.w-16]="size() === 'lg'"
-    [class.h-16]="size() === 'lg'"
+    [class]="sizeClass()"
   />
 } @else {
   <div
     class="shrink-0 rounded-full flex items-center justify-center font-semibold"
-    [style.background-color]="colorInfo().bg"
-    [style.color]="colorInfo().text"
-    [class.w-8]="size() === 'sm'"
-    [class.h-8]="size() === 'sm'"
-    [class.text-xs]="size() === 'sm'"
-    [class.w-10]="size() === 'md'"
-    [class.h-10]="size() === 'md'"
-    [class.text-sm]="size() === 'md'"
-    [class.w-16]="size() === 'lg'"
-    [class.h-16]="size() === 'lg'"
-    [class.text-xl]="size() === 'lg'"
+    [class]="avatarClass() + ' ' + sizeClass()"
+    role="img"
+    [attr.aria-label]="'Avatar de ' + name()"
   >
     {{ initials() }}
   </div>

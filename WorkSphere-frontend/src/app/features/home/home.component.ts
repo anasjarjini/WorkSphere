@@ -3,8 +3,9 @@
  * Présente la plateforme avec un hero, des fonctionnalités et un footer.
  */
 
-import { Component } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -14,6 +15,20 @@ import { RouterModule } from '@angular/router';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent {
+  private authService = inject(AuthService);
+
+  readonly isAuthenticated = this.authService.isAuthenticated;
+
+  readonly dashboardRoute = computed(() => {
+    const user = this.authService.currentUser();
+    switch (user?.role) {
+      case 'HR_ADMIN': return '/admin/dashboard';
+      case 'MANAGER': return '/manager/dashboard';
+      case 'EMPLOYEE': return '/employee/dashboard';
+      default: return '/login';
+    }
+  });
+
   /**
    * Défilement fluide vers une section de la page.
    * @param elementId ID de l'élément cible

@@ -1,5 +1,5 @@
 <div
-  class="relative border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-200 cursor-pointer"
+  class="relative border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25"
   [class.border-primary]="!isDragOver()"
   [class.border-accent]="isDragOver()"
   [class.bg-primary-50]="!isDragOver() && !previewUrl()"
@@ -7,7 +7,12 @@
   [class.rounded-full]="shape() === 'circle'"
   [class.w-40]="shape() === 'circle'"
   [class.h-40]="shape() === 'circle'"
+  role="button"
+  tabindex="0"
+  (keydown.escape)="isDragOver.set(false)"
   (click)="fileInput.click()"
+  (keydown.enter)="fileInput.click()"
+  (keydown.space)="fileInput.click(); $event.preventDefault()"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave()"
   (drop)="onDrop($event)"
@@ -23,7 +28,7 @@
   @if (previewUrl()) {
     <img
       [src]="previewUrl()"
-      alt="Preview"
+      alt=""
       class="w-full h-full object-cover"
       [class.rounded-lg]="shape() === 'square'"
       [class.rounded-full]="shape() === 'circle'"
@@ -42,7 +47,7 @@
       </span>
     </div>
   } @else {
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
       <circle cx="8.5" cy="8.5" r="1.5"></circle>
       <polyline points="21 15 16 10 5 21"></polyline>

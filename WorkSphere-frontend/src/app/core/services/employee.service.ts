@@ -80,6 +80,15 @@ export class EmployeeService {
   }
 
   /**
+   * Suppression par lot (bulk delete) d'employés.
+   * @param ids - Liste des IDs des employés à supprimer
+   * @returns Observable avec le message de confirmation
+   */
+  bulkDeleteEmployees(ids: number[]): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/employees/bulk`, { body: { ids } });
+  }
+
+  /**
    * Importe des employés depuis un fichier CSV.
    * Envoie le fichier en FormData pour une gestion multipart.
    * @param file - Fichier CSV à importer
