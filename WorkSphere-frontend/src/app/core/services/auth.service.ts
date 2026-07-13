@@ -215,7 +215,7 @@ export class AuthService {
    * Vide le token et les signaux d'authentification. Appelée après logout
    * ou quand le token est invalide/expiré.
    */
-  private clearSession(): void {
+  clearSession(): void {
     sessionStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.authReady.set(true);

@@ -19,15 +19,7 @@ export class HomeComponent {
 
   readonly isAuthenticated = this.authService.isAuthenticated;
 
-  readonly dashboardRoute = computed(() => {
-    const user = this.authService.currentUser();
-    switch (user?.role) {
-      case 'HR_ADMIN': return '/admin/dashboard';
-      case 'MANAGER': return '/manager/dashboard';
-      case 'EMPLOYEE': return '/employee/dashboard';
-      default: return '/login';
-    }
-  });
+
 
   /**
    * Défilement fluide vers une section de la page.

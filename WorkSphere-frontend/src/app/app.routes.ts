@@ -1,37 +1,40 @@
-/**
- * Configuration des routes de l'application.
- * Définit les chemins publics (login, register, activation, reset),
- * les espaces protégés par rôle (admin, manager, employee) avec guards,
- * et une route wildcard 404.
- */
+
+
 
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { clearAuthGuard } from './core/guards/clear-auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent)
   },
   {
     path: 'login',
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: 'activate',
+       canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/activate-account/activate-account.component').then((m) => m.ActivateAccountComponent)
   },
   {
     path: 'register-company',
+       canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/register-company/register-company.component').then((m) => m.RegisterCompanyComponent)
   },
   {
     path: 'forgot-password',
+       canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
   },
   {
     path: 'reset-password',
+       canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
   },
   {
@@ -118,6 +121,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
+        canActivate: [clearAuthGuard],
     loadComponent: () => import('./shared/components/not-found/not-found.component').then((m) => m.NotFoundComponent)
   }
 ];
