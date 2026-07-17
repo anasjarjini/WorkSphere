@@ -209,7 +209,7 @@ CSV;
         $this->assertSame(0, $result['failed']);
 
         $manager = User::where('company_id', $company->id)->where('role', 'MANAGER')->firstOrFail();
-        $employee = User::where('company_id', $company->id)->where('role', 'EMPLOYEE')->firstOrFail();
+        $employee = User::where('company_id', $company->id)->where('role', 'EMPLOYE')->firstOrFail();
 
         $this->assertSame($manager->id, $employee->manager_id);
     }

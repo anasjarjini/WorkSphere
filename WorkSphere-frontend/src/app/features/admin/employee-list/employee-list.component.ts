@@ -271,7 +271,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         return 'bg-primary-100 text-primary-dark';
       case 'MANAGER':
         return 'bg-accent-light text-accent-dark';
-      case 'EMPLOYEE':
+      case 'EMPLOYE':
         return 'bg-info-light text-primary-dark';
       default:
         return 'bg-background-alt text-text-muted';

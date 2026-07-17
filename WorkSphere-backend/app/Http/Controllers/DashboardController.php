@@ -30,7 +30,7 @@ class DashboardController extends Controller
 
         // 4 & 5. Répartition par rôle (Manager vs Employé)
         $managersCount = (clone $baseQuery)->where('users.role', 'MANAGER')->count();
-        $regularEmployeesCount = (clone $baseQuery)->where('users.role', 'EMPLOYEE')->count();
+        $regularEmployeesCount = (clone $baseQuery)->where('users.role', 'EMPLOYE')->count();
 
         // 6 & 7. Distribution des départements et nombre de départements
         $departmentDistribution = (clone $baseQuery)

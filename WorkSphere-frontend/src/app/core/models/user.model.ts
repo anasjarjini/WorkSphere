@@ -8,7 +8,7 @@ import { Company } from "./company.model";
 import { Department } from "./department.model";
 import { Role } from "./role.model";
 
-export type UserRole = 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE';
+export type UserRole = 'HR_ADMIN' | 'MANAGER' | 'EMPLOYE';
 
 export type UserStatus = 'PENDING_ACTIVATION' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 

@@ -17,7 +17,7 @@ export interface ImportResult {
   errors: ImportError[];
 }
 
-export type EmployeeRole = 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE';
+export type EmployeeRole = 'HR_ADMIN' | 'MANAGER' | 'EMPLOYE';
 
 export type EmployeeStatus = 'PENDING_ACTIVATION' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 

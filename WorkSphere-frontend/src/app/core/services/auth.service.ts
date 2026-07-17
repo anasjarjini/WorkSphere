@@ -181,7 +181,7 @@ export class AuthService {
 
   /**
    * Retourne la route de redirection après connexion selon le rôle.
-   * @param role - Rôle utilisateur (HR_ADMIN, MANAGER, EMPLOYEE)
+   * @param role - Rôle utilisateur (HR_ADMIN, MANAGER, EMPLOYE)
    * @returns Chemin de redirection
    */
   getRedirectPathForRole(role: string): string {
@@ -190,7 +190,7 @@ export class AuthService {
         return '/admin/dashboard';
       case 'MANAGER':
         return '/manager/dashboard';
-      case 'EMPLOYEE':
+      case 'EMPLOYE':
         return '/employee/dashboard';
       default:
         return '/login';

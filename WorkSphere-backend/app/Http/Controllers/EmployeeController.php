@@ -16,9 +16,9 @@ class EmployeeController extends Controller
      *
      * Query params:
      * - search      : recherche LIKE sur first_name, last_name, email
-     * - role        : filtre exact sur le rôle ENUM (MANAGER|EMPLOYEE)
+     * - role        : filtre exact sur le rôle ENUM (MANAGER|EMPLOYE)
      * - department  : filtre exact sur le département (nom)
-     * - is_active   : filtre exact (true/false)
+     * - is_active   : filtre ex    act (true/false)
      * - per_page    : nombre d'éléments par page (défaut: 15)
      */
     public function index(Request $request): EmployeeCollection
@@ -55,7 +55,7 @@ class EmployeeController extends Controller
             $query->where('status', $request->status);
         }
 
-        // ── Filtre par rôle (nouvel ENUM: MANAGER|EMPLOYEE) ──
+        // ── Filtre par rôle (nouvel ENUM: MANAGER|EMPLOYE) ──
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }

@@ -56,6 +56,16 @@ class Company extends Model
         return $this->hasMany(User::class);
     }
 
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function serviceRequests()
+    {
+        return $this->hasMany(ServiceRequest::class);
+    }
+
     public function departments()
     {
         return $this->hasMany(Department::class);

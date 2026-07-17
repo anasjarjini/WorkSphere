@@ -42,7 +42,7 @@ export class AdminLayoutComponent {
         return 'Administrateur RH';
       case 'MANAGER':
         return 'Manager';
-      case 'EMPLOYEE':
+      case 'EMPLOYE':
         return 'Employé';
       default:
         return 'Utilisateur';

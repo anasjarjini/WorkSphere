@@ -88,7 +88,7 @@
           >
             <option value="">Tous les rôles</option>
             <option value="MANAGER">Manager</option>
-            <option value="EMPLOYEE">Employé</option>
+            <option value="EMPLOYE">Employé</option>
           </select>
         </div>
         <div>
@@ -267,7 +267,7 @@
                     <span [class]="'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ' + getRoleBadgeClass(employee.role)">
                       @if (employee.role === 'HR_ADMIN') { Admin RH }
                       @else if (employee.role === 'MANAGER') { Manager }
-                      @else if (employee.role === 'EMPLOYEE') { Employé }
+                      @else if (employee.role === 'EMPLOYE') { Employé }
                       @else { {{ employee.role }} }
                     </span>
                   </td>

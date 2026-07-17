@@ -21,7 +21,22 @@ class EmployeeCsvImportService
      * Rôles autorisés à l'import (nouveaux ENUMs).
      * HR_ADMIN est interdit — les admins sont créés via l'inscription.
      */
-    private const ALLOWED_ROLES = ['MANAGER', 'EMPLOYEE'];
+    private const ALLOWED_ROLES = ['MANAGER', 'EMPLOYE'];
+
+    /**
+     * Alias acceptés pour chaque rôle : français / anglais, toute casse
+     * (la casse et les accents sont normalisés avant comparaison via
+     * normalizeRole(), donc on ne liste ici que les formes en MAJUSCULES
+     * SANS ACCENTS).
+     */
+    private const ROLE_ALIASES = [
+        'MANAGER'      => 'MANAGER',
+        'GESTIONNAIRE' => 'MANAGER',
+        'RESPONSABLE'  => 'MANAGER',
+        'EMPLOYE'      => 'EMPLOYE', // couvre EMPLOYÉ une fois les accents retirés
+        'EMPLOYEE'     => 'EMPLOYE',
+        'SALARIE'      => 'EMPLOYE', // couvre SALARIÉ une fois les accents retirés
+    ];
 
     /**
      * Import employees from a CSV file for the given company.
@@ -48,6 +63,13 @@ class EmployeeCsvImportService
             // offset 0 = header row, so real spreadsheet line = offset + 2
             $lineNumber = $offset + 2;
 
+            // Normalise le rôle : accepte FR/EN, toute casse, avec ou sans accents
+            // (ex: "manager", "Gestionnaire", "EMPLOYÉ", "employee" ...).
+            // Si le rôle n'est pas reconnu, on garde la valeur brute (trim) pour
+            // que le message d'erreur de validation soit explicite.
+            $rawRole = trim((string) ($record['role'] ?? ''));
+            $record['role'] = $this->normalizeRole($rawRole) ?? $rawRole;
+
             $validationResult = $this->validateRow($record, $seenEmails, $seenManagerDepartments, $company);
 
             if ($validationResult !== null) {
@@ -61,7 +83,7 @@ class EmployeeCsvImportService
 
             // Mark email as seen for intra-CSV duplicate detection
             $seenEmails[] = strtolower(trim($record['email']));
-            if (trim($record['role']) === 'MANAGER') {
+            if ($record['role'] === 'MANAGER') {
                 $seenManagerDepartments[] = $this->normalizeDepartmentName($record['department']);
             }
 
@@ -73,8 +95,10 @@ class EmployeeCsvImportService
 
                     // ── Résoudre ou créer le département par son nom ──
                     $departmentId = $this->resolveDepartmentId($company, $record['department'] ?? '');
-                    $role = trim($record['role']);
-                    $managerId = $role === 'EMPLOYEE'
+                    // Le rôle a déjà été normalisé (FR/EN, toute casse) en amont
+                    $role = $record['role'];
+
+                    $managerId = $role === 'EMPLOYE'
                         ? $this->resolveDepartmentManagerId($company, $departmentId)
                         : null;
 
@@ -87,7 +111,7 @@ class EmployeeCsvImportService
                         'company_id' => $company->id,
                         'department_id' => $departmentId,
                         'manager_id' => $managerId,
-                        'role'       => $role,  // MANAGER ou EMPLOYEE
+                        'role'       => $role,  // MANAGER ou EMPLOYE
                         'status'     => 'PENDING_ACTIVATION',
                         'job_title'  => trim($record['job_title']),
                         'hire_date'  => $hireDate,
@@ -123,6 +147,18 @@ class EmployeeCsvImportService
             'failed' => count($errors),
             'errors' => $errors,
         ];
+    }
+
+    /**
+     * Normalise une valeur de rôle brute (FR/EN, toute casse, avec ou sans
+     * accents) vers la valeur canonique ('MANAGER' ou 'EMPLOYE').
+     * Retourne null si la valeur ne correspond à aucun alias connu.
+     */
+    private function normalizeRole(?string $role): ?string
+    {
+        $normalized = Str::ascii(Str::upper(trim((string) $role)));
+
+        return self::ROLE_ALIASES[$normalized] ?? null;
     }
 
     /**
@@ -177,7 +213,7 @@ class EmployeeCsvImportService
 
         User::where('company_id', $company->id)
             ->where('department_id', $departmentId)
-            ->where('role', 'EMPLOYEE')
+            ->where('role', 'EMPLOYE')
             ->whereNull('manager_id')
             ->update(['manager_id' => $managerId]);
     }
@@ -197,13 +233,14 @@ class EmployeeCsvImportService
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'unique:users,email'],
+            // À ce stade $record['role'] est déjà normalisé (MANAGER/EMPLOYE)
             'role'       => ['required', 'in:' . implode(',', self::ALLOWED_ROLES)],
             'job_title'  => ['required', 'string', 'max:255'],
             'department' => ['required', 'string', 'max:255'],
             'hire_date'  => ['required', 'string'],
             'salary'     => ['nullable', 'numeric'],
         ], [
-            'role.in' => "Le rôle doit être 'MANAGER' ou 'EMPLOYEE'. Le rôle 'HR_ADMIN' est interdit à l'import.",
+            'role.in' => "Le rôle doit être 'MANAGER'/'GESTIONNAIRE' ou 'EMPLOYE'/'EMPLOYEE' (FR ou EN, toute casse). Le rôle 'HR_ADMIN' est interdit à l'import.",
             'email.unique' => 'Cet email est déjà utilisé dans le système.',
         ]);
 
@@ -223,7 +260,7 @@ class EmployeeCsvImportService
             return 'Email en doublon dans le fichier CSV.';
         }
 
-        if (trim($record['role']) === 'MANAGER') {
+        if ($record['role'] === 'MANAGER') {
             $departmentName = trim($record['department']);
             $normalizedDepartment = $this->normalizeDepartmentName($departmentName);
 

@@ -104,7 +104,7 @@ export const routes: Routes = [
     path: 'employee',
     loadComponent: () => import('./layouts/employee-layout/employee-layout.component').then((m) => m.EmployeeLayoutComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['EMPLOYEE'] },
+    data: { roles: ['EMPLOYE'] },
     children: [
       {
         path: 'dashboard',

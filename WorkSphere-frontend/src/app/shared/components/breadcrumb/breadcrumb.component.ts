@@ -31,7 +31,7 @@ export class BreadcrumbComponent {
     switch (user?.role) {
       case 'HR_ADMIN': return '/admin/dashboard';
       case 'MANAGER': return '/manager/dashboard';
-      case 'EMPLOYEE': return '/employee/dashboard';
+      case 'EMPLOYE': return '/employee/dashboard';
       default: return '/';
     }
   });

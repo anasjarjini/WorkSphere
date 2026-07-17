@@ -5,7 +5,7 @@ import { AuthService } from '../services/auth.service';
 /**
  * Garde de navigation basé sur le rôle de l'utilisateur.
  * Vérifie si le rôle de l'utilisateur correspond aux rôles autorisés pour cette route.
- * Utilise le nouveau champ `role` (ENUM : HR_ADMIN, MANAGER, EMPLOYEE).
+ * Utilise le nouveau champ `role` (ENUM : HR_ADMIN, MANAGER, EMPLOYE).
  * Redirige vers le bon espace si non autorisé.
  */
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
