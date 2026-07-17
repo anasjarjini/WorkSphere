@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagerTeamController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
 // ═══════════════════════════════════════════════════════════════════
 // PUBLIC ROUTES — Aucune authentification requise
 // ═══════════════════════════════════════════════════════════════════
@@ -71,5 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
     Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
+
+    // ── Projets ──
+    Route::apiResource('projects', ProjectController::class);
+    Route::post('projects/{project}/cahier-charges', [ProjectController::class, 'uploadCahierCharges']);
 
 });
