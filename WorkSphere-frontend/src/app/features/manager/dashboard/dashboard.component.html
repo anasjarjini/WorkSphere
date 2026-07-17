@@ -86,9 +86,9 @@
                 </td>
                 <td class="px-6 py-3 text-text-secondary">{{ emp.job_title || '—' }}</td>
                 <td class="px-6 py-3">
-                  @if (emp.department) {
+                  @if (emp.department.company_id) {
                     <span class="inline-flex items-center px-[10px] py-[3px] bg-accent/10 text-accent rounded-full font-sans text-[12px] font-medium">
-                      {{ emp.department }}
+                      {{ emp.department.name }}
                     </span>
                   } @else {
                     <span class="text-text-muted">—</span>
