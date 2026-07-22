@@ -1,0 +1,341 @@
+@if (loading()) {
+  <div class="max-w-5xl mx-auto px-6 py-8 animate-pulse space-y-6">
+    <div class="h-6 bg-background-alt rounded w-1/3"></div>
+    <div class="h-8 bg-background-alt rounded w-1/2"></div>
+    <div class="h-24 bg-background-alt rounded-xl"></div>
+  </div>
+} @else if (task(); as t) {
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- ===== HEADER ===== -->
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 text-sm text-text-secondary mb-1">
+          <a [routerLink]="['/' + (user()?.role === 'HR_ADMIN' ? 'admin' : 'manager') + '/projects/' + t.project_id]"
+            class="hover:text-primary transition-colors p-0.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+          </a>
+          <span class="font-medium">{{ t.project?.name || 'Projet' }}</span>
+          <span class="material-symbols-outlined text-sm text-text-muted">chevron_right</span>
+          <span class="font-semibold text-primary">{{ t.reference_code || 'TSK-000' }}</span>
+        </div>
+        <h1 class="text-2xl font-heading font-bold text-text-heading truncate">{{ t.title }}</h1>
+      </div>
+    </div>
+
+    <!-- ===== STATUS BAR ===== -->
+    <div class="bg-background-alt rounded-xl border border-border p-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+          <span class="text-[11px] text-text-secondary font-medium uppercase tracking-wider">Statut</span>
+          <div class="mt-1.5">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" [class]="getStatusClass(t.status)">
+              <span class="material-symbols-outlined text-[14px]">{{ getStatusIcon(t.status) }}</span>
+              {{ getStatusLabel(t.status) }}
+            </span>
+          </div>
+        </div>
+        <div>
+          <span class="text-[11px] text-text-secondary font-medium uppercase tracking-wider">Assigné</span>
+          <div class="mt-1.5 flex items-center gap-2">
+            @if (t.assigned_user) {
+              <app-avatar [imageUrl]="resolveAvatarUrl(t.assigned_user.avatar_url)" [name]="t.assigned_user.first_name + ' ' + t.assigned_user.last_name" size="sm" class="!w-7 !h-7 !text-[10px] shrink-0 rounded-full" />
+              <span class="text-sm font-medium text-text">{{ t.assigned_user.first_name }} {{ t.assigned_user.last_name }}</span>
+            } @else {
+              <span class="text-sm text-text-secondary italic">Non assigné</span>
+            }
+          </div>
+        </div>
+        <div>
+          <span class="text-[11px] text-text-secondary font-medium uppercase tracking-wider">Priorité</span>
+          <div class="mt-1.5">
+            @if (t.priority) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-surface border border-border text-text-secondary">
+                <span class="material-symbols-outlined text-[14px]">{{ t.priority === 'HIGH' || t.priority === 'CRITICAL' ? 'priority_high' : t.priority === 'LOW' ? 'arrow_downward' : 'remove' }}</span>
+                {{ getPriorityLabel(t.priority) }}
+              </span>
+            } @else {
+              <span class="text-sm text-text-secondary">—</span>
+            }
+          </div>
+        </div>
+        <div>
+          <span class="text-[11px] text-text-secondary font-medium uppercase tracking-wider">Échéance</span>
+          <div class="mt-1.5 flex items-center gap-1.5">
+            @if (t.due_date) {
+              <span class="material-symbols-outlined text-sm text-text-secondary">calendar_today</span>
+              <span class="text-sm font-medium text-text">{{ t.due_date | date:'d MMM yyyy' }}</span>
+            } @else {
+              <span class="text-sm text-text-secondary">—</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ACTION BUTTONS ===== -->
+    <div class="flex items-center gap-3">
+      @if (canStart()) {
+        <button (click)="updateStatus('IN_PROGRESS')" [disabled]="saving()"
+          class="px-5 py-2.5 bg-primary text-text-inverse rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-hover disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-sm">play_arrow</span>
+          Démarrer le travail
+        </button>
+      }
+      @if (canSubmitForReview()) {
+        <button (click)="updateStatus('REVIEW')" [disabled]="saving()"
+          class="px-5 py-2.5 bg-primary text-text-inverse rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-hover disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-sm">rate_review</span>
+          Soumettre pour validation
+        </button>
+      }
+      @if (canApproveOrRework()) {
+        <button (click)="updateStatus('DONE')" [disabled]="saving()"
+          class="px-5 py-2.5 bg-success text-text-inverse rounded-lg text-sm font-semibold shadow-sm hover:bg-accent-dark disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-sm">check_circle</span>
+          Valider
+        </button>
+        <button (click)="updateStatus('IN_PROGRESS')" [disabled]="saving()"
+          class="px-5 py-2.5 bg-surface border border-border text-text-secondary rounded-lg text-sm font-semibold hover:bg-background-alt disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-sm">undo</span>
+          Renvoyer pour reprise
+        </button>
+      }
+    </div>
+
+    <!-- ===== DESCRIPTION ===== -->
+    @if (t.description) {
+      <div class="bg-surface rounded-xl border border-border p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined text-primary text-lg">description</span>
+          <h3 class="font-heading text-base font-semibold text-text">Description</h3>
+        </div>
+        <div class="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">{{ t.description }}</div>
+      </div>
+    }
+
+    <!-- ===== MAIN GRID: 2/3 + 1/3 ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- ===== LEFT COLUMN (2/3) ===== -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- ── DISCUSSION ── -->
+        <div class="bg-surface rounded-xl border border-border overflow-hidden">
+          <div class="px-6 py-4 border-b border-border flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-lg">chat_bubble_outline</span>
+            <h3 class="font-heading text-base font-semibold text-text">Discussion</h3>
+            @if (comments().length > 0) {
+              <span class="ml-auto bg-background-alt text-text-secondary px-2 py-0.5 rounded-full text-[11px] font-semibold">{{ comments().length }} message{{ comments().length > 1 ? 's' : '' }}</span>
+            }
+          </div>
+
+          <!-- Comment input -->
+          <div class="px-6 py-4 border-b border-border bg-background-alt/30">
+            <div class="flex gap-3">
+              <app-avatar [name]="(user()?.first_name || '') + ' ' + (user()?.last_name || '')" [imageUrl]="resolveAvatarUrl(user()?.avatar_url)" size="sm" class="!w-8 !h-8 !text-xs shrink-0 rounded-full mt-1" />
+              <div class="flex-1">
+                <textarea [(ngModel)]="newCommentContent" rows="2" placeholder="Ajouter un commentaire..."
+                  class="w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"></textarea>
+                <div class="flex justify-end mt-2">
+                  <button (click)="addComment()" [disabled]="!newCommentContent().trim() || saving()"
+                    class="bg-primary text-text-inverse text-sm font-semibold px-5 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">send</span>
+                    Poster
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comments list -->
+          <div class="px-6 py-4 max-h-[500px] overflow-y-auto space-y-5">
+            @if (rootComments.length === 0) {
+              <p class="text-sm text-text-secondary text-center py-4">Aucun commentaire pour l'instant. Lancez la discussion !</p>
+            }
+            @for (comment of rootComments; track comment.id) {
+              <div class="flex gap-3">
+                <app-avatar [imageUrl]="resolveAvatarUrl(comment.user?.avatar_url)" [name]="(comment.user?.first_name || '') + ' ' + (comment.user?.last_name || '')" size="sm" class="!w-8 !h-8 !text-xs shrink-0 rounded-full" />
+                <div class="flex-1 min-w-0">
+                  <div class="bg-background-alt rounded-2xl rounded-tl-sm px-4 py-3 border border-border/40">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-sm font-semibold text-text">{{ comment.user?.first_name }} {{ comment.user?.last_name }}</span>
+                      <span class="text-[11px] text-text-secondary">{{ comment.created_at ? relativeTime(comment.created_at) : '' }}</span>
+                    </div>
+                    <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">{{ comment.content }}</p>
+                  </div>
+                  <div class="flex items-center gap-3 mt-1.5 ml-2">
+                    <button (click)="toggleReply(comment.id)" class="text-xs font-semibold text-primary hover:text-primary-hover transition-colors cursor-pointer flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm">reply</span>
+                      Répondre
+                    </button>
+                  </div>
+
+                  <!-- Reply input -->
+                  @if (isReplyVisible(comment.id)) {
+                    <div class="mt-2 ml-4 flex gap-2">
+                      <input type="text" [ngModel]="getReplyContent(comment.id)" (ngModelChange)="setReplyContent(comment.id, $event)" placeholder="Votre réponse..." class="flex-1 px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                      <button (click)="addReply(comment.id)" [disabled]="!getReplyContent(comment.id).trim()" class="bg-primary text-text-inverse text-xs font-semibold px-3 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 cursor-pointer transition-colors">Répondre</button>
+                    </div>
+                  }
+
+                  <!-- Replies -->
+                  @for (reply of getReplies(comment.id); track reply.id) {
+                    <div class="ml-4 mt-3 flex gap-3">
+                      <app-avatar [imageUrl]="resolveAvatarUrl(reply.user?.avatar_url)" [name]="(reply.user?.first_name || '') + ' ' + (reply.user?.last_name || '')" size="sm" class="!w-6 !h-6 !text-[9px] shrink-0 rounded-full" />
+                      <div class="flex-1 min-w-0">
+                        <div class="bg-surface rounded-xl rounded-tl-sm px-3 py-2.5 border border-border/40">
+                          <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-semibold text-text">{{ reply.user?.first_name }} {{ reply.user?.last_name }}</span>
+                            <span class="text-[10px] text-text-secondary">{{ reply.created_at ? relativeTime(reply.created_at) : '' }}</span>
+                          </div>
+                          <p class="text-sm text-text-secondary whitespace-pre-wrap">{{ reply.content }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ── ATTACHMENTS ── -->
+        <div class="bg-surface rounded-xl border border-border p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="material-symbols-outlined text-primary text-lg">attachment</span>
+            <h3 class="font-heading text-base font-semibold text-text">Pièces jointes</h3>
+          </div>
+
+          <!-- Upload zone -->
+          <div class="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-background-alt/30 hover:border-primary/40 transition-colors cursor-pointer mb-4" (click)="fileInput.click()">
+            <span class="material-symbols-outlined text-3xl text-text-muted">cloud_upload</span>
+            <p class="text-sm text-text-secondary mt-2 font-medium">Cliquez pour ajouter des fichiers</p>
+            <p class="text-xs text-text-muted/60 mt-1">PNG, JPG, PDF jusqu'à 20 Mo</p>
+          </div>
+          <input #fileInput type="file" (change)="onFileInputChange($event)" class="hidden" multiple />
+
+          <app-file-uploader (fileSelected)="onAttachmentSelected($event)" [maxSizeMB]="20" label="Pièce jointe" class="hidden" />
+
+          <!-- Files list -->
+          @if (attachments().length > 0) {
+            <div class="space-y-2 mt-4">
+              @for (att of attachments(); track att.id) {
+                <div class="flex items-center gap-3 bg-background-alt/40 rounded-lg px-4 py-3 border border-border/40 hover:border-primary/30 transition-colors group">
+                  <div class="w-9 h-9 bg-primary-50 text-primary rounded-lg flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <a [href]="getAttachmentUrl(att)" target="_blank" class="text-sm font-medium text-primary hover:underline truncate block">{{ att.file_name }}</a>
+                    <p class="text-[11px] text-text-secondary">{{ formatFileSize(att.file_size) }}</p>
+                  </div>
+                  <a [href]="getAttachmentUrl(att)" target="_blank" class="text-text-secondary hover:text-primary p-1 rounded transition-colors">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                  </a>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-sm text-text-muted/60 text-center py-2">Aucune pièce jointe</p>
+          }
+        </div>
+
+        <!-- ── DEPENDENCIES ── -->
+        <div class="bg-surface rounded-xl border border-border p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="material-symbols-outlined text-primary text-lg">account_tree</span>
+            <h3 class="font-heading text-base font-semibold text-text">Dépendances</h3>
+          </div>
+
+          @if (dependencies().length > 0) {
+            <div class="space-y-2 mb-4">
+              @for (dep of dependencies(); track dep.id) {
+                <div class="flex items-center justify-between bg-background-alt/40 rounded-lg px-4 py-2.5 border border-border/40">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-text-secondary">subdirectory_arrow_right</span>
+                    <span class="text-sm text-text truncate">{{ dep.dependsOnTask?.title || 'Tâche #' + dep.depends_on_task_id }}</span>
+                  </div>
+                  <button (click)="removeDependency(dep)" class="text-text-secondary hover:text-error p-1 rounded hover:bg-error-light transition-colors cursor-pointer" title="Retirer">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-sm text-text-muted/60 text-center py-2 mb-4">Aucune dépendance</p>
+          }
+
+          @if (dependencyCandidates.length > 0) {
+            <select (change)="addDependency($event)" class="w-full px-3 py-2.5 bg-surface border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors cursor-pointer">
+              <option value="">Ajouter une dépendance...</option>
+              @for (candidate of dependencyCandidates; track candidate.id) {
+                <option [value]="candidate.id">{{ candidate.title }}</option>
+              }
+            </select>
+          }
+        </div>
+
+      </div>
+
+      <!-- ===== RIGHT COLUMN (1/3) — Activity timeline ===== -->
+      <div class="space-y-6">
+
+        <div class="bg-surface rounded-xl border border-border p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="material-symbols-outlined text-primary text-lg">history</span>
+            <h3 class="font-heading text-base font-semibold text-text">Activité</h3>
+          </div>
+
+          <div class="relative">
+            <!-- Timeline vertical line -->
+            <div class="absolute left-[9px] top-2 bottom-2 w-0.5 bg-border/50"></div>
+
+            <div class="space-y-5">
+              @if (history().length === 0) {
+                <p class="text-sm text-text-secondary text-center py-4 relative pl-8">
+                  <span class="absolute left-0 top-1.5 w-[18px] h-[18px] bg-background-alt border-2 border-border rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[10px] text-text-secondary">more_horiz</span>
+                  </span>
+                  Aucune activité enregistrée
+                </p>
+              }
+              @for (entry of history(); track $index) {
+                <div class="relative pl-8">
+                  <!-- Timeline dot -->
+                  <div class="absolute left-0 top-1.5 w-[18px] h-[18px] bg-surface border-2 rounded-full flex items-center justify-center shrink-0"
+                    [class.border-primary]="entry.type === 'status_change'"
+                    [class.border-border]="entry.type !== 'status_change'">
+                    @if (entry.type === 'status_change') {
+                      <span class="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                    } @else {
+                      <span class="material-symbols-outlined text-[10px] text-text-secondary">person_add</span>
+                    }
+                  </div>
+
+                  <div>
+                    @if (entry.type === 'status_change') {
+                      <p class="text-sm text-text">
+                        <span class="font-semibold">{{ entry.user?.first_name }} {{ entry.user?.last_name }}</span>
+                        <span class="text-text-secondary"> a changé le statut en </span>
+                        <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold" [class]="getStatusClass(entry.new_status)">{{ formatStatus(entry.new_status) }}</span>
+                      </p>
+                    } @else {
+                      <p class="text-sm text-text">
+                        <span class="font-semibold">{{ entry.user?.first_name }} {{ entry.user?.last_name }}</span>
+                        <span class="text-text-secondary"> a assigné à </span>
+                        <span class="font-semibold">{{ entry.new_user?.first_name }} {{ entry.new_user?.last_name }}</span>
+                      </p>
+                    }
+                    <span class="text-xs text-text-muted/60 mt-0.5 block">{{ relativeTime(entry.created_at) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+}

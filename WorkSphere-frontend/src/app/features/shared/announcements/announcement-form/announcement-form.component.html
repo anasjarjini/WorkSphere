@@ -1,0 +1,89 @@
+<div class="max-w-3xl mx-auto flex flex-col gap-6">
+  <div class="flex items-center gap-3">
+    <a [routerLink]="[baseRoute() + '/announcements']" class="text-text-secondary hover:text-text transition-colors p-1 cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
+    <h1 class="font-heading text-2xl font-bold text-text-heading">Nouvelle annonce</h1>
+  </div>
+
+  <form (ngSubmit)="onSubmit()" class="bg-surface border border-border rounded-xl p-6 sm:p-8 flex flex-col gap-6">
+    @if (errorMessage()) {
+      <div class="bg-error-light border border-error/20 rounded-md px-4 py-3 text-sm font-medium text-error-dark">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <div>
+      <label class="block text-sm font-semibold text-text mb-1.5">Titre *</label>
+      <input type="text" [(ngModel)]="formData.title" name="title" required
+        class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-text mb-1.5">Contenu *</label>
+      <textarea [(ngModel)]="formData.content" name="content" rows="6"
+        class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-vertical"></textarea>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm font-semibold text-text mb-1.5">Type</label>
+        <select [(ngModel)]="formData.type" name="type"
+          class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors">
+          <option value="GENERAL">Général</option>
+          <option value="MEETING">Réunion</option>
+          <option value="TRAINING">Formation</option>
+          <option value="POLICY">Politique</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-text mb-1.5">Département</label>
+        <select [(ngModel)]="formData.department_id" name="department_id"
+          class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors">
+          <option [ngValue]="null">Toute l'entreprise</option>
+          @for (dept of departments(); track dept.id) {
+            <option [ngValue]="dept.id">{{ dept.name }}</option>
+          }
+        </select>
+      </div>
+
+      @if (isMeeting()) {
+        <div>
+          <label class="block text-sm font-semibold text-text mb-1.5">Date de réunion</label>
+          <input type="datetime-local" [(ngModel)]="formData.meeting_date" name="meeting_date"
+            class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-text mb-1.5">Lien réunion</label>
+          <input type="url" [(ngModel)]="formData.meeting_link" name="meeting_link" placeholder="https://..."
+            class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+        </div>
+      }
+
+      @if (isTraining()) {
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-semibold text-text mb-1.5">Lien formation</label>
+          <input type="url" [(ngModel)]="formData.training_link" name="training_link" placeholder="https://..."
+            class="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+        </div>
+      }
+    </div>
+
+    <div class="flex items-center justify-end gap-3 pt-2 border-t border-border">
+      <a [routerLink]="[baseRoute() + '/announcements']"
+        class="px-5 py-2.5 text-sm font-semibold text-text-secondary border border-border rounded-md hover:bg-background-alt transition-colors cursor-pointer">
+        Annuler
+      </a>
+      <button type="submit" [disabled]="saving()"
+        class="px-5 py-2.5 text-sm font-semibold bg-primary text-text-inverse rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer">
+        @if (saving()) {
+          <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
+        }
+        Publier
+      </button>
+    </div>
+  </form>
+</div>

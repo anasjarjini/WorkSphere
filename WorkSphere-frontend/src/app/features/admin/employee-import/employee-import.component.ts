@@ -1,34 +1,108 @@
-/**
- * Page d'import CSV d'employés (Administrateur RH).
- * Drag & drop ou sélection de fichier, validation format/taille,
- * téléchargement du modèle CSV, et affichage du résultat d'import.
- */
-
-import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { ImportResult } from '../../../core/models/employee.model';
 
+interface CsvHeader {
+  name: string;
+  mappedField: string;
+  sampleValue: string;
+}
+
+const WORKSPHERE_FIELDS = [
+  { value: 'skip', label: '— Ignorer' },
+  { value: 'first_name', label: 'Prénom' },
+  { value: 'last_name', label: 'Nom' },
+  { value: 'email', label: 'Email' },
+  { value: 'role', label: 'Rôle (MANAGER/EMPLOYEE)' },
+  { value: 'job_title', label: 'Poste' },
+  { value: 'department_id', label: 'Département' },
+  { value: 'hire_date', label: "Date d'embauche" },
+  { value: 'salary', label: 'Salaire' },
+  { value: 'phone', label: 'Téléphone' },
+  { value: 'address', label: 'Adresse' },
+  { value: 'birth_date', label: 'Date de naissance' },
+  { value: 'contract_type', label: 'Type de contrat' },
+];
+
+const KNOWN_MAPPINGS: Record<string, string> = {
+  'full name': 'first_name',
+  'first name': 'first_name',
+  'first_name': 'first_name',
+  'last name': 'last_name',
+  'last_name': 'last_name',
+  'email': 'email',
+  'e-mail': 'email',
+  'contact email': 'email',
+  'contact_email': 'email',
+  'role': 'role',
+  'job title': 'job_title',
+  'job_title': 'job_title',
+  'position': 'job_title',
+  'department': 'department_id',
+  'dept': 'department_id',
+  'dept. code': 'department_id',
+  'dept code': 'department_id',
+  'department code': 'department_id',
+  'department_code': 'department_id',
+  'hire date': 'hire_date',
+  'hire_date': 'hire_date',
+  'joining date': 'hire_date',
+  'start date': 'hire_date',
+  'salary': 'salary',
+  'monthly salary': 'salary',
+  'annual salary': 'salary',
+  'phone': 'phone',
+  'telephone': 'phone',
+  'address': 'address',
+  'birth date': 'birth_date',
+  'birth_date': 'birth_date',
+  'date of birth': 'birth_date',
+  'contract type': 'contract_type',
+  'contract_type': 'contract_type',
+};
+
 @Component({
   selector: 'app-employee-import',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, FormsModule],
   templateUrl: './employee-import.component.html',
   styleUrl: './employee-import.component.scss'
 })
 export class EmployeeImportComponent {
   private readonly employeeService = inject(EmployeeService);
-  @ViewChild('fileInput', { static: true }) fileInput?: ElementRef<HTMLInputElement>;
 
+  readonly currentStep = signal<number>(1);
   readonly selectedFile = signal<File | null>(null);
   readonly isUploading = signal<boolean>(false);
   readonly importResult = signal<ImportResult | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly frontendError = signal<string | null>(null);
   readonly isDragOver = signal<boolean>(false);
+  readonly csvHeaders = signal<CsvHeader[]>([]);
 
-  // ── Helpers d'affichage ────────────────────────────────────────
+  readonly stepClass = (step: number): string => {
+    const current = this.currentStep();
+    if (step < current) return 'bg-success text-text-inverse';
+    if (step === current) return 'bg-primary text-text-inverse';
+    return 'bg-background-alt text-text-muted';
+  };
+
+  readonly stepLabelClass = (step: number): string => {
+    const current = this.currentStep();
+    if (step <= current) return 'text-primary';
+    return 'text-text-muted';
+  };
+
+  readonly stepLineClass = (step: number): string => {
+    if (step < this.currentStep()) return 'bg-primary';
+    return 'bg-border';
+  };
+
+  protected readonly fields = WORKSPHERE_FIELDS;
+
   readonly fileLabel = (): string => {
     const file = this.selectedFile();
     if (!file) return 'Aucun fichier sélectionné';
@@ -47,19 +121,33 @@ export class EmployeeImportComponent {
     return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
   }
 
-  // ── Téléchargement du modèle CSV ───────────────────────────────
-  /**
-   * Télécharge un modèle CSV vierge (avec un exemple) pour guider l'utilisateur.
-   */
+  goToNextStep(): void {
+    if (this.currentStep() === 1 && this.csvHeaders().length > 0) {
+      this.currentStep.set(2);
+    } else if (this.currentStep() === 2) {
+      this.onSubmit();
+    }
+  }
+
+  goToPrevStep(): void {
+    if (this.currentStep() > 1) {
+      this.currentStep.update(s => s - 1);
+    }
+  }
+
+  updateMapping(index: number, field: string): void {
+    this.csvHeaders.update(headers =>
+      headers.map((h, i) => i === index ? { ...h, mappedField: field } : h)
+    );
+  }
+
   downloadTemplate(): void {
     const headers = 'first_name,last_name,email,role,job_title,department,hire_date,salary';
     const exampleRow = 'Ahmed,Bennani,ahmed@example.com,EMPLOYEE,Développeur,IT,15/03/2023,8000';
-    const commentLine = '# first_name,last_name,email,role,job_title,department,hire_date,salary';
-    const content = `${headers}\n${commentLine}\n${exampleRow}\n`;
+    const content = `${headers}\n${exampleRow}\n`;
 
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement('a');
     link.href = url;
     link.download = 'modele_import_employes.csv';
@@ -69,22 +157,14 @@ export class EmployeeImportComponent {
     URL.revokeObjectURL(url);
   }
 
-  // ── Gestion du fichier (drag & drop + input file) ──────────────
-  /**
-   * Gère la sélection manuelle d'un fichier via l'input.
-   */
   onFileSelected(event: Event): void {
     this.resetErrors();
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     this.validateAndSetFile(input.files[0]);
-    // Reset input value pour permettre de re-sélectionner le même fichier
     input.value = '';
   }
 
-  /**
-   * Gère le survol d'un élément glissé (effet visuel).
-   */
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -97,9 +177,6 @@ export class EmployeeImportComponent {
     this.isDragOver.set(false);
   }
 
-  /**
-   * Gère le dépôt d'un fichier par glisser-déposer.
-   */
   onDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -110,40 +187,57 @@ export class EmployeeImportComponent {
     this.validateAndSetFile(event.dataTransfer.files[0]);
   }
 
-  /**
-   * Retire le fichier sélectionné et réinitialise les erreurs.
-   */
   removeFile(): void {
     this.selectedFile.set(null);
+    this.csvHeaders.set([]);
     this.resetErrors();
   }
 
-  /**
-   * Ouvre la boîte de dialogue de sélection de fichier.
-   */
   triggerFileInput(): void {
-    if (this.fileInput?.nativeElement) {
-      this.fileInput.nativeElement.click();
-    }
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    input?.click();
   }
 
   private validateAndSetFile(file: File): void {
     this.frontendError.set(null);
 
-    // Validation extension
     if (!file.name.toLowerCase().endsWith('.csv')) {
       this.frontendError.set('Seuls les fichiers au format .csv sont acceptés.');
       return;
     }
 
-    // Validation taille max (10 Mo)
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
-      this.frontendError.set(`Le fichier est trop volumineux (${this.formatFileSize(file.size)}). Taille maximale : 10 Mo.`);
+      this.frontendError.set(`Le fichier est trop volumineux (${this.formatFileSize(file.size)}). Taille maximale : 20 Mo.`);
       return;
     }
 
     this.selectedFile.set(file);
+    this.parseCsvHeaders(file);
+  }
+
+  private parseCsvHeaders(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+      if (lines.length === 0) return;
+
+      const headerLine = lines[0];
+      const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const sampleLine = lines.length > 1 ? lines[1] : '';
+      const sampleValues = sampleLine.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+
+      const mapped: CsvHeader[] = headers.map((name, i) => ({
+        name,
+        mappedField: KNOWN_MAPPINGS[name.toLowerCase()] || 'skip',
+        sampleValue: sampleValues[i] || '',
+      }));
+
+      this.csvHeaders.set(mapped);
+      this.currentStep.set(1);
+    };
+    reader.readAsText(file, 'UTF-8');
   }
 
   private resetErrors(): void {
@@ -152,10 +246,6 @@ export class EmployeeImportComponent {
     this.importResult.set(null);
   }
 
-  // ── Envoi du fichier à l'API ───────────────────────────────────
-  /**
-   * Envoie le fichier CSV à l'API et affiche le résultat de l'import.
-   */
   onSubmit(): void {
     const file = this.selectedFile();
     if (!file) return;
@@ -168,8 +258,7 @@ export class EmployeeImportComponent {
       next: (result) => {
         this.isUploading.set(false);
         this.importResult.set(result);
-        // Vider la zone d'upload pour permettre un nouvel import
-        this.selectedFile.set(null);
+        this.currentStep.set(3);
       },
       error: (err: HttpErrorResponse) => {
         this.isUploading.set(false);
@@ -185,14 +274,12 @@ export class EmployeeImportComponent {
     });
   }
 
-  // ── Réinitialisation ───────────────────────────────────────────
-  /**
-   * Réinitialise complètement l'état de l'import (fichier, résultats, erreurs).
-   */
   resetImport(): void {
     this.selectedFile.set(null);
     this.importResult.set(null);
     this.errorMessage.set(null);
     this.frontendError.set(null);
+    this.csvHeaders.set([]);
+    this.currentStep.set(1);
   }
 }

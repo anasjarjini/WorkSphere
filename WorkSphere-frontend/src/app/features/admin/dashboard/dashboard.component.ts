@@ -20,15 +20,22 @@ import { ChartConfiguration } from 'chart.js';
 const CSS_VAR = (name: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+const STITCH_PRIMARY = '#630ed4';
+const STITCH_PRIMARY_LIGHT = '#f0e6ff';
+const STITCH_SURFACE_LOW = '#f9f1ff';
+const STITCH_OUTLINE_VARIANT = '#ccc3d8';
+const STITCH_ON_SURFACE_VARIANT = '#4a4455';
+const STITCH_SECONDARY_CONTAINER = '#86f2e4';
+
 const CSS_COLORS = (): string[] => [
-  CSS_VAR('--color-primary') || '#1E40AF',
-  CSS_VAR('--color-secondary') || '#475569',
-  CSS_VAR('--color-tertiary') || '#F59E0B',
-  CSS_VAR('--color-primary-light') || '#60A5FA',
-  CSS_VAR('--color-secondary-light') || '#94A3B8',
-  CSS_VAR('--color-warning') || '#D97706',
-  '#3B82F6',
-  '#10B981',
+  CSS_VAR('--color-stitch-primary') || STITCH_PRIMARY,
+  CSS_VAR('--color-stitch-primary-container') || '#7c3aed',
+  STITCH_SECONDARY_CONTAINER,
+  CSS_VAR('--color-stitch-primary-light') || STITCH_PRIMARY_LIGHT,
+  '#e8def8',
+  '#ffb4ab',
+  '#d0bcff',
+  '#bae2e0',
 ];
 
 const CHART_TOOLTIP_BG = (): string => CSS_VAR('--color-tooltip') || '#1E293B';
@@ -53,6 +60,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly user = this.authService.currentUser;
   readonly userName = computed(() => this.authService.displayName(this.user()));
 
+  today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   loading = signal(true);
   error = signal<string | null>(null);
   stats = signal<DashboardStats | null>(null);
@@ -205,15 +213,15 @@ export class AdminDashboardComponent implements OnInit {
         // Prepare donut chart data for role distribution
         const totalNonAdmin =
           stats.managers_count + stats.regular_employees_count;
-        const primary = CSS_VAR('--color-primary') || '#1E40AF';
-        const secondary = CSS_VAR('--color-secondary') || '#475569';
+        const stitchPrimary = CSS_VAR('--color-stitch-primary') || STITCH_PRIMARY;
+        const stitchSecondary = STITCH_SECONDARY_CONTAINER;
         if (totalNonAdmin > 0) {
           this.donutChartData.set({
             labels: ['Managers', 'Employés'],
             datasets: [
               {
                 data: [stats.managers_count, stats.regular_employees_count],
-                backgroundColor: [primary, secondary],
+                backgroundColor: [stitchPrimary, stitchSecondary],
                 borderColor: [CSS_VAR('--color-surface') || '#FFFFFF', CSS_VAR('--color-surface') || '#FFFFFF'],
                 borderWidth: 3,
                 hoverOffset: 8,

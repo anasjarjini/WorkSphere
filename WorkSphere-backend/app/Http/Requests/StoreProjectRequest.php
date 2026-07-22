@@ -20,6 +20,7 @@ class StoreProjectRequest extends FormRequest
             'priority' => 'nullable|in:low,medium,high,critical',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'progress_percentage' => 'nullable|integer|min:0|max:100',
             'estimated_budget' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|size:3',
         ];

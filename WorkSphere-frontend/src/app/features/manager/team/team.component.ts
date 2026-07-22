@@ -7,17 +7,20 @@ import { Component, OnInit, inject, signal, computed, OnDestroy } from '@angular
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { AvatarComponent } from '../../../shared/components/avatar/avatar.component';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee, PaginatedResponse, EmployeeQueryParams } from '../../../core/models/employee.model';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 
 @Component({
   selector: 'app-manager-team',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, AvatarComponent],
   templateUrl: './team.component.html'
 })
 export class ManagerTeamComponent implements OnInit, OnDestroy {
   private readonly employeeService = inject(EmployeeService);
+  readonly imageUrlService = inject(ImageUrlService);
 
   readonly employees = signal<Employee[]>([]);
   readonly total = signal(0);
@@ -31,14 +34,13 @@ export class ManagerTeamComponent implements OnInit, OnDestroy {
   readonly successMessage = signal<string | null>(null);
 
   readonly searchTerm = signal('');
-  readonly roleFilter = signal('');
   readonly departmentFilter = signal('');
 
   private readonly searchSubject = new Subject<string>();
   private readonly subscriptions: Subscription[] = [];
 
   readonly isFiltered = computed(() =>
-    !!this.searchTerm() || !!this.roleFilter() || !!this.departmentFilter()
+    !!this.searchTerm() || !!this.departmentFilter()
   );
 
   readonly pageNumbers = computed(() => {
@@ -87,12 +89,6 @@ export class ManagerTeamComponent implements OnInit, OnDestroy {
     this.searchSubject.next(value);
   }
 
-  onRoleChange(value: string): void {
-    this.roleFilter.set(value);
-    this.currentPage.set(1);
-    this.loadTeam();
-  }
-
   onDepartmentChange(value: string): void {
     this.departmentFilter.set(value);
     this.currentPage.set(1);
@@ -101,7 +97,6 @@ export class ManagerTeamComponent implements OnInit, OnDestroy {
 
   resetFilters(): void {
     this.searchTerm.set('');
-    this.roleFilter.set('');
     this.departmentFilter.set('');
     this.currentPage.set(1);
     this.loadTeam();
@@ -119,7 +114,6 @@ export class ManagerTeamComponent implements OnInit, OnDestroy {
     };
 
     if (this.searchTerm()) params.search = this.searchTerm();
-    if (this.roleFilter()) params.role = this.roleFilter();
     if (this.departmentFilter()) params.department = this.departmentFilter();
 
     this.employeeService.getManagerTeam(params).subscribe({
@@ -152,17 +146,6 @@ export class ManagerTeamComponent implements OnInit, OnDestroy {
     if (page < 1 || page > this.lastPage() || page === this.currentPage()) return;
     this.currentPage.set(page);
     this.loadTeam(page);
-  }
-
-  getRoleBadgeClass(role: string): string {
-    switch (role) {
-      case 'MANAGER':
-        return 'bg-accent-light text-accent-dark';
-      case 'EMPLOYE':
-        return 'bg-info-light text-primary-dark';
-      default:
-        return 'bg-background-alt text-text-muted';
-    }
   }
 
   dismissSuccess(): void {

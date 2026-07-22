@@ -1,0 +1,68 @@
+<div
+  class="relative border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-200 cursor-pointer"
+  [class.border-primary]="!isDragOver() && !selectedFile()"
+  [class.border-accent]="isDragOver()"
+  [class.bg-accent-light]="isDragOver()"
+  [class.border-success]="selectedFile()"
+  [class.bg-success-light]="selectedFile()"
+  [class.border-solid]="selectedFile()"
+  role="button"
+  tabindex="0"
+  (click)="fileInput.click()"
+  (keydown.enter)="fileInput.click()"
+  (keydown.space)="fileInput.click(); $event.preventDefault()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave()"
+  (drop)="onDrop($event)"
+>
+  <input
+    #fileInput
+    type="file"
+    [accept]="accept()"
+    class="hidden"
+    (change)="onFileSelected($event)"
+  />
+
+  @if (selectedFile(); as file) {
+    <div class="flex items-center gap-3 w-full">
+      <div class="w-10 h-10 bg-primary-50 text-primary rounded-lg flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-text truncate">{{ file.name }}</p>
+        <p class="text-xs text-text-secondary">{{ formatSize(file.size) }}</p>
+      </div>
+      <button type="button" (click)="clear(); $event.stopPropagation()"
+        class="text-text-secondary hover:text-error p-1 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  } @else {
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17 8 12 3 7 8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+    <div class="text-center">
+      <p class="text-sm font-medium text-text-secondary">Cliquez ou glissez un fichier</p>
+      <p class="text-xs text-text-muted mt-0.5">Taille max : {{ maxSizeMB() }} Mo</p>
+    </div>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="flex items-center gap-1.5 mt-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-error shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span class="text-xs font-medium text-error-dark">{{ errorMessage() }}</span>
+  </div>
+}

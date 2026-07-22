@@ -30,6 +30,8 @@ class Project extends Model
         'cahier_charges_original_name',
     ];
 
+    protected $appends = ['cahier_charges_url'];
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
@@ -51,6 +53,16 @@ class Project extends Model
         static::creating(function (Project $project) {
             if (empty($project->reference_code) && $project->company_id) {
                 $project->reference_code = self::generateReferenceCode($project->company_id);
+            }
+        });
+
+        static::saving(function (Project $project) {
+            if ($project->progress_percentage === 0) {
+                $project->status = 'PLANIFICATION';
+            } elseif ($project->progress_percentage === 100) {
+                $project->status = 'TERMINE';
+            } elseif ($project->progress_percentage > 0 && $project->progress_percentage < 100) {
+                $project->status = 'EN_COURS';
             }
         });
     }
