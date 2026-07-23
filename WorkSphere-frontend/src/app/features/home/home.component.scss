@@ -1,1 +1,7 @@
-/* Custom component styles have been removed in favor of Tailwind CSS utility classes defined in MASTER.md */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-bounce-subtle {
+  animation: bounce-subtle 4s ease-in-out infinite;
+}

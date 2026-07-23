@@ -8,11 +8,4 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 class EmployeeCollection extends ResourceCollection
 {
     public $collects = UserResource::class;
-
-    public function toArray(Request $request): array
-    {
-        return [
-            'data' => $this->collection,
-        ];
-    }
 }

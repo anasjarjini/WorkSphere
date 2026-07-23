@@ -265,6 +265,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     return role === 'HR_ADMIN';
   }
 
+  formatId(id: number): string {
+    return id.toString().padStart(4, '0');
+  }
+
   getRoleBadgeClass(role: string): string {
     switch (role) {
       case 'HR_ADMIN':

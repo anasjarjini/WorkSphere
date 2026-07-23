@@ -22,10 +22,17 @@ class TaskComment extends Model
         'parent_id',
     ];
 
+    protected $appends = ['content'];
+
     protected $casts = [
         'is_edited' => 'boolean',
         'edited_at' => 'datetime',
     ];
+
+    public function getContentAttribute(): ?string
+    {
+        return $this->attributes['comment'] ?? null;
+    }
 
     public function markAsEdited(): void
     {

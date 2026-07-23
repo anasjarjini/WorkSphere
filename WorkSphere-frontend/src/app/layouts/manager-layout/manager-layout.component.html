@@ -22,31 +22,38 @@
     <div class="fixed inset-0 bg-text/50 z-40 md:hidden" (click)="toggleMobileMenu()"></div>
   }
 
-  <nav class="fixed md:sticky top-0 h-screen z-50 w-64 bg-surface border-r border-border flex flex-col py-6 px-4 shrink-0 transition-transform duration-300 md:translate-x-0"
+  <nav class="fixed md:sticky top-0 h-screen z-50 w-64 bg-surface border-r border-border flex flex-col py-8 px-5 shrink-0 transition-transform duration-300 md:translate-x-0"
        [class.-translate-x-full]="!mobileMenuOpen"
        [class.translate-x-0]="mobileMenuOpen">
-    <div class="px-3 mb-8 flex justify-between items-center">
+    <div class="px-3 mb-10 flex justify-between items-center">
       <app-company-brand [homeRoute]="'/manager'" [contextLabel]="'Espace Manager'" class="flex-1 min-w-0"></app-company-brand>
       <button (click)="toggleMobileMenu()" class="md:hidden text-text-secondary hover:text-text p-1 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
 
-    <ul class="flex flex-col gap-1 flex-1">
+    <ul class="flex flex-col gap-2 flex-1">
       <li>
-        <a routerLink="/manager/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+        <a routerLink="/manager/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-4 py-3 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Dashboard
+          Tableau de bord
         </a>
       </li>
       <li>
-        <a routerLink="/manager/team" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+        <a routerLink="/manager/team" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-4 py-3 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Mon équipe
         </a>
       </li>
       <li>
-        <a routerLink="/manager/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+        <a routerLink="/manager/projects" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-4 py-3 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Projets
+        </a>
+      </li>
+
+      <li>
+        <a routerLink="/manager/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-4 py-3 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Profil
         </a>

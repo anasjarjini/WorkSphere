@@ -8,11 +8,12 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { LoadingComponent } from './shared/components/loading/loading.component';
+import { ToastContainerComponent } from './shared/components/toast/toast.component';
 import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LoadingComponent],
+  imports: [RouterOutlet, LoadingComponent, ToastContainerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

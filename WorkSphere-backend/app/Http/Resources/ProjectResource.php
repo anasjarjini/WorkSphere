@@ -31,6 +31,7 @@ class ProjectResource extends JsonResource
             'cahier_charges_url' => $this->cahier_charges_url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'tasks_count' => $this->tasks_count ?? 0,
         ];
     }
 }

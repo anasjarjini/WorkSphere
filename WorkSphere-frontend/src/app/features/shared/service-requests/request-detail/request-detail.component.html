@@ -1,0 +1,142 @@
+@if (loading()) {
+  <div class="max-w-4xl mx-auto animate-pulse space-y-6">
+    <div class="h-8 bg-background-alt rounded w-1/3"></div>
+    <div class="bg-surface border border-border rounded-xl p-8 space-y-4">
+      <div class="h-6 bg-background-alt rounded w-1/2"></div>
+      <div class="h-4 bg-background-alt rounded w-full"></div>
+    </div>
+  </div>
+} @else if (request(); as r) {
+  <div class="max-w-4xl mx-auto flex flex-col gap-6">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <a [routerLink]="[baseRoute() + '/requests']" class="text-text-secondary hover:text-text transition-colors p-1 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
+          <h1 class="font-heading text-2xl font-bold text-text-heading truncate">{{ r.title }}</h1>
+        </div>
+        <p class="text-sm text-text-muted font-mono mt-1">{{ r.reference_code }}</p>
+      </div>
+      <span class="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full" [class]="getStatusClass(r.status)">
+        {{ getStatusLabel(r.status) }}
+      </span>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl p-6 sm:p-8 shadow-sm">
+      @if (r.description) {
+        <div class="mb-6">
+          <p class="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Description</p>
+          <p class="text-sm text-text whitespace-pre-wrap">{{ r.description }}</p>
+        </div>
+      }
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        @if (r.from_department) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Département demandeur</p>
+            <p class="text-text font-medium">{{ r.from_department.name }}</p>
+          </div>
+        }
+        @if (r.to_department) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Département destinataire</p>
+            <p class="text-text font-medium">{{ r.to_department.name }}</p>
+          </div>
+        }
+        @if (r.creator) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Créé par</p>
+            <p class="text-text font-medium">{{ r.creator.first_name }} {{ r.creator.last_name }}</p>
+          </div>
+        }
+        @if (r.developer) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Développeur assigné</p>
+            <p class="text-text font-medium">{{ r.developer.first_name }} {{ r.developer.last_name }}</p>
+          </div>
+        }
+        @if (r.priority) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Priorité</p>
+            <p class="text-text font-medium">{{ r.priority }}</p>
+          </div>
+        }
+        @if (r.assigned_at) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Assignée le</p>
+            <p class="text-text font-medium">{{ r.assigned_at }}</p>
+          </div>
+        }
+        @if (r.resolved_at) {
+          <div>
+            <p class="text-xs uppercase tracking-wider text-text-muted font-semibold">Résolue le</p>
+            <p class="text-text font-medium">{{ r.resolved_at }}</p>
+          </div>
+        }
+      </div>
+
+      @if (isRejected() && r.rejection_reason) {
+        <div class="mt-6 bg-error-light border border-error/20 rounded-md p-4">
+          <p class="text-xs uppercase tracking-wider text-error-dark font-semibold mb-1">Motif du rejet</p>
+          <p class="text-sm text-error-dark">{{ r.rejection_reason }}</p>
+        </div>
+      }
+
+      @if (showActions()) {
+        <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-border">
+          @if (canApprove()) {
+            <button (click)="approve()" [disabled]="saving()"
+              class="bg-success text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-success-hover disabled:opacity-50 transition-colors cursor-pointer">
+              Approuver
+            </button>
+            <div class="flex items-center gap-2">
+              <input type="text" [(ngModel)]="rejectionReason" placeholder="Motif du rejet..."
+                class="px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <button (click)="reject()" [disabled]="!rejectionReason().trim() || saving()"
+                class="bg-error text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-error-hover disabled:opacity-50 transition-colors cursor-pointer">
+                Rejeter
+              </button>
+            </div>
+          }
+
+          @if (canAssignDeveloper()) {
+            <div class="flex items-center gap-2">
+              <select (change)="selectedDeveloperId.set(+$any($event.target).value)"
+                class="px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/30">
+                <option [ngValue]="null">Choisir un développeur...</option>
+                @for (emp of employees(); track emp.id) {
+                  <option [value]="emp.id">{{ emp.first_name }} {{ emp.last_name }}</option>
+                }
+              </select>
+              <button (click)="assignDeveloper()" [disabled]="!selectedDeveloperId() || saving()"
+                class="bg-primary text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer">
+                Assigner
+              </button>
+            </div>
+          }
+
+          @if (canStartDevelopment()) {
+            <button (click)="updateStatus('TESTING')" [disabled]="saving()"
+              class="bg-accent text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer">
+              Passer en test
+            </button>
+          }
+
+          @if (canApproveDeployment()) {
+            <button (click)="updateStatus('DEPLOYED')" [disabled]="saving()"
+              class="bg-success text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-success-hover disabled:opacity-50 transition-colors cursor-pointer">
+              Valider le déploiement
+            </button>
+            <button (click)="updateStatus('IN_DEVELOPMENT')" [disabled]="saving()"
+              class="bg-warning text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-warning-hover disabled:opacity-50 transition-colors cursor-pointer">
+              Renvoyer en développement
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

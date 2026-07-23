@@ -14,7 +14,7 @@ class UploadCahierChargesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'file' => 'required|file|mimes:pdf,doc,docx,zip|max:20480',
         ];
     }
 }

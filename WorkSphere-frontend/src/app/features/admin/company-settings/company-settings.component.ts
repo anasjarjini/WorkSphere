@@ -53,7 +53,7 @@ export class CompanySettingsComponent implements OnInit {
     this.loadCompany();
   }
 
-  private loadCompany(): void {
+  loadCompany(): void {
     this.isLoading.set(true);
     this.companyService.getCompany().subscribe({
       next: (response) => {

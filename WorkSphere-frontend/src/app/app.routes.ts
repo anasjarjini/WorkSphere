@@ -1,6 +1,3 @@
-
-
-
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -19,23 +16,29 @@ export const routes: Routes = [
   },
   {
     path: 'activate',
-       canActivate: [clearAuthGuard],
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/activate-account/activate-account.component').then((m) => m.ActivateAccountComponent)
   },
   {
     path: 'register-company',
-       canActivate: [clearAuthGuard],
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/register-company/register-company.component').then((m) => m.RegisterCompanyComponent)
   },
   {
     path: 'forgot-password',
-       canActivate: [clearAuthGuard],
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
   },
   {
     path: 'reset-password',
-       canActivate: [clearAuthGuard],
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+  },
+  {
+    path: 'tasks/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/shared/tasks/task-detail/task-detail.component').then((m) => m.TaskDetailComponent),
+    data: { breadcrumb: 'Tâche' }
   },
   {
     path: 'admin',
@@ -69,6 +72,51 @@ export const routes: Routes = [
         data: { breadcrumb: 'Paramètres' }
       },
       {
+        path: 'projects',
+        loadComponent: () => import('./features/projects/project-list/project-list.component').then((m) => m.ProjectListComponent),
+        data: { breadcrumb: 'Projets' }
+      },
+      {
+        path: 'projects/new',
+        loadComponent: () => import('./features/projects/project-form/project-form.component').then((m) => m.ProjectFormComponent),
+        data: { breadcrumb: 'Nouveau projet' }
+      },
+      {
+        path: 'projects/:id',
+        loadComponent: () => import('./features/projects/project-detail/project-detail.component').then((m) => m.ProjectDetailComponent),
+        data: { breadcrumb: 'Projet' }
+      },
+      {
+        path: 'projects/:id/edit',
+        loadComponent: () => import('./features/projects/project-form/project-form.component').then((m) => m.ProjectFormComponent),
+        data: { breadcrumb: 'Modifier projet' }
+      },
+      {
+        path: 'requests',
+        loadComponent: () => import('./features/shared/service-requests/request-list/request-list.component').then((m) => m.RequestListComponent),
+        data: { breadcrumb: 'Demandes' }
+      },
+      {
+        path: 'requests/new',
+        loadComponent: () => import('./features/shared/service-requests/request-form/request-form.component').then((m) => m.RequestFormComponent),
+        data: { breadcrumb: 'Nouvelle demande' }
+      },
+      {
+        path: 'requests/:id',
+        loadComponent: () => import('./features/shared/service-requests/request-detail/request-detail.component').then((m) => m.RequestDetailComponent),
+        data: { breadcrumb: 'Demande' }
+      },
+      {
+        path: 'announcements',
+        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        data: { breadcrumb: 'Annonces' }
+      },
+      {
+        path: 'announcements/new',
+        loadComponent: () => import('./features/shared/announcements/announcement-form/announcement-form.component').then((m) => m.AnnouncementFormComponent),
+        data: { breadcrumb: 'Nouvelle annonce' }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
@@ -93,6 +141,61 @@ export const routes: Routes = [
         data: { breadcrumb: 'Mon équipe' }
       },
       {
+        path: 'projects',
+        loadComponent: () => import('./features/projects/project-list/project-list.component').then((m) => m.ProjectListComponent),
+        data: { breadcrumb: 'Projets' }
+      },
+      {
+        path: 'projects/new',
+        loadComponent: () => import('./features/projects/project-form/project-form.component').then((m) => m.ProjectFormComponent),
+        data: { breadcrumb: 'Nouveau projet' }
+      },
+      {
+        path: 'projects/:id',
+        loadComponent: () => import('./features/projects/project-detail/project-detail.component').then((m) => m.ProjectDetailComponent),
+        data: { breadcrumb: 'Projet' }
+      },
+      {
+        path: 'projects/:id/edit',
+        loadComponent: () => import('./features/projects/project-form/project-form.component').then((m) => m.ProjectFormComponent),
+        data: { breadcrumb: 'Modifier projet' }
+      },
+      {
+        path: 'projects/:id/board',
+        loadComponent: () => import('./features/shared/tasks/task-kanban/task-board.component').then((m) => m.TaskBoardComponent),
+        data: { breadcrumb: 'Tableau Kanban' }
+      },
+      {
+        path: 'projects/:projectId/tasks/new',
+        loadComponent: () => import('./features/shared/tasks/task-form/task-form.component').then((m) => m.TaskFormComponent),
+        data: { breadcrumb: 'Nouvelle tâche' }
+      },
+      {
+        path: 'requests',
+        loadComponent: () => import('./features/shared/service-requests/request-list/request-list.component').then((m) => m.RequestListComponent),
+        data: { breadcrumb: 'Demandes' }
+      },
+      {
+        path: 'requests/new',
+        loadComponent: () => import('./features/shared/service-requests/request-form/request-form.component').then((m) => m.RequestFormComponent),
+        data: { breadcrumb: 'Nouvelle demande' }
+      },
+      {
+        path: 'requests/:id',
+        loadComponent: () => import('./features/shared/service-requests/request-detail/request-detail.component').then((m) => m.RequestDetailComponent),
+        data: { breadcrumb: 'Demande' }
+      },
+      {
+        path: 'announcements',
+        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        data: { breadcrumb: 'Annonces' }
+      },
+      {
+        path: 'announcements/new',
+        loadComponent: () => import('./features/shared/announcements/announcement-form/announcement-form.component').then((m) => m.AnnouncementFormComponent),
+        data: { breadcrumb: 'Nouvelle annonce' }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
@@ -112,6 +215,36 @@ export const routes: Routes = [
         data: { breadcrumb: 'Dashboard' }
       },
       {
+        path: 'tasks',
+        loadComponent: () => import('./features/employee/my-tasks/my-tasks.component').then((m) => m.MyTasksComponent),
+        data: { breadcrumb: 'Mes tâches' }
+      },
+      {
+        path: 'tasks/:id',
+        loadComponent: () => import('./features/shared/tasks/task-detail/task-detail.component').then((m) => m.TaskDetailComponent),
+        data: { breadcrumb: 'Tâche' }
+      },
+      {
+        path: 'requests',
+        loadComponent: () => import('./features/shared/service-requests/request-list/request-list.component').then((m) => m.RequestListComponent),
+        data: { breadcrumb: 'Demandes' }
+      },
+      {
+        path: 'requests/new',
+        loadComponent: () => import('./features/shared/service-requests/request-form/request-form.component').then((m) => m.RequestFormComponent),
+        data: { breadcrumb: 'Nouvelle demande' }
+      },
+      {
+        path: 'requests/:id',
+        loadComponent: () => import('./features/shared/service-requests/request-detail/request-detail.component').then((m) => m.RequestDetailComponent),
+        data: { breadcrumb: 'Demande' }
+      },
+      {
+        path: 'announcements',
+        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        data: { breadcrumb: 'Annonces' }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
@@ -121,7 +254,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-        canActivate: [clearAuthGuard],
+    canActivate: [clearAuthGuard],
     loadComponent: () => import('./shared/components/not-found/not-found.component').then((m) => m.NotFoundComponent)
   }
 ];

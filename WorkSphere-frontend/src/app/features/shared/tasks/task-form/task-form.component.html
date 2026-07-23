@@ -1,0 +1,138 @@
+<div class="min-h-screen bg-background py-8 px-6">
+  <div class="max-w-7xl mx-auto flex flex-col gap-6">
+
+   
+
+    <!-- Page Title -->
+    <div>
+      <h1 class="font-heading text-2xl font-bold text-text-heading">Nouvelle tâche</h1>
+      <p class="text-sm text-text-secondary mt-1">Définissez les détails de la mission pour votre équipe.</p>
+    </div>
+
+    <!-- Grid: Form + Side Panel -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Form Card -->
+      <div class="lg:col-span-8">
+        <div class="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+          <form (ngSubmit)="onSubmit()" class="p-6 sm:p-8 space-y-6">
+
+            @if (errorMessage()) {
+              <div class="bg-error-light border border-error/20 rounded-lg px-4 py-3 text-sm font-medium text-error-dark flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm shrink-0">error</span>
+                <span class="flex-1">{{ errorMessage() }}</span>
+                <button type="button" (click)="errorMessage.set(null)" class="text-error-dark/60 hover:text-error-dark cursor-pointer shrink-0">
+                  <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+            }
+
+            <!-- Title -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-semibold text-text" for="task-title">Titre de la tâche *</label>
+              <input type="text" id="task-title" [(ngModel)]="formData.title" name="title" required
+                placeholder="ex: Finalisation du rapport trimestriel"
+                class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all" />
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-semibold text-text" for="description">Description</label>
+              <textarea id="description" [(ngModel)]="formData.description" name="description" rows="5"
+                placeholder="Décrivez les objectifs et les livrables attendus..."
+                class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Priority + Due Date -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="block text-sm font-semibold text-text" for="priority">Priorité</label>
+                <div class="relative">
+                  <select id="priority" [(ngModel)]="formData.priority" name="priority"
+                    class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-surface border border-border rounded-lg text-sm text-text focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all cursor-pointer">
+                    <option value="">Sélectionner...</option>
+                    <option value="LOW">Faible</option>
+                    <option value="MEDIUM">Moyenne</option>
+                    <option value="HIGH">Haute</option>
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted text-base">expand_more</span>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="block text-sm font-semibold text-text" for="due-date">Date d'échéance</label>
+                <div class="relative">
+                  <input type="date" id="due-date" [(ngModel)]="formData.due_date" name="due_date"
+                    [attr.min]="today"
+                    class="w-full px-3.5 py-2.5 bg-surface border border-border rounded-lg text-sm text-text focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all" />
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted text-base">calendar_today</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assignee -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-semibold text-text" for="assignee">Assigner à</label>
+              <div class="relative">
+                <select id="assignee" [(ngModel)]="formData.user_id" name="user_id"
+                  class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-surface border border-border rounded-lg text-sm text-text focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all cursor-pointer">
+                  <option [ngValue]="null">Sélectionner un collaborateur</option>
+                  @for (member of teamMembers(); track member.id) {
+                    <option [ngValue]="member.id">{{ member.first_name }} {{ member.last_name }} — {{ member.job_title }}</option>
+                  }
+                </select>
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted text-base">person_search</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 pt-5 border-t border-border">
+              <a [routerLink]="[baseRoute() + '/projects/' + projectId]"
+                class="px-5 py-2.5 text-sm font-semibold text-text-secondary border border-border rounded-lg hover:bg-background-alt transition-all cursor-pointer">
+                Annuler
+              </a>
+              <button type="submit" [disabled]="saving()"
+                class="px-5 py-2.5 text-sm font-semibold bg-primary text-text-inverse rounded-lg shadow-sm hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 cursor-pointer">
+                @if (saving()) {
+                  <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
+                } @else {
+                  <span class="material-symbols-outlined text-sm">add_task</span>
+                }
+                Créer la tâche
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="lg:col-span-4 space-y-6">
+
+        <!-- Helper Card -->
+        <div class="bg-surface border border-border rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4 text-primary">
+            <span class="material-symbols-outlined">lightbulb</span>
+            <h4 class="font-heading text-lg font-semibold text-text-heading">Conseils</h4>
+          </div>
+          <ul class="space-y-3">
+            <li class="flex gap-2.5 text-sm text-text-secondary">
+              <span class="material-symbols-outlined text-base text-accent shrink-0 mt-0.5">check_circle</span>
+              Soyez spécifique dans le titre pour une identification rapide.
+            </li>
+            <li class="flex gap-2.5 text-sm text-text-secondary">
+              <span class="material-symbols-outlined text-base text-accent shrink-0 mt-0.5">check_circle</span>
+              Définissez une priorité "Haute" uniquement pour les urgences réelles.
+            </li>
+            <li class="flex gap-2.5 text-sm text-text-secondary">
+              <span class="material-symbols-outlined text-base text-accent shrink-0 mt-0.5">check_circle</span>
+              L'assignation d'une date d'échéance aide à la gestion du calendrier d'équipe.
+            </li>
+          </ul>
+        </div>
+
+
+      </div>
+
+    </div>
+  </div>
+</div>
