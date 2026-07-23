@@ -51,6 +51,35 @@ export class ProjectDetailComponent implements OnInit {
   readonly tasks = signal<Task[]>([]);
   readonly loading = signal(true);
   readonly viewMode = signal<'list' | 'kanban'>('list');
+  readonly currentPage = signal(1);
+  readonly pageSize = 5;
+
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.tasks().length / this.pageSize)));
+
+  readonly paginatedTasks = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.tasks().slice(start, start + this.pageSize);
+  });
+
+  readonly currentStart = computed(() => (this.currentPage() - 1) * this.pageSize + 1);
+
+  readonly currentEnd = computed(() => Math.min(this.currentPage() * this.pageSize, this.tasks().length));
+
+  readonly pages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range: number[] = [];
+    const start = Math.max(1, current - 1);
+    const end = Math.min(total, current + 1);
+    for (let i = start; i <= end; i++) range.push(i);
+    return range;
+  });
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
 
   readonly isManager = computed(() => this.user()?.role === 'MANAGER');
 

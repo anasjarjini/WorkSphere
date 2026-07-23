@@ -34,6 +34,8 @@ export class MyTasksComponent {
   readonly tasks = signal<Task[]>([]);
   readonly loading = signal(true);
   readonly selectedStatus = signal<TaskStatus | 'ALL'>('ALL');
+  readonly currentPage = signal(1);
+  readonly pageSize = 5;
 
   readonly statuses: (TaskStatus | 'ALL')[] = ['ALL', 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'];
 
@@ -43,6 +45,33 @@ export class MyTasksComponent {
     if (status === 'ALL') return list;
     return list.filter(t => t.status === status);
   });
+
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredTasks().length / this.pageSize)));
+
+  readonly paginatedTasks = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredTasks().slice(start, start + this.pageSize);
+  });
+
+  readonly currentStart = computed(() => (this.currentPage() - 1) * this.pageSize + 1);
+
+  readonly currentEnd = computed(() => Math.min(this.currentPage() * this.pageSize, this.filteredTasks().length));
+
+  readonly pages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range: number[] = [];
+    const start = Math.max(1, current - 1);
+    const end = Math.min(total, current + 1);
+    for (let i = start; i <= end; i++) range.push(i);
+    return range;
+  });
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
 
   readonly inProgressCount = computed(() =>
     this.tasks().filter(t => t.status === 'IN_PROGRESS' || t.status === 'REVIEW').length

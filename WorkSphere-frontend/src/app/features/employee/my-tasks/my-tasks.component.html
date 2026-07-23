@@ -5,10 +5,7 @@
     <div>
       <h1 class="font-heading text-2xl font-bold text-text-heading">Mes tâches</h1>
       <div class="flex items-center gap-2 mt-1">
-        <span class="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-0.5 rounded-full text-xs font-bold">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          {{ inProgressCount() }} tâche{{ inProgressCount() > 1 ? 's' : '' }} en cours
-        </span>
+       
       </div>
     </div>
   </div>
@@ -17,7 +14,7 @@
   <div class="bg-surface-bright/70 backdrop-blur-md border border-border/60 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
     <div class="flex flex-wrap items-center gap-1.5">
       @for (s of statuses; track s) {
-        <button (click)="selectedStatus.set(s)"
+        <button (click)="selectedStatus.set(s); currentPage.set(1)"
           class="px-4 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer"
           [class.bg-primary]="selectedStatus() === s"
           [class.text-text-inverse]="selectedStatus() === s"
@@ -85,11 +82,10 @@
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider hidden md:table-cell">Projet lié</th>
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Priorité</th>
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Échéance</th>
-              <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
-            @for (task of filteredTasks(); track task.id) {
+            @for (task of paginatedTasks(); track task.id) {
               <tr class="hover:bg-surface-container-lowest transition-colors group"
                 [class.opacity-60]="task.status === 'DONE'">
                 <td class="px-4 py-3.5">
@@ -135,26 +131,6 @@
                     </span>
                   }
                 </td>
-                <td class="px-4 py-3.5 text-right">
-                  @if (task.status === 'TODO') {
-                    <button (click)="startTask(task)"
-                      class="bg-secondary text-text-inverse px-4 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer">
-                      Démarrer
-                    </button>
-                  } @else if (task.status === 'IN_PROGRESS') {
-                    <button (click)="submitTask(task)"
-                      class="bg-primary/10 text-primary px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 active:scale-95 transition-all cursor-pointer">
-                      Soumettre
-                    </button>
-                  } @else if (task.status === 'REVIEW') {
-                    <button (click)="submitTask(task)"
-                      class="bg-primary/10 text-primary px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 active:scale-95 transition-all cursor-pointer">
-                      Soumettre
-                    </button>
-                  } @else {
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success inline-block"><polyline points="20 6 9 17 4 12"/></svg>
-                  }
-                </td>
               </tr>
             }
           </tbody>
@@ -163,56 +139,33 @@
       <!-- Pagination -->
       <div class="px-4 py-3.5 bg-surface-container-low border-t border-border flex items-center justify-between">
         <p class="text-sm text-text-muted">
-          Affichage de 1 à {{ filteredTasks().length }} sur {{ tasks().length }} tâche{{ tasks().length > 1 ? 's' : '' }}
+          Affichage {{ currentStart() }} à {{ currentEnd() }} sur {{ filteredTasks().length }} tâche{{ filteredTasks().length > 1 ? 's' : '' }}
         </p>
         <div class="flex items-center gap-1">
-          <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+          <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-text-inverse text-sm font-bold">1</span>
-          <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-secondary hover:bg-surface-container transition-colors cursor-pointer">2</button>
-          <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-secondary hover:bg-surface-container transition-colors cursor-pointer">3</button>
-          <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+          @for (p of pages(); track p) {
+            <button (click)="goToPage(p)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors cursor-pointer"
+              [class.bg-primary]="p === currentPage()"
+              [class.text-text-inverse]="p === currentPage()"
+              [class.border]="p !== currentPage()"
+              [class.border-border]="p !== currentPage()"
+              [class.bg-surface-bright]="p !== currentPage()"
+              [class.text-text-secondary]="p !== currentPage()"
+              [class.hover:bg-surface-container]="p !== currentPage()">
+              {{ p }}
+            </button>
+          }
+          <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-primary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">En cours</p>
-        <h3 class="font-heading text-xl font-bold text-text-heading">{{ inProgressCount() }}</h3>
-      </div>
-      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-        <div class="w-10 h-10 rounded-full bg-success-light/50 flex items-center justify-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success-dark"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Terminées</p>
-        <h3 class="font-heading text-xl font-bold text-text-heading">{{ completedCount() }}</h3>
-      </div>
-      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-        <div class="w-10 h-10 rounded-full bg-error-light/50 flex items-center justify-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">En retard</p>
-        <h3 class="font-heading text-xl font-bold text-text-heading">{{ overdueCount() }}</h3>
-      </div>
-      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-primary"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        </div>
-        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Productivité</p>
-        <h3 class="font-heading text-xl font-bold text-text-heading">
-          @if (tasks().length > 0) {
-            {{ (completedCount() / tasks().length * 100) | number:'1.0-0' }}%
-          } @else { — }
-        </h3>
-      </div>
-    </div>
   }
 </div>

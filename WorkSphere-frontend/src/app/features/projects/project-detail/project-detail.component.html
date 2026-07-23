@@ -68,7 +68,7 @@
                 <p class="text-xs text-text-muted">Budget</p>
                 <p class="text-sm font-semibold text-text">
                   @if (p.actual_cost) {
-                    <span>{{ p.actual_cost }} {{ p.currency || '' }} / </span>
+                   
                   }
                   {{ p.estimated_budget }} {{ p.currency || '' }}
                 </p>
@@ -164,11 +164,10 @@
                   <th class="p-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Priorité</th>
                   <th class="p-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Assigné</th>
                   <th class="p-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Échéance</th>
-                  <th class="p-3.5 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-border">
-                @for (task of tasks(); track task.id) {
+                @for (task of paginatedTasks(); track task.id) {
                   <tr class="hover:bg-surface-container-lowest transition-colors group"
                     [class.opacity-60]="task.status === 'DONE'">
                     <td class="p-3.5 text-center">
@@ -209,26 +208,6 @@
                           <span class="text-sm text-text-secondary">{{ task.due_date | date:'d MMM y' }}</span>
                         }
                       </td>
-                      <td class="p-3.5 text-right">
-                        @if (task.status === 'TODO') {
-                          <button (click)="startTask(task)"
-                            class="bg-secondary text-text-inverse px-3.5 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer">
-                            Démarrer
-                          </button>
-                        } @else if (task.status === 'IN_PROGRESS') {
-                          <button (click)="submitTask(task)"
-                            class="bg-primary/10 text-primary px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-primary hover:text-text-inverse active:scale-95 transition-all cursor-pointer">
-                            Soumettre
-                          </button>
-                        } @else if (task.status === 'REVIEW') {
-                          <button (click)="submitTask(task)"
-                            class="bg-primary/10 text-primary px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-primary hover:text-text-inverse active:scale-95 transition-all cursor-pointer">
-                            Soumettre
-                          </button>
-                        } @else {
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success inline-block"><polyline points="20 6 9 17 4 12"/></svg>
-                        }
-                      </td>
                   </tr>
                 }
               </tbody>
@@ -238,16 +217,28 @@
           <!-- Pagination -->
           <div class="p-3.5 bg-surface-container-low border-t border-border flex items-center justify-between">
             <p class="text-sm text-text-muted">
-              Affichage 1 à {{ tasks().length }} sur {{ tasks().length }} tâche{{ tasks().length > 1 ? 's' : '' }}
+              Affichage {{ currentStart() }} à {{ currentEnd() }} sur {{ tasks().length }} tâche{{ tasks().length > 1 ? 's' : '' }}
             </p>
             <div class="flex items-center gap-1">
-              <button disabled class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted opacity-30 cursor-not-allowed">
+              <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="15 18 9 12 15 6"/></svg>
               </button>
-              <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-text-inverse text-sm font-bold">1</span>
-              <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-secondary hover:bg-surface-container transition-colors cursor-pointer">2</button>
-              <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-secondary hover:bg-surface-container transition-colors cursor-pointer">3</button>
-              <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer">
+              @for (p of pages(); track p) {
+                <button (click)="goToPage(p)"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors cursor-pointer"
+                  [class.bg-primary]="p === currentPage()"
+                  [class.text-text-inverse]="p === currentPage()"
+                  [class.border]="p !== currentPage()"
+                  [class.border-border]="p !== currentPage()"
+                  [class.bg-surface-bright]="p !== currentPage()"
+                  [class.text-text-secondary]="p !== currentPage()"
+                  [class.hover:bg-surface-container]="p !== currentPage()">
+                  {{ p }}
+                </button>
+              }
+              <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-surface-bright text-text-muted hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             </div>
