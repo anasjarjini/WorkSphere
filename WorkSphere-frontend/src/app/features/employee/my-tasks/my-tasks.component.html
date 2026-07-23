@@ -85,7 +85,7 @@
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider hidden md:table-cell">Projet lié</th>
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Priorité</th>
               <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider">Échéance</th>
-              <!-- <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</th> -->
+              <th class="px-4 py-3.5 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
@@ -135,7 +135,26 @@
                     </span>
                   }
                 </td>
-              
+                <td class="px-4 py-3.5 text-right">
+                  @if (task.status === 'TODO') {
+                    <button (click)="startTask(task)"
+                      class="bg-secondary text-text-inverse px-4 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer">
+                      Démarrer
+                    </button>
+                  } @else if (task.status === 'IN_PROGRESS') {
+                    <button (click)="submitTask(task)"
+                      class="bg-primary/10 text-primary px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 active:scale-95 transition-all cursor-pointer">
+                      Soumettre
+                    </button>
+                  } @else if (task.status === 'REVIEW') {
+                    <button (click)="submitTask(task)"
+                      class="bg-primary/10 text-primary px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 active:scale-95 transition-all cursor-pointer">
+                      Soumettre
+                    </button>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success inline-block"><polyline points="20 6 9 17 4 12"/></svg>
+                  }
+                </td>
               </tr>
             }
           </tbody>
@@ -160,6 +179,40 @@
       </div>
     </div>
 
-    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-primary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">En cours</p>
+        <h3 class="font-heading text-xl font-bold text-text-heading">{{ inProgressCount() }}</h3>
+      </div>
+      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        <div class="w-10 h-10 rounded-full bg-success-light/50 flex items-center justify-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success-dark"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Terminées</p>
+        <h3 class="font-heading text-xl font-bold text-text-heading">{{ completedCount() }}</h3>
+      </div>
+      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        <div class="w-10 h-10 rounded-full bg-error-light/50 flex items-center justify-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">En retard</p>
+        <h3 class="font-heading text-xl font-bold text-text-heading">{{ overdueCount() }}</h3>
+      </div>
+      <div class="bg-surface border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-primary"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Productivité</p>
+        <h3 class="font-heading text-xl font-bold text-text-heading">
+          @if (tasks().length > 0) {
+            {{ (completedCount() / tasks().length * 100) | number:'1.0-0' }}%
+          } @else { — }
+        </h3>
+      </div>
+    </div>
   }
 </div>

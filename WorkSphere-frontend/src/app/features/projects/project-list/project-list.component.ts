@@ -46,16 +46,6 @@ export class ProjectListComponent {
     return list.filter(p => p.status === status);
   });
 
-  readonly inProgressCount = computed(() =>
-    this.filteredProjects().filter(p => p.status === 'EN_COURS').length
-  );
-
-  readonly avgProgress = computed(() => {
-    const list = this.filteredProjects();
-    if (list.length === 0) return 0;
-    return Math.round(list.reduce((sum, p) => sum + p.progress_percentage, 0) / list.length);
-  });
-
   readonly statuses: (ProjectStatus | 'ALL')[] = ['ALL', 'PLANIFICATION', 'EN_COURS', 'EN_PAUSE', 'TERMINE'];
 
   constructor() {

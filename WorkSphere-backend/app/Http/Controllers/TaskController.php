@@ -38,6 +38,7 @@ class TaskController extends Controller
     {
         Gate::authorize('create', [Task::class, $project]);
 
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -61,6 +62,7 @@ class TaskController extends Controller
     {
         Gate::authorize('update', $task);
 
+
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -80,6 +82,7 @@ class TaskController extends Controller
     {
         Gate::authorize('delete', $task);
 
+
         $task->delete();
 
         return response()->json(['message' => 'Tâche supprimée avec succès.']);
@@ -88,6 +91,7 @@ class TaskController extends Controller
     public function updateStatus(Request $request, Task $task): JsonResponse
     {
         Gate::authorize('updateStatus', $task);
+
 
         $validated = $request->validate([
             'status' => 'required|in:TODO,IN_PROGRESS,REVIEW,DONE',
@@ -112,6 +116,7 @@ class TaskController extends Controller
     public function assign(Request $request, Task $task): JsonResponse
     {
         Gate::authorize('assign', $task);
+
 
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
@@ -165,6 +170,7 @@ class TaskController extends Controller
     {
         Gate::authorize('history', $task);
 
+
         if ($task->company_id !== $request->user()->company_id) {
             return response()->json(['message' => 'Non autorisé.'], 403);
         }
@@ -217,6 +223,7 @@ class TaskController extends Controller
     public function reorder(Request $request, Task $task): JsonResponse
     {
         Gate::authorize('reorder', $task);
+
 
         $validated = $request->validate([
             'order_position' => 'required|integer|min:0',

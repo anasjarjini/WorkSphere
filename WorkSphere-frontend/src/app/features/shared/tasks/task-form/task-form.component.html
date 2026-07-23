@@ -1,7 +1,14 @@
 <div class="min-h-screen bg-background py-8 px-6">
   <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
-   
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-1.5 text-sm text-text-muted">
+      <a [routerLink]="baseRoute()" class="hover:text-primary transition-colors">Accueil</a>
+      <span class="material-symbols-outlined text-sm">chevron_right</span>
+      <a [routerLink]="[baseRoute() + '/projects']" class="hover:text-primary transition-colors">Projets</a>
+      <span class="material-symbols-outlined text-sm">chevron_right</span>
+      <span class="text-text font-semibold">Nouvelle tâche</span>
+    </nav>
 
     <!-- Page Title -->
     <div>
@@ -130,6 +137,15 @@
           </ul>
         </div>
 
+        <!-- Decorative Card -->
+        <div class="relative h-56 rounded-xl overflow-hidden group">
+          <div class="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary-dark/90 z-10"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-20"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-6 z-30">
+            <h4 class="font-heading text-lg font-semibold text-white mb-1">Optimisez vos projets</h4>
+            <p class="text-sm text-white/80">WorkSphere vous aide à coordonner vos équipes avec fluidité.</p>
+          </div>
+        </div>
 
       </div>
 
