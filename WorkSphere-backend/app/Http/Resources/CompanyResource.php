@@ -23,6 +23,7 @@ class CompanyResource extends JsonResource
             $data['email'] = $this->email;
             $data['phone'] = $this->phone;
             $data['address'] = $this->address;
+            $data['default_annual_leave_days'] = $this->default_annual_leave_days;
         }
 
         return $data;

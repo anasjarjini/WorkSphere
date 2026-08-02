@@ -11,11 +11,12 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { CompanyBrandComponent } from '../../shared/components/company-brand/company-brand.component';
 import { ImageUrlService } from '../../core/services/image-url.service';
 import { ThemeSwitcherComponent } from '../../shared/components/theme-switcher/theme-switcher.component';
+import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-manager-layout',
   standalone: true,
-  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent, ThemeSwitcherComponent],
+  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent, ThemeSwitcherComponent, NotificationBellComponent],
   templateUrl: './manager-layout.component.html',
   styles: []
 })

@@ -1,0 +1,39 @@
+<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-on-surface-variant mb-1">
+        <span class="font-label-md text-label-md">Équipe</span>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="font-label-md text-label-md">Présences</span>
+      </nav>
+      <h1 class="font-heading text-headline-lg text-on-surface">Gestion des Présences</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Validez les déclarations et suivez les présences de votre équipe.</p>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="flex border-b border-outline-variant">
+    <a routerLink="/manager/attendance/validation" routerLinkActive="text-primary border-b-2 border-primary font-bold"
+       class="px-8 py-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer inline-flex items-center">
+      À valider
+      @if (pendingCount() > 0) {
+        <span class="inline-flex items-center justify-center w-5 h-5 ml-2 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">{{ pendingCount() > 9 ? '9+' : pendingCount() }}</span>
+      }
+    </a>
+    <a routerLink="/manager/attendance/today" routerLinkActive="text-primary border-b-2 border-primary font-bold"
+       class="px-8 py-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+      Aujourd'hui
+    </a>
+    <a routerLink="/manager/attendance/history" routerLinkActive="text-primary border-b-2 border-primary font-bold"
+       class="px-8 py-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+      Historique
+    </a>
+    <a routerLink="/manager/attendance/monthly" routerLinkActive="text-primary border-b-2 border-primary font-bold"
+       class="px-8 py-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+      Résumé mensuel
+    </a>
+  </div>
+
+  <router-outlet />
+</div>

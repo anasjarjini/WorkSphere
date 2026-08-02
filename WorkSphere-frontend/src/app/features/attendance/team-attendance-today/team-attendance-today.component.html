@@ -1,0 +1,161 @@
+<div class="flex flex-col gap-6">
+  <!-- Sub Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <p class="font-label-md text-label-md text-on-surface-variant">{{ todayStr | date:'fullDate':'':'fr' }}</p>
+    <div class="flex gap-3">
+      <button class="px-4 py-2.5 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">filter_list</span>
+        Filtrer
+      </button>
+      <button class="px-4 py-2.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">download</span>
+        Exporter Rapport
+      </button>
+    </div>
+  </div>
+
+  @if (loading() && teamMembers().length === 0) {
+    <div class="bg-surface border border-outline-variant rounded-xl p-6 animate-pulse space-y-4">
+      @for (_ of [1,2,3]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
+    </div>
+  } @else {
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-surface border border-outline-variant rounded-xl p-5">
+        <div class="w-12 h-12 rounded-lg bg-secondary-container/30 text-secondary flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">check_circle</span>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Présents</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ counts().present }} <span class="text-on-surface-variant font-label-md text-label-md">/ {{ counts().total }}</span></p>
+      </div>
+      <div class="bg-surface border border-outline-variant rounded-xl p-5">
+        <div class="w-12 h-12 rounded-lg bg-primary-container/30 text-primary flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">schedule</span>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">En attente</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ counts().pending }}</p>
+      </div>
+      <div class="bg-surface border border-outline-variant rounded-xl p-5">
+        <div class="w-12 h-12 rounded-lg bg-error-container/30 text-error flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">event_busy</span>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Absents</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ counts().absent }}</p>
+      </div>
+      <div class="bg-surface border border-outline-variant rounded-xl p-5">
+        <div class="w-12 h-12 rounded-lg bg-surface-variant text-on-surface-variant flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">help</span>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Non déclarés</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ counts().notDeclared }}</p>
+      </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead class="bg-surface-container-lowest">
+            <tr class="border-b border-outline-variant">
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Statut</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Lieu</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Heures</th>
+              <th class="px-6 py-4 text-right font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            @for (item of teamStatus(); track item.employee.id) {
+              <tr class="hover:bg-surface-container-lowest transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="relative">
+                      <div class="w-10 h-10 rounded-full bg-primary-container/30 text-primary flex items-center justify-center font-bold text-xs shrink-0">{{ initials(item.employee.first_name, item.employee.last_name) }}</div>
+                      @if (item.declaration?.status === 'PRESENT') {
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-secondary border-2 border-surface rounded-full status-pulse"></span>
+                      } @else if (item.declaration?.status === 'ABSENT') {
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-error border-2 border-surface rounded-full"></span>
+                      }
+                    </div>
+                    <div>
+                      <p class="font-body-md text-body-md text-on-surface font-medium">{{ item.employee.first_name }} {{ item.employee.last_name }}</p>
+                      <p class="font-body-sm text-body-sm text-on-surface-variant">{{ item.employee.job_title }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  @if (item.declaration) {
+                    <app-attendance-status-badge [status]="item.declaration.status" [validationStatus]="item.declaration.validation_status" [isOnLeave]="item.isOnLeave" size="sm" />
+                  } @else {
+                    <app-attendance-status-badge [status]="null" [validationStatus]="null" [isOnLeave]="item.isOnLeave" size="sm" />
+                  }
+                </td>
+                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">
+                  @if (item.declaration) {
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[16px]">apartment</span>
+                      Bureau
+                    </span>
+                  } @else {
+                    <span class="text-on-surface-variant/50">—</span>
+                  }
+                </td>
+                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ item.declaration?.hours_worked ? item.declaration.hours_worked + 'h' : '—' }}</td>
+                <td class="px-6 py-4 text-right">
+                  @if (item.declaration?.validation_status === 'EN_ATTENTE') {
+                    <a routerLink="/manager/attendance/validation"
+                      class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm hover:opacity-90 transition-opacity cursor-pointer">
+                      <span class="material-symbols-outlined text-[16px]">check</span>
+                      Valider
+                    </a>
+                  } @else {
+                    <span class="font-label-sm text-label-sm text-on-surface-variant/50">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Map / Legend Card -->
+      <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden lg:col-span-2">
+        <div class="h-52 relative bg-surface-container-low">
+          <svg class="absolute inset-0 w-full h-full opacity-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 6v16l6 3 6-3 6 3 4-2V6l-4 2-6-3-6 3-4-2z"/>
+            <path d="M7 8v16"/><path d="M13 5v16"/><path d="M19 7v16"/>
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span class="font-label-md text-label-md text-on-surface-variant bg-surface px-4 py-2 rounded-lg shadow-sm">Carte des équipes (Bureau central)</span>
+          </div>
+        </div>
+        <div class="p-4 border-t border-outline-variant flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
+            <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span> Présent
+          </span>
+          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span> En attente
+          </span>
+          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
+            <span class="w-2.5 h-2.5 rounded-full bg-error"></span> Absent
+          </span>
+        </div>
+      </div>
+      <!-- Performance Card -->
+      <div class="bg-primary-container text-on-primary-container rounded-xl p-6 relative overflow-hidden flex flex-col justify-between">
+        <span class="material-symbols-outlined absolute right-4 top-4 text-4xl opacity-30">bolt</span>
+        <div>
+          <h3 class="font-heading text-lg font-bold mb-2">Performance de l'équipe</h3>
+          <p class="font-body-md text-body-md opacity-90">{{ counts().rate }}% de présence aujourd'hui</p>
+        </div>
+        <a routerLink="/manager/dashboard" class="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-primary rounded-full font-label-md text-label-md font-semibold hover:opacity-90 transition-opacity cursor-pointer w-fit">
+          Voir Analytics
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  }
+</div>

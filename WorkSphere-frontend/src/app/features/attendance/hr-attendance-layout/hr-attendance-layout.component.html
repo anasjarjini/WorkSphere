@@ -1,0 +1,32 @@
+<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+  <div>
+    <h1 class="font-heading text-2xl font-bold text-text-heading">Présences — Vue RH</h1>
+    <p class="text-sm text-text-secondary mt-1">Validez les déclarations des managers et consultez les présences de l'entreprise</p>
+  </div>
+
+  <div class="border-b border-border">
+    <nav class="flex gap-8">
+      <a routerLink="/admin/attendance/validation" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer inline-flex items-center gap-2">
+        À valider
+        @if (pendingCount() > 0) {
+          <span class="inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold bg-error text-text-inverse rounded-full">{{ pendingCount() > 9 ? '9+' : pendingCount() }}</span>
+        }
+      </a>
+      <a routerLink="/admin/attendance/today" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Aujourd'hui
+      </a>
+      <a routerLink="/admin/attendance/history" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Historique
+      </a>
+      <a routerLink="/admin/attendance/monthly" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Résumé mensuel
+      </a>
+    </nav>
+  </div>
+
+  <router-outlet />
+</div>

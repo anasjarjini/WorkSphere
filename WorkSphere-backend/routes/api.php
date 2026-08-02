@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountActivationController;
+use App\Http\Controllers\AbsenceController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyRegistrationController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\TaskAttachmentController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskDependencyController;
+use App\Http\Controllers\AttendanceDeclarationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register-company', [CompanyRegistrationController::class, 'store']);
@@ -54,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/company', [CompanySettingsController::class, 'update']);
         Route::post('/company/logo', [CompanySettingsController::class, 'uploadLogo']);
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+        Route::post('/public-holidays', [AbsenceController::class, 'storeHoliday']);
+        Route::delete('/public-holidays/{publicHoliday}', [AbsenceController::class, 'destroyHoliday']);
     });
 
     // MANAGER routes
@@ -112,5 +116,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}/dependencies', [TaskDependencyController::class, 'index']);
     Route::post('/tasks/{task}/dependencies', [TaskDependencyController::class, 'store']);
     Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskDependencyController::class, 'destroy']);
+
+    // Attendance Declarations
+    Route::get('/attendance-declarations', [AttendanceDeclarationController::class, 'index']);
+    Route::post('/attendance-declarations', [AttendanceDeclarationController::class, 'store']);
+    Route::patch('/attendance-declarations/{attendanceDeclaration}/approve', [AttendanceDeclarationController::class, 'approve']);
+    Route::patch('/attendance-declarations/{attendanceDeclaration}/reject', [AttendanceDeclarationController::class, 'reject']);
+    Route::post('/attendance-declarations/bulk-approve', [AttendanceDeclarationController::class, 'bulkApprove']);
+
+    // Absences / Congés
+    Route::get('/absences', [AbsenceController::class, 'index']);
+    Route::post('/absences', [AbsenceController::class, 'store']);
+    Route::patch('/absences/{absence}/approve', [AbsenceController::class, 'approve']);
+    Route::patch('/absences/{absence}/reject', [AbsenceController::class, 'reject']);
+    Route::patch('/absences/{absence}/cancel', [AbsenceController::class, 'cancel']);
+    Route::get('/absences/is-on-leave', [AbsenceController::class, 'isOnLeave']);
+    Route::get('/absences/working-days', [AbsenceController::class, 'workingDays']);
+    Route::get('/leave-balances/me', [AbsenceController::class, 'myBalances']);
+    Route::get('/leave-balances/team', [AbsenceController::class, 'teamBalances']);
+    Route::get('/public-holidays', [AbsenceController::class, 'holidays']);
 
 });

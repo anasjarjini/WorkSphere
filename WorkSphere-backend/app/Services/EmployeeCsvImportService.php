@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\AbsenceType;
 use App\Jobs\SendActivationEmailJob;
 use App\Models\ActivationToken;
 use App\Models\Company;
 use App\Models\Department;
+use App\Models\LeaveBalance;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
@@ -49,8 +51,17 @@ class EmployeeCsvImportService
      */
     public function import(UploadedFile $file, Company $company): array
     {
-        $csv = Reader::createFromPath($file->getRealPath(), 'r');
+        // Les gros fichiers ne doivent pas être tués par max_execution_time (30s
+        // en php.ini) : le hashing bcrypt est fait une seule fois ci-dessous.
+        set_time_limit(120);
+
+        $csv = Reader::from($file->getRealPath());
         $csv->setHeaderOffset(0); // first row = headers
+
+        // Hash unique partagé par tous les employés importés : le mot de passe
+        // est un placeholder aléatoire (login bloqué tant que status !== 'ACTIVE',
+        // et l'activation le remplace). 1 hash bcrypt (~1s) au lieu d'un par ligne.
+        $placeholderPasswordHash = Hash::make(Str::random(32));
 
         $imported = 0;
         $errors = [];
@@ -90,7 +101,7 @@ class EmployeeCsvImportService
             try {
                 // One transaction per line: a failure here does NOT roll back
                 // previously committed lines (best-effort strategy).
-                DB::transaction(function () use ($record, $company) {
+                DB::transaction(function () use ($record, $company, $placeholderPasswordHash) {
                     $hireDate = Carbon::createFromFormat('d/m/Y', trim($record['hire_date']))->format('Y-m-d');
 
                     // ── Résoudre ou créer le département par son nom ──
@@ -107,7 +118,7 @@ class EmployeeCsvImportService
                         'first_name' => trim($record['first_name']),
                         'last_name'  => trim($record['last_name']),
                         'email'      => strtolower(trim($record['email'])),
-                        'password'   => Hash::make(Str::random(32)),
+                        'password'   => $placeholderPasswordHash,
                         'company_id' => $company->id,
                         'department_id' => $departmentId,
                         'manager_id' => $managerId,
@@ -121,6 +132,21 @@ class EmployeeCsvImportService
                     if ($role === 'MANAGER') {
                         $this->attachDepartmentEmployeesToManager($company, $departmentId, $user->id);
                     }
+
+                    // Solde de congés payés de l'année courante (même logique que
+                    // la commande leaves:init-yearly-balances).
+                    LeaveBalance::firstOrCreate(
+                        [
+                            'user_id' => $user->id,
+                            'year' => now()->year,
+                            'type' => AbsenceType::CONGE_PAYE,
+                        ],
+                        [
+                            'company_id' => $company->id,
+                            'allocated_days' => $company->default_annual_leave_days ?? 18,
+                            'carried_over_days' => 0,
+                        ]
+                    );
 
                     $activationToken = ActivationToken::create([
                         'user_id'    => $user->id,

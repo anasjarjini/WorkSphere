@@ -1,0 +1,116 @@
+<div class="flex flex-col gap-4 w-full">
+  @if (error()) {
+    <div class="bg-error-container border border-error/20 rounded-lg p-4 flex items-start gap-2">
+      <span class="material-symbols-outlined text-error shrink-0 mt-0.5">error</span>
+      <span class="text-sm font-medium text-error">{{ error() }}</span>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="bg-secondary-container/30 border border-secondary/20 rounded-lg p-4 flex items-start gap-2">
+      <span class="material-symbols-outlined text-secondary shrink-0 mt-0.5">check_circle</span>
+      <span class="text-sm font-medium text-secondary">{{ success() }}</span>
+    </div>
+  }
+
+  <div class="flex flex-wrap items-center gap-2">
+    @for (filter of filters; track filter.value) {
+      <button (click)="setFilter(filter.value)"
+        class="px-4 py-2 rounded-full text-sm font-medium border transition-colors cursor-pointer"
+        [class.bg-primary]="statusFilter() === filter.value"
+        [class.text-white]="statusFilter() === filter.value"
+        [class.border-primary]="statusFilter() === filter.value"
+        [class.bg-white]="statusFilter() !== filter.value"
+        [class.text-text-secondary]="statusFilter() !== filter.value"
+        [class.border-outline-variant]="statusFilter() !== filter.value"
+        [class.hover:border-primary]="statusFilter() !== filter.value">
+        {{ filter.label }}
+        <span class="ml-1 text-xs opacity-70">{{ countByStatus()[filter.value] ?? 0 }}</span>
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+  } @else if (filteredAbsences().length === 0) {
+    <div class="bg-white border border-outline-variant rounded-xl py-16 flex flex-col items-center gap-3 custom-shadow">
+      <span class="material-symbols-outlined text-[40px] text-text-muted">event_busy</span>
+      <p class="font-sans font-medium text-sm text-text-secondary">Aucune demande de congé</p>
+    </div>
+  } @else {
+    <div class="bg-white border border-outline-variant rounded-xl overflow-hidden custom-shadow">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-outline-variant bg-background-alt">
+              <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Référence</th>
+              @if (scope() !== 'mine') {
+                <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Employé</th>
+              }
+              <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Type</th>
+              <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Période</th>
+              <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Jours</th>
+              <th class="text-left font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Statut</th>
+              @if (scope() === 'mine') {
+                <th class="text-right font-semibold text-xs uppercase tracking-wider text-on-surface-variant px-5 py-3">Action</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (absence of filteredAbsences(); track absence.id) {
+              <tr class="border-b border-outline-variant/60 last:border-b-0 hover:bg-background-alt/50 transition-colors">
+                <td class="px-5 py-4 font-mono text-xs text-on-surface-variant">{{ absence.reference_code }}</td>
+                @if (scope() !== 'mine') {
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-heading font-bold text-[11px] shrink-0">
+                        {{ (absence.user?.first_name ?? '').charAt(0) }}{{ (absence.user?.last_name ?? '').charAt(0) }}
+                      </div>
+                      <span class="font-medium text-text-heading">{{ absence.user?.first_name }} {{ absence.user?.last_name }}</span>
+                    </div>
+                  </td>
+                }
+                <td class="px-5 py-4">
+                  <span class="inline-flex items-center gap-1.5 text-text-heading">
+                    <span class="material-symbols-outlined text-base text-primary">{{ typeIcon(absence.type) }}</span>
+                    {{ typeLabel(absence.type) }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-on-surface-variant">{{ formatPeriod(absence) }}</td>
+                <td class="px-5 py-4">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-background-alt text-xs font-medium text-text-heading">
+                    {{ absence.duration_days }} j
+                  </span>
+                </td>
+                <td class="px-5 py-4"><app-leave-status-badge [status]="absence.status" /></td>
+                @if (scope() === 'mine') {
+                  <td class="px-5 py-4 text-right">
+                    @if (canCancel(absence)) {
+                      <button (click)="onCancel(absence)" [disabled]="cancellingId() === absence.id"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant text-xs font-medium text-on-surface-variant hover:bg-background-alt hover:text-error transition-colors disabled:opacity-50 cursor-pointer">
+                        @if (cancellingId() === absence.id) {
+                          <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                          </svg>
+                        } @else {
+                          <span class="material-symbols-outlined text-sm">cancel</span>
+                        }
+                        Annuler
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,75 @@
+<div class="space-y-8">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-sans font-medium text-xs text-on-surface-variant">Jours présents</span>
+        <div class="p-2 bg-secondary-container rounded-lg">
+          <span class="material-symbols-outlined text-secondary">check_circle</span>
+        </div>
+      </div>
+      <p class="font-heading font-bold text-headline-md text-on-surface">
+        {{ summary().daysPresent }}
+        <span class="text-sm font-normal text-on-surface-variant">/ 22</span>
+      </p>
+      <div class="mt-2 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+        <div class="h-full bg-secondary transition-all duration-1000 ease-in-out"
+          [style.width]="(summary().daysPresent / 22 * 100) + '%'"></div>
+      </div>
+    </div>
+    <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-sans font-medium text-xs text-on-surface-variant">Heures ce mois</span>
+        <div class="p-2 bg-primary-fixed rounded-lg">
+          <span class="material-symbols-outlined text-primary">timer</span>
+        </div>
+      </div>
+      <p class="font-heading font-bold text-headline-md text-on-surface">
+        {{ summary().totalHours }}
+        <span class="text-sm font-normal text-on-surface-variant">heures</span>
+      </p>
+      @if (summary().overtime > 0) {
+        <p class="text-xs text-secondary font-medium mt-2">+{{ summary().overtime }}h sup. validées</p>
+      }
+    </div>
+    <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-sans font-medium text-xs text-on-surface-variant">Absences</span>
+        <div class="p-2 bg-error-container rounded-lg">
+          <span class="material-symbols-outlined text-error">event_busy</span>
+        </div>
+      </div>
+      <p class="font-heading font-bold text-headline-md text-on-surface">
+        {{ summary().daysAbsent }}
+        <span class="text-sm font-normal text-on-surface-variant">jours</span>
+      </p>
+      @if (summary().unjustified > 0) {
+        <p class="text-xs text-on-surface-variant mt-2">{{ summary().unjustified }} non justifié</p>
+      }
+    </div>
+    <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-sans font-medium text-xs text-on-surface-variant">En attente</span>
+        <div class="p-2 bg-tertiary-fixed rounded-lg">
+          <span class="material-symbols-outlined text-tertiary">pending_actions</span>
+        </div>
+      </div>
+      <p class="font-heading font-bold text-headline-md text-on-surface">
+        {{ summary().pendingCount }}
+        <span class="text-sm font-normal text-on-surface-variant">déclarations</span>
+      </p>
+      @if (summary().pendingCount > 0) {
+        <p class="text-xs text-on-surface-variant mt-2">Dernière aujourd'hui</p>
+      }
+    </div>
+  </div>
+
+  <app-daily-declaration />
+
+  <div class="bg-surface-container-high p-6 rounded-xl flex gap-4 items-start border border-outline-variant/30">
+    <span class="material-symbols-outlined text-primary">info</span>
+    <div class="space-y-2">
+      <h4 class="font-sans font-bold text-sm text-on-surface">Rappel des politiques</h4>
+      <p class="text-xs text-on-surface-variant">Les déclarations journalières doivent être soumises avant 19h00. Toute absence prolongée nécessite un justificatif médical téléchargeable dans l'onglet historique.</p>
+    </div>
+  </div>
+</div>

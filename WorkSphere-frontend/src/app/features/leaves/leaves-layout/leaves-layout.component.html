@@ -1,0 +1,25 @@
+<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+  <div>
+    <h1 class="font-heading text-2xl font-bold text-text-heading">Congés et absences</h1>
+    <p class="text-sm text-text-secondary mt-1">Demandez un congé, suivez vos demandes et consultez votre solde annuel</p>
+  </div>
+
+  <div class="border-b border-border">
+    <nav class="flex gap-8">
+      <a routerLink="/employee/leaves/request" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Demander un congé
+      </a>
+      <a routerLink="/employee/leaves/history" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Mon historique
+      </a>
+      <a routerLink="/employee/leaves/balance" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Mon solde
+      </a>
+    </nav>
+  </div>
+
+  <router-outlet />
+</div>

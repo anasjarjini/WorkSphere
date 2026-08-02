@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\User;
 use App\Models\TaskAssignmentHistory;
 use App\Models\TaskStatusHistory;
 use App\Enums\TaskStatus as TaskStatusEnum;
+use App\Notifications\TaskAssignedNotification;
+use App\Notifications\TaskStatusChangedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -52,6 +55,10 @@ class TaskController extends Controller
             'company_id' => $request->user()->company_id,
             'creator_id' => $request->user()->id,
         ]);
+
+        if ($task->user_id && $task->user_id !== $request->user()->id) {
+            $task->assignedUser?->notify(new TaskAssignedNotification($task, true));
+        }
 
         $task->load('assignedUser', 'creator');
 
@@ -108,6 +115,16 @@ class TaskController extends Controller
             'changed_by' => $request->user()->id,
         ]);
 
+        $recipients = collect([$task->creator_id, $task->user_id])
+            ->filter()
+            ->unique()
+            ->reject(fn ($id) => (int) $id === $request->user()->id);
+
+        $actorName = $request->user()->first_name . ' ' . $request->user()->last_name;
+        foreach ($recipients as $userId) {
+            User::find($userId)?->notify(new TaskStatusChangedNotification($task, $actorName, $oldStatus, $validated['status']));
+        }
+
         $task->load('assignedUser', 'creator');
 
         return response()->json($task);
@@ -138,6 +155,10 @@ class TaskController extends Controller
             'to_user_id' => $validated['user_id'],
             'changed_by' => $request->user()->id,
         ]);
+
+        if ($task->user_id && $task->user_id !== $oldUserId && $task->user_id !== $request->user()->id) {
+            $task->assignedUser?->notify(new TaskAssignedNotification($task));
+        }
 
         $task->load('assignedUser', 'creator');
 

@@ -121,6 +121,30 @@ export const routes: Routes = [
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
       },
+      {
+        path: 'attendance',
+        loadComponent: () => import('./features/attendance/hr-attendance-layout/hr-attendance-layout.component').then((m) => m.HrAttendanceLayoutComponent),
+        data: { breadcrumb: 'Présences' },
+        children: [
+          { path: 'validation', loadComponent: () => import('./features/attendance/hr-attendance-validation/hr-attendance-validation.component').then((m) => m.HrAttendanceValidationComponent), data: { breadcrumb: 'Validation' } },
+          { path: 'today', loadComponent: () => import('./features/attendance/hr-attendance-today/hr-attendance-today.component').then((m) => m.HrAttendanceTodayComponent), data: { breadcrumb: "Aujourd'hui" } },
+          { path: 'history', loadComponent: () => import('./features/attendance/hr-attendance-history/hr-attendance-history.component').then((m) => m.HrAttendanceHistoryComponent), data: { breadcrumb: 'Historique' } },
+          { path: 'monthly', loadComponent: () => import('./features/attendance/hr-attendance-monthly/hr-attendance-monthly.component').then((m) => m.HrAttendanceMonthlyComponent), data: { breadcrumb: 'Résumé mensuel' } },
+          { path: '', redirectTo: 'validation', pathMatch: 'full' },
+        ]
+      },
+      {
+        path: 'hr/leaves',
+        loadComponent: () => import('./features/leaves/hr-leaves-layout/hr-leaves-layout.component').then((m) => m.HrLeavesLayoutComponent),
+        data: { breadcrumb: 'Congés' },
+        children: [
+          { path: 'validation', loadComponent: () => import('./features/leaves/hr-leave-validation/hr-leave-validation.component').then((m) => m.HrLeaveValidationComponent), data: { breadcrumb: 'Validation congés' } },
+          { path: 'history', loadComponent: () => import('./features/leaves/hr-leave-history/hr-leave-history.component').then((m) => m.HrLeaveHistoryComponent), data: { breadcrumb: 'Historique congés' } },
+          { path: 'balances', loadComponent: () => import('./features/leaves/hr-leave-balances/hr-leave-balances.component').then((m) => m.HrLeaveBalancesComponent), data: { breadcrumb: 'Balances équipe' } },
+          { path: 'holidays', loadComponent: () => import('./features/leaves/public-holidays/public-holidays.component').then((m) => m.PublicHolidaysComponent), data: { breadcrumb: 'Jours fériés' } },
+          { path: '', redirectTo: 'validation', pathMatch: 'full' },
+        ]
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -200,6 +224,29 @@ export const routes: Routes = [
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
       },
+      {
+        path: 'attendance',
+        loadComponent: () => import('./features/attendance/team-attendance-layout/team-attendance-layout.component').then((m) => m.TeamAttendanceLayoutComponent),
+        data: { breadcrumb: 'Présences' },
+        children: [
+          { path: 'validation', loadComponent: () => import('./features/attendance/team-attendance-validation/team-attendance-validation.component').then((m) => m.TeamAttendanceValidationComponent), data: { breadcrumb: 'Validation' } },
+          { path: 'today', loadComponent: () => import('./features/attendance/team-attendance-today/team-attendance-today.component').then((m) => m.TeamAttendanceTodayComponent), data: { breadcrumb: "Aujourd'hui" } },
+          { path: 'history', loadComponent: () => import('./features/attendance/team-attendance-history/team-attendance-history.component').then((m) => m.TeamAttendanceHistoryComponent), data: { breadcrumb: 'Historique' } },
+          { path: 'monthly', loadComponent: () => import('./features/attendance/team-attendance-monthly/team-attendance-monthly.component').then((m) => m.TeamAttendanceMonthlyComponent), data: { breadcrumb: 'Résumé mensuel' } },
+          { path: '', redirectTo: 'validation', pathMatch: 'full' },
+        ]
+      },
+      {
+        path: 'team/leaves',
+        loadComponent: () => import('./features/leaves/team-leaves-layout/team-leaves-layout.component').then((m) => m.TeamLeavesLayoutComponent),
+        data: { breadcrumb: 'Congés' },
+        children: [
+          { path: 'validation', loadComponent: () => import('./features/leaves/team-leave-validation/team-leave-validation.component').then((m) => m.TeamLeaveValidationComponent), data: { breadcrumb: 'Validation congés' } },
+          { path: 'history', loadComponent: () => import('./features/leaves/team-leave-history/team-leave-history.component').then((m) => m.TeamLeaveHistoryComponent), data: { breadcrumb: 'Historique congés' } },
+          { path: 'balances', loadComponent: () => import('./features/leaves/team-leave-balances/team-leave-balances.component').then((m) => m.TeamLeaveBalancesComponent), data: { breadcrumb: 'Balances équipe' } },
+          { path: '', redirectTo: 'validation', pathMatch: 'full' },
+        ]
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -248,6 +295,28 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./features/shared/profile/profile.component').then((m) => m.ProfileComponent),
         data: { breadcrumb: 'Profil' }
+      },
+      {
+        path: 'attendance',
+        loadComponent: () => import('./features/attendance/employee-attendance-layout/employee-attendance-layout.component').then((m) => m.EmployeeAttendanceLayoutComponent),
+        data: { breadcrumb: 'Ma présence' },
+        children: [
+          { path: 'today', loadComponent: () => import('./features/attendance/attendance-today/attendance-today.component').then((m) => m.AttendanceTodayComponent), data: { breadcrumb: "Aujourd'hui" } },
+          { path: 'history', loadComponent: () => import('./features/attendance/attendance-history/attendance-history.component').then((m) => m.AttendanceHistoryComponent), data: { breadcrumb: 'Historique' } },
+          { path: 'summary', loadComponent: () => import('./features/attendance/attendance-monthly-summary/attendance-monthly-summary.component').then((m) => m.AttendanceMonthlySummaryComponent), data: { breadcrumb: 'Résumé du mois' } },
+          { path: '', redirectTo: 'today', pathMatch: 'full' },
+        ]
+      },
+      {
+        path: 'leaves',
+        loadComponent: () => import('./features/leaves/leaves-layout/leaves-layout.component').then((m) => m.LeavesLayoutComponent),
+        data: { breadcrumb: 'Congés' },
+        children: [
+          { path: 'request', loadComponent: () => import('./features/leaves/leave-request/leave-request.component').then((m) => m.LeaveRequestComponent), data: { breadcrumb: 'Demander un congé' } },
+          { path: 'history', loadComponent: () => import('./features/leaves/leave-history/leave-history.component').then((m) => m.LeaveHistoryComponent), data: { breadcrumb: 'Mon historique' } },
+          { path: 'balance', loadComponent: () => import('./features/leaves/leave-balance/leave-balance.component').then((m) => m.LeaveBalanceComponent), data: { breadcrumb: 'Mon solde' } },
+          { path: '', redirectTo: 'request', pathMatch: 'full' },
+        ]
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

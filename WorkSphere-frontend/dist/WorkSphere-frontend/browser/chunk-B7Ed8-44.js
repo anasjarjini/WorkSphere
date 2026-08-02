@@ -1,1 +1,0 @@
-import {D,a6 as Vt,a7 as o,a8 as ie}from'./main-YP2EGRXF.js';var i=class t{http=D(Vt);apiUrl=o.apiUrl;getDepartments(){return this.http.get(`${this.apiUrl}/departments`)}static \u0275fac=function(n){return new(n||t)};static \u0275prov=ie({token:t,factory:t.\u0275fac,providedIn:"root"})};export{i};

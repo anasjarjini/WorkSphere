@@ -62,6 +62,20 @@ class EmployeeCsvImportServiceTest extends TestCase
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('leave_balances', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedSmallInteger('year');
+            $table->string('type');
+            $table->unsignedSmallInteger('allocated_days')->default(0);
+            $table->unsignedSmallInteger('used_days')->default(0);
+            $table->unsignedSmallInteger('carried_over_days')->default(0);
+            $table->timestamps();
+            $table->softDeletes();
+            $table->unique(['user_id', 'year', 'type']);
+        });
     }
 
     public function test_user_creation_without_name_uses_first_and_last_name(): void

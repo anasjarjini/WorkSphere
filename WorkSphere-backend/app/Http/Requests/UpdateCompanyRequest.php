@@ -33,6 +33,7 @@ class UpdateCompanyRequest extends FormRequest
             'email'   => ['nullable', 'email'],
             'phone'   => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
+            'default_annual_leave_days' => ['nullable', 'integer', 'min:0', 'max:365'],
         ];
     }
 
@@ -47,6 +48,8 @@ class UpdateCompanyRequest extends FormRequest
             'email.email'    => 'Veuillez fournir une adresse email valide.',
             'phone.max'      => 'Le numéro de téléphone ne peut pas dépasser 20 caractères.',
             'address.max'    => 'L\'adresse ne peut pas dépasser 500 caractères.',
+            'default_annual_leave_days.integer' => 'Le nombre de jours de congés doit être un entier.',
+            'default_annual_leave_days.max'     => 'Le nombre de jours de congés ne peut pas dépasser 365.',
         ];
     }
 }

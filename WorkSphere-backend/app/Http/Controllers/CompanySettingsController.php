@@ -46,6 +46,7 @@ class CompanySettingsController extends Controller
             'email'   => $validated['email'] ?? null,
             'phone'   => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
+            'default_annual_leave_days' => $validated['default_annual_leave_days'] ?? $company->default_annual_leave_days,
         ]);
 
         return response()->json([

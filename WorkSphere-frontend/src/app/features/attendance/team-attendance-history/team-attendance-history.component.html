@@ -1,0 +1,139 @@
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-heading text-headline-lg text-on-surface">Historique des présences</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Suivez l'historique des déclarations de votre équipe mois par mois.</p>
+    </div>
+    <div class="flex gap-3">
+      <button class="px-4 py-2.5 border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">download</span>
+        Exporter PDF
+      </button>
+      <button class="px-4 py-2.5 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">description</span>
+        Générer Rapport
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-2 bg-surface border border-outline-variant rounded-lg px-3 py-2">
+      <span class="material-symbols-outlined text-on-surface-variant text-[18px]">person_search</span>
+      <select [ngModel]="historyEmployeeFilter()" (ngModelChange)="filterByEmployee($any($event))"
+        class="bg-transparent text-sm font-medium text-on-surface outline-none cursor-pointer">
+        <option [ngValue]="null">Tous les employés</option>
+        @for (m of teamMembers(); track m.id) {
+          <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+        }
+      </select>
+    </div>
+    <div class="flex items-center gap-1 bg-surface border border-outline-variant rounded-lg px-2 py-1.5">
+      <button (click)="previousMonth()" class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant transition-colors cursor-pointer" title="Mois précédent">
+        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+      </button>
+      <span class="font-label-md text-label-md text-on-surface min-w-[120px] text-center">{{ currentMonth() }}</span>
+      <button (click)="nextMonth()" class="p-1.5 rounded-md hover:bg-surface-container-high text-on-surface-variant transition-colors cursor-pointer" title="Mois suivant">
+        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+      </button>
+    </div>
+    <button (click)="filterByEmployee(null)"
+      class="px-4 py-2 text-primary font-label-md text-label-md hover:underline transition-all cursor-pointer">
+      Réinitialiser
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-surface border border-outline-variant rounded-xl shadow-sm p-6 animate-pulse space-y-4">
+      @for (_ of [1,2,3,4]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
+    </div>
+  } @else if (error()) {
+    <div class="bg-error-light border border-error/20 rounded-xl p-6 text-center">
+      <p class="text-sm text-error-dark">{{ error() }}</p>
+    </div>
+  } @else if (filteredDeclarations().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface border border-outline-variant rounded-xl">
+      <span class="material-symbols-outlined text-5xl text-on-surface-variant mb-4">calendar_today</span>
+      <h3 class="font-heading text-lg font-semibold text-on-surface mb-1">Aucune déclaration</h3>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Aucune déclaration pour la période sélectionnée.</p>
+    </div>
+  } @else {
+    <div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead class="bg-surface-container-lowest">
+            <tr class="border-b border-outline-variant">
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Date</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Statut</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Heures</th>
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Validation</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            @for (decl of paginatedDeclarations(); track decl.id) {
+              <tr class="hover:bg-surface-container-lowest transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-primary-container/30 text-primary flex items-center justify-center text-xs font-bold shrink-0">{{ initials(decl.user?.first_name ?? '', decl.user?.last_name ?? '') }}</div>
+                    <span class="font-body-md text-body-md text-on-surface font-medium">{{ decl.user?.first_name }} {{ decl.user?.last_name }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ decl.date | date:'shortDate':'':'fr' }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm px-3 py-1 rounded-full"
+                    [class.bg-secondary-container]="decl.status === 'PRESENT'" [class.text-on-secondary-container]="decl.status === 'PRESENT'"
+                    [class.bg-error-container]="decl.status === 'ABSENT'" [class.text-on-error-container]="decl.status === 'ABSENT'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                      [class.bg-secondary]="decl.status === 'PRESENT'" [class.bg-error]="decl.status === 'ABSENT'"></span>
+                    {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ decl.hours_worked ? decl.hours_worked + 'h' : '—' }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm px-3 py-1 rounded-lg"
+                    [class.bg-surface-container-high]="decl.validation_status === 'EN_ATTENTE'" [class.text-on-surface-variant]="decl.validation_status === 'EN_ATTENTE'"
+                    [class.bg-primary-container]="decl.validation_status === 'VALIDEE'" [class.text-on-primary-container]="decl.validation_status === 'VALIDEE'"
+                    [class.bg-error-container]="decl.validation_status === 'REJETEE'" [class.text-on-error-container]="decl.validation_status === 'REJETEE'">
+                    @if (decl.validation_status === 'VALIDEE') {
+                      <span class="material-symbols-outlined text-[14px]">verified</span>
+                    } @else if (decl.validation_status === 'REJETEE') {
+                      <span class="material-symbols-outlined text-[14px]">block</span>
+                    } @else {
+                      <span class="material-symbols-outlined text-[14px]">schedule</span>
+                    }
+                    {{ decl.validation_status === 'EN_ATTENTE' ? 'En attente' : decl.validation_status === 'VALIDEE' ? 'Validée' : 'Rejetée' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="px-6 py-4 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between">
+        <p class="font-label-sm text-label-sm text-on-surface-variant">{{ filteredDeclarations().length }} déclaration(s)</p>
+        <div class="flex items-center gap-1.5">
+          <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          @for (page of [].constructor(totalPages()); track $index) {
+            <button (click)="goToPage($index + 1)"
+              class="w-8 h-8 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              [class.bg-primary-container]="$index + 1 === currentPage()" [class.text-on-primary-container]="$index + 1 === currentPage()"
+              [class.text-on-surface-variant]="$index + 1 !== currentPage()" [class.hover:bg-surface-container-high]="$index + 1 !== currentPage()">
+              {{ $index + 1 }}
+            </button>
+          }
+          <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+            class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

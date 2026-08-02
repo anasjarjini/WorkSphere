@@ -1,0 +1,258 @@
+<div class="space-y-8 max-w-[1400px] mx-auto w-full">
+  <!-- FILTERS BENTO BAR -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white p-4 rounded-xl border border-outline-variant shadow-sm items-end">
+    <div class="md:col-span-4 flex flex-col gap-2">
+      <label class="font-sans font-medium text-xs text-on-surface-variant">Période</label>
+      <div class="flex items-center gap-2">
+        <button (click)="previousMonth()" class="p-2 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant cursor-pointer">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span class="flex-1 text-center font-sans text-sm font-semibold text-on-surface">{{ currentMonth() }}</span>
+        <button (click)="nextMonth()" class="p-2 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant cursor-pointer">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+    <div class="md:col-span-4 flex flex-col gap-2">
+      <label class="font-sans font-medium text-xs text-on-surface-variant">Statut de présence</label>
+      <select class="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest font-sans text-sm focus:ring-primary focus:border-primary">
+        <option value="">Tous les statuts</option>
+        <option value="PRESENT">Présent</option>
+        <option value="ABSENT">Absent</option>
+      </select>
+    </div>
+    <div class="md:col-span-4 flex gap-3">
+      <button class="flex-1 px-6 py-2 bg-primary text-white font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all cursor-pointer">
+        <span class="material-symbols-outlined text-[20px]">filter_list</span>
+        Appliquer
+      </button>
+      <button class="px-6 py-2 bg-surface-container-high text-on-surface-variant font-sans font-medium text-sm rounded-lg hover:bg-outline-variant/30 active:scale-95 transition-all cursor-pointer">
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TABLE CARD -->
+  <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+    @if (loading()) {
+      <div class="p-6 animate-pulse space-y-4">
+        @for (_ of [1,2,3,4]; track _) { <div class="h-10 bg-surface-container rounded"></div> }
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <span class="material-symbols-outlined text-error text-4xl mb-4">error</span>
+        <p class="text-sm text-error mb-2">{{ error() }}</p>
+        <button (click)="loadMonth()" class="text-sm font-semibold text-primary hover:underline cursor-pointer">Réessayer</button>
+      </div>
+    } @else if (monthDeclarations().length === 0) {
+      <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-4">calendar_month</span>
+        <h3 class="font-heading text-lg font-semibold text-on-surface mb-1">Aucune déclaration ce mois-ci</h3>
+        <p class="text-sm text-on-surface-variant">Utilisez l'onglet "Aujourd'hui" pour déclarer votre présence.</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low border-b border-outline-variant">
+            <tr>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Date</th>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Jour</th>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Statut</th>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Heures</th>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Validation</th>
+              <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            @for (decl of paginatedDeclarations(); track decl.id) {
+              <tr class="table-row-hover transition-colors">
+                <td class="px-6 py-4 font-sans text-sm text-on-surface">{{ decl.date | date:'d MMM yyyy':'':'fr' }}</td>
+                <td class="px-6 py-4 font-sans text-sm text-on-surface-variant">{{ decl.date | date:'EEEE':'':'fr' }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 rounded-full font-sans font-medium text-xs"
+                    [class.bg-secondary-container/30]="decl.status === 'PRESENT'"
+                    [class.text-secondary]="decl.status === 'PRESENT'"
+                    [class.bg-error-container]="decl.status === 'ABSENT'"
+                    [class.text-error]="decl.status === 'ABSENT'">
+                    {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 font-sans text-sm text-on-surface">{{ decl.hours_worked ? decl.hours_worked + 'h' : '--:--' }}</td>
+                <td class="px-6 py-4">
+                  @if (decl.validation_status === 'VALIDEE') {
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/30 text-secondary font-sans font-medium text-xs border border-secondary/20">
+                      <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                      Validée
+                    </span>
+                  } @else if (decl.validation_status === 'REJETEE') {
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-error-container text-error font-sans font-medium text-xs border border-error/20">
+                      <span class="material-symbols-outlined text-[14px]">cancel</span>
+                      Rejetée
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-sans font-medium text-xs border border-yellow-200">
+                      <span class="material-symbols-outlined text-[14px]">schedule</span>
+                      En attente
+                    </span>
+                  }
+                </td>
+                <td class="px-6 py-4 text-right">
+                  @if (decl.validation_status === 'REJETEE') {
+                    <button (click)="openCorrection(decl)"
+                      class="px-4 py-1.5 bg-primary text-white font-sans font-medium text-xs rounded-lg hover:bg-primary-hover transition-all shadow-sm cursor-pointer">
+                      Corriger
+                    </button>
+                  } @else {
+                    <button class="p-2 hover:bg-surface-container-highest rounded-full text-on-surface-variant transition-colors cursor-pointer">
+                      <span class="material-symbols-outlined text-[20px]">more_vert</span>
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (decl.validation_status === 'REJETEE' && decl.rejection_reason) {
+                <tr class="bg-error-container/10">
+                  <td colspan="6" class="px-6 py-4">
+                    <div class="flex items-center gap-2 text-xs text-error">
+                      <span class="material-symbols-outlined text-[16px]">info</span>
+                      <span>{{ decl.rejection_reason }}</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-lowest">
+        <span class="font-sans text-xs text-on-surface-variant">{{ monthDeclarations().length }} déclaration(s)</span>
+        <div class="flex items-center gap-1">
+          <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-default">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          @for (page of [].constructor(totalPages()); track $index) {
+            <button (click)="goToPage($index + 1)"
+              class="w-10 h-10 flex items-center justify-center rounded-lg font-sans font-medium text-xs transition-all cursor-pointer"
+              [class.bg-primary]="$index + 1 === currentPage()"
+              [class.text-white]="$index + 1 === currentPage()"
+              [class.border]="$index + 1 !== currentPage()"
+              [class.border-outline-variant]="$index + 1 !== currentPage()"
+              [class.text-on-surface-variant]="$index + 1 !== currentPage()"
+              [class.hover:bg-surface-container]="$index + 1 !== currentPage()">
+              {{ $index + 1 }}
+            </button>
+          }
+          <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+            class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-default">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined">timer</span>
+      </div>
+      <div>
+        <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Total heures</p>
+        <p class="font-heading font-bold text-headline-sm text-on-surface">{{ summary().totalHours }}h</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+        <span class="material-symbols-outlined">done_all</span>
+      </div>
+      <div>
+        <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Jours présents</p>
+        <p class="font-heading font-bold text-headline-sm text-on-surface">{{ summary().daysPresent }}/{{ summary().totalDays }}</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+        <span class="material-symbols-outlined">event_busy</span>
+      </div>
+      <div>
+        <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Jours absents</p>
+        <p class="font-heading font-bold text-headline-sm text-on-surface">{{ summary().daysAbsent }}</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex items-center gap-4 border-l-4 border-l-error">
+      <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center text-error">
+        <span class="material-symbols-outlined">warning</span>
+      </div>
+      <div>
+        <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">En attente</p>
+        <p class="font-heading font-bold text-headline-sm text-error">{{ summary().pendingCount }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (correctionDate() !== null) {
+  <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" (click)="closeCorrection()">
+    <div class="bg-white rounded-xl shadow-xl border border-outline-variant p-6 max-w-md w-full" (click)="$event.stopPropagation()">
+      <h3 class="font-heading text-lg font-bold text-on-surface mb-1">Corriger la déclaration</h3>
+      <p class="text-sm text-on-surface-variant mb-4">{{ correctionDate() | date:'fullDate':'':'fr' }}</p>
+
+      @if (correctionError()) {
+        <div class="bg-error-container border border-error/20 rounded-lg p-3 mb-4">
+          <p class="text-sm text-error">{{ correctionError() }}</p>
+        </div>
+      }
+
+      <div class="flex gap-3 mb-4">
+        <button (click)="correctionStatus.set('PRESENT')"
+          class="flex-1 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer"
+          [class.border-secondary]="correctionStatus() === 'PRESENT'"
+          [class.bg-secondary-container/30]="correctionStatus() === 'PRESENT'"
+          [class.text-secondary]="correctionStatus() === 'PRESENT'"
+          [class.border-outline-variant]="correctionStatus() !== 'PRESENT'"
+          [class.text-on-surface-variant]="correctionStatus() !== 'PRESENT'">
+          Présent(e)
+        </button>
+        <button (click)="correctionStatus.set('ABSENT')"
+          class="flex-1 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer"
+          [class.border-warning]="correctionStatus() === 'ABSENT'"
+          [class.bg-warning/5]="correctionStatus() === 'ABSENT'"
+          [class.text-warning-dark]="correctionStatus() === 'ABSENT'"
+          [class.border-outline-variant]="correctionStatus() !== 'ABSENT'"
+          [class.text-on-surface-variant]="correctionStatus() !== 'ABSENT'">
+          Absent(e)
+        </button>
+      </div>
+
+      @if (correctionStatus() === 'PRESENT') {
+        <div class="mb-4">
+          <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 block">Heures travaillées</label>
+          <input type="number" step="0.5" min="0" max="24"
+            [ngModel]="correctionHours()" (ngModelChange)="correctionHours.set($any($event))"
+            placeholder="Ex: 7.5"
+            class="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all" />
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        <button (click)="closeCorrection()"
+          class="px-4 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container transition-all cursor-pointer">
+          Annuler
+        </button>
+        <button (click)="submitCorrection()" [disabled]="correctionSaving()"
+          class="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2">
+          @if (correctionSaving()) {
+            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          }
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

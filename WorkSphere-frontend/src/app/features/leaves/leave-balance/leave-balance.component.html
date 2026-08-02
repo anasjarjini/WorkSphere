@@ -1,0 +1,82 @@
+<div class="flex flex-col gap-4 w-full">
+  @if (error()) {
+    <div class="bg-error-container border border-error/20 rounded-lg p-4 flex items-start gap-2">
+      <span class="material-symbols-outlined text-error shrink-0 mt-0.5">error</span>
+      <span class="text-sm font-medium text-error">{{ error() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+  } @else if (balances().length === 0) {
+    <div class="bg-white border border-outline-variant rounded-xl py-16 flex flex-col items-center gap-3 custom-shadow">
+      <span class="material-symbols-outlined text-[40px] text-text-muted">account_balance_wallet</span>
+      <p class="font-sans font-medium text-sm text-text-secondary">
+        Aucun solde n'est encore disponible pour {{ year() }}. Il sera initialisé par votre équipe RH.
+      </p>
+    </div>
+  } @else {
+    <div class="bg-white border border-outline-variant rounded-xl p-6 custom-shadow">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="font-heading font-bold text-lg text-text-heading">Solde annuel {{ year() }}</h2>
+        <button (click)="loadBalances()" class="text-sm text-primary hover:text-primary-dark flex items-center gap-1 cursor-pointer">
+          <span class="material-symbols-outlined text-base">refresh</span>
+          Actualiser
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="rounded-xl bg-background-alt border border-outline-variant p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Restant</p>
+          <p class="font-heading font-bold text-3xl text-primary mt-1">{{ totalRemaining() }}</p>
+          <p class="text-xs text-on-surface-variant mt-1">jour(s) au total</p>
+        </div>
+        <div class="rounded-xl bg-background-alt border border-outline-variant p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Consommé</p>
+          <p class="font-heading font-bold text-3xl text-warning-dark mt-1">{{ totalUsed() }}</p>
+          <p class="text-xs text-on-surface-variant mt-1">jour(s) utilisés</p>
+        </div>
+        <div class="rounded-xl bg-background-alt border border-outline-variant p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Alloué</p>
+          <p class="font-heading font-bold text-3xl text-text-heading mt-1">{{ totalAllocated() }}</p>
+          <p class="text-xs text-on-surface-variant mt-1">jour(s) (+ report)</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        @for (balance of balances(); track balance.id) {
+          <div class="rounded-xl border border-outline-variant p-5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-full flex items-center justify-center {{ typeColor(balance.type) }}">
+                  <span class="material-symbols-outlined">{{ typeIcon(balance.type) }}</span>
+                </span>
+                <div>
+                  <p class="font-sans font-semibold text-sm text-text-heading">{{ typeLabel(balance.type) }}</p>
+                  <p class="text-xs text-on-surface-variant">{{ balance.year }}</p>
+                </div>
+              </div>
+              <p class="font-heading font-bold text-2xl text-primary">{{ balance.remaining_days }}<span class="text-sm font-medium text-on-surface-variant ml-1">j</span></p>
+            </div>
+            <div class="mt-4 h-2 rounded-full bg-background-alt overflow-hidden">
+              <div class="h-full rounded-full bg-primary transition-all"
+                [style.width.%]="balance.allocated_days + balance.carried_over_days > 0
+                  ? Math.min(100, (balance.used_days / (balance.allocated_days + balance.carried_over_days)) * 100)
+                  : 0"></div>
+            </div>
+            <div class="mt-2 flex justify-between text-xs text-on-surface-variant">
+              <span>Alloué : {{ balance.allocated_days }} j</span>
+              <span>Reporté : {{ balance.carried_over_days }} j</span>
+              <span>Utilisé : {{ balance.used_days }} j</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

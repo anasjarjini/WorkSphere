@@ -1,0 +1,173 @@
+<div class="flex flex-col gap-6">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <h1 class="font-heading text-headline-lg text-on-surface mb-1">Statut Global de l'Entreprise</h1>
+      <p class="font-body-md text-on-surface-variant">Vue d'ensemble des présences de tous les collaborateurs aujourd'hui.</p>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="bg-surface-container px-4 py-2 rounded-xl flex items-center gap-2 text-on-surface-variant font-label-md">
+        <span class="material-symbols-outlined">event</span>
+        {{ todayStr | date:'MMMM yyyy':'':'fr' }}
+      </div>
+      <button class="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:opacity-95 transition-all shadow-sm cursor-pointer">
+        <span class="material-symbols-outlined">download</span>
+        Export CSV (Full)
+      </button>
+    </div>
+  </div>
+
+  @if (loading() && allEmployees().length === 0) {
+    <div class="bg-surface border border-outline-variant rounded-xl p-6 animate-pulse space-y-4">
+      @for (_ of [1,2,3,4]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
+    </div>
+  } @else {
+    <!-- Status Filter Chips -->
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <h3 class="font-heading text-headline-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">groups</span>
+        Statut Global (Aujourd'hui)
+      </h3>
+      <div class="flex gap-2 flex-wrap">
+        <button (click)="setFilter('TOUS')"
+          class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
+          [class.bg-primary]="statusFilter() === 'TOUS'" [class.text-on-primary]="statusFilter() === 'TOUS'"
+          [class.bg-surface-container]="statusFilter() !== 'TOUS'" [class.text-on-surface-variant]="statusFilter() !== 'TOUS'"
+          [class.hover:bg-surface-container-high]="statusFilter() !== 'TOUS'">
+          Tous ({{ counts().total }})
+        </button>
+        <button (click)="setFilter('PRESENT')"
+          class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
+          [class.bg-primary]="statusFilter() === 'PRESENT'" [class.text-on-primary]="statusFilter() === 'PRESENT'"
+          [class.bg-surface-container]="statusFilter() !== 'PRESENT'" [class.text-on-surface-variant]="statusFilter() !== 'PRESENT'"
+          [class.hover:bg-surface-container-high]="statusFilter() !== 'PRESENT'">
+          Présents ({{ counts().present }})
+        </button>
+        <button (click)="setFilter('EN_ATTENTE')"
+          class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
+          [class.bg-primary]="statusFilter() === 'EN_ATTENTE'" [class.text-on-primary]="statusFilter() === 'EN_ATTENTE'"
+          [class.bg-surface-container]="statusFilter() !== 'EN_ATTENTE'" [class.text-on-surface-variant]="statusFilter() !== 'EN_ATTENTE'"
+          [class.hover:bg-surface-container-high]="statusFilter() !== 'EN_ATTENTE'">
+          En attente ({{ counts().pending }})
+        </button>
+        <button (click)="setFilter('EN_CONGE')"
+          class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
+          [class.bg-primary]="statusFilter() === 'EN_CONGE'" [class.text-on-primary]="statusFilter() === 'EN_CONGE'"
+          [class.bg-surface-container]="statusFilter() !== 'EN_CONGE'" [class.text-on-surface-variant]="statusFilter() !== 'EN_CONGE'"
+          [class.hover:bg-surface-container-high]="statusFilter() !== 'EN_CONGE'">
+          En congé ({{ counts().leave }})
+        </button>
+        <button (click)="setFilter('ABSENT')"
+          class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
+          [class.bg-primary]="statusFilter() === 'ABSENT'" [class.text-on-primary]="statusFilter() === 'ABSENT'"
+          [class.bg-surface-container]="statusFilter() !== 'ABSENT'" [class.text-on-surface-variant]="statusFilter() !== 'ABSENT'"
+          [class.hover:bg-surface-container-high]="statusFilter() !== 'ABSENT'">
+          Absents ({{ counts().absent }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant">
+              <th class="px-6 py-4 font-label-md text-on-surface-variant">Collaborateur</th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant">Département</th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant">Rôle</th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant">Dernière Décl.</th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant">Statut</th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/50">
+            @for (item of paginatedStatus(); track item.employee.id) {
+              <tr class="hover:bg-surface-container-lowest transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center font-bold text-on-surface-variant shrink-0">{{ initials(item.employee.first_name, item.employee.last_name) }}</div>
+                    <div>
+                      <div class="font-label-md text-on-surface">{{ item.employee.first_name }} {{ item.employee.last_name }}</div>
+                      <div class="text-body-sm text-on-surface-variant">{{ item.employee.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 font-body-sm text-on-surface">{{ item.employee.department?.name ?? '—' }}</td>
+                <td class="px-6 py-4 font-body-sm text-on-surface-variant">{{ roleLabel(item.employee.role) }}</td>
+                <td class="px-6 py-4 font-body-sm text-on-surface-variant">
+                  @if (item.declaration) {
+                    @if (item.declaration.date === todayStr) {
+                      Aujourd'hui, {{ item.declaration.hours_worked ? item.declaration.hours_worked + 'h' : 'déclaré' }}
+                    } @else {
+                      {{ item.declaration.date | date:'dd MMM':'':'fr' }}
+                    }
+                  } @else {
+                    <span class="text-on-surface-variant/50">—</span>
+                  }
+                </td>
+                <td class="px-6 py-4">
+                  @switch (statusOf(item)) {
+                    @case ('PRESENT') {
+                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-sm">
+                        <span class="w-2 h-2 bg-secondary rounded-full"></span> Présent
+                      </span>
+                    }
+                    @case ('EN_ATTENTE') {
+                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-label-sm">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> En attente
+                      </span>
+                    }
+                    @case ('EN_CONGE') {
+                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-label-sm">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full"></span> En congé
+                      </span>
+                    }
+                    @case ('ABSENT') {
+                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-label-sm">
+                        <span class="w-2 h-2 bg-outline rounded-full"></span> Absent
+                      </span>
+                    }
+                  }
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button class="material-symbols-outlined text-outline hover:text-primary transition-colors cursor-pointer">visibility</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      <div class="p-4 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between">
+        <span class="text-body-sm text-on-surface-variant">Affichage de {{ (currentPage() - 1) * pageSize + 1 }} sur {{ filteredStatus().length }} employés</span>
+        <div class="flex gap-2">
+          <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          @for (page of [].constructor(totalPages()); track $index) {
+            <button (click)="goToPage($index + 1)"
+              class="w-8 h-8 rounded flex items-center justify-center text-label-sm transition-colors cursor-pointer"
+              [class.bg-primary]="$index + 1 === currentPage()" [class.text-on-primary]="$index + 1 === currentPage()"
+              [class.border]="$index + 1 !== currentPage()" [class.border-outline-variant]="$index + 1 !== currentPage()"
+              [class.hover:bg-surface-container]="$index + 1 !== currentPage()">
+              {{ $index + 1 }}
+            </button>
+          }
+          <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+            class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Floating Action Button -->
+<div class="fixed bottom-8 right-8">
+  <button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer" title="Nouvelle demande">
+    <span class="material-symbols-outlined text-3xl">add</span>
+  </button>
+</div>

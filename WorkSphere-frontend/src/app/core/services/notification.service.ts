@@ -61,6 +61,24 @@ export class NotificationService {
     });
   }
 
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  startPolling(intervalMs = 30000): void {
+    this.stopPolling();
+    this.fetchUnreadCount();
+    this.pollTimer = setInterval(() => {
+      this.fetchUnreadCount();
+      this.fetchNotifications();
+    }, intervalMs);
+  }
+
+  stopPolling(): void {
+    if (this.pollTimer !== null) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
   incrementUnreadCount(): void {
     this.unreadCount.update((c) => c + 1);
   }

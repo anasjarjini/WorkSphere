@@ -1,0 +1,23 @@
+<div class="max-w-container-max mx-auto">
+  <header class="mb-6">
+    <h1 class="font-heading text-headline-md font-bold text-on-surface mb-2">Gestion des présences</h1>
+    <p class="text-on-surface-variant font-sans text-body-md">Suivez et déclarez votre temps de travail quotidien.</p>
+  </header>
+
+  <div class="flex border-b border-outline-variant mb-8">
+    <a routerLink="/employee/attendance/today" routerLinkActive="text-[#7C3AED] border-b-2 border-[#7C3AED] -mb-[2px]"
+      class="px-8 py-4 font-sans font-medium text-sm text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+      Aujourd'hui
+    </a>
+    <a routerLink="/employee/attendance/history" routerLinkActive="text-[#7C3AED] border-b-2 border-[#7C3AED] -mb-[2px]"
+      class="px-8 py-4 font-sans font-medium text-sm text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+      Historique
+    </a>
+    <a routerLink="/employee/attendance/summary" routerLinkActive="text-[#7C3AED] border-b-2 border-[#7C3AED] -mb-[2px]"
+      class="px-8 py-4 font-sans font-medium text-sm text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+      Résumé du mois
+    </a>
+  </div>
+
+  <router-outlet />
+</div>

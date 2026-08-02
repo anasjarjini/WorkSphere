@@ -1,0 +1,172 @@
+<div class="flex flex-col gap-6">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <p class="font-label-md text-primary mb-1">Espace RH / Présences</p>
+      <h1 class="font-heading text-headline-lg text-on-surface mb-1">Suivi des Présences</h1>
+      <p class="font-body-md text-on-surface-variant">Gérez et validez l'historique des présences de vos équipes.</p>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
+        <button (click)="previousMonth()" class="w-9 h-9 rounded-lg border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button (click)="nextMonth()" class="w-9 h-9 rounded-lg border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+      <button class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        PDF
+      </button>
+      <button class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
+        <span class="material-symbols-outlined">table_chart</span>
+        Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm">
+    <h3 class="font-label-md text-on-surface mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">tune</span>
+      Filtres
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <label class="block font-label-sm text-on-surface-variant mb-2">Période</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant/60 text-lg">calendar_month</span>
+          <input type="month" [value]="currentMonth()"
+            class="w-full bg-surface-container-low rounded-lg border border-outline-variant py-2.5 pl-10 pr-3 font-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+            (change)="changeMonth($any($event.target).value)" />
+        </div>
+      </div>
+      <div>
+        <label class="block font-label-sm text-on-surface-variant mb-2">Département</label>
+        <select (change)="setDeptFilter(($any($event.target).value ? +$any($event.target).value : null))"
+          class="w-full bg-surface-container-low rounded-lg border border-outline-variant py-2.5 px-3 font-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+          <option [value]="null">Tous les départements</option>
+          @for (dept of departments(); track dept.id) {
+            <option [value]="dept.id">{{ dept.name }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="block font-label-sm text-on-surface-variant mb-2">Statut</label>
+        <select (change)="setStatusFilter(($any($event.target).value))"
+          class="w-full bg-surface-container-low rounded-lg border border-outline-variant py-2.5 px-3 font-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+          <option value="TOUS">Tous les statuts</option>
+          <option value="VALIDEE">Validé</option>
+          <option value="REJETEE">Rejeté</option>
+          <option value="EN_ATTENTE">En attente</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button class="w-full bg-primary text-on-primary rounded-lg py-2.5 px-6 font-label-md flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors cursor-pointer">
+          <span class="material-symbols-outlined">search</span>
+          Filtrer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Date</th>
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Manager / Équipe</th>
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Période</th>
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Statut</th>
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider text-center">Anomalies</th>
+            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/50">
+          @for (d of paginatedDeclarations(); track d.id) {
+            <tr class="hover:bg-surface-container-lowest transition-colors group">
+              <td class="px-6 py-4 font-body-sm text-on-surface">{{ d.date | date:'dd MMM yyyy':'':'fr' }}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant text-[11px] overflow-hidden shrink-0">{{ initialsOf(d.user_id) }}</div>
+                  <div>
+                    <p class="font-label-md text-on-surface">{{ employeeName(d.user_id) }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ teamOf(d.user_id) }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 font-body-sm text-on-surface-variant">{{ hoursOf(d) }}</td>
+              <td class="px-6 py-4">
+                @switch (d.validation_status) {
+                  @case ('VALIDEE') {
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-label-sm">
+                      <span class="material-symbols-outlined text-sm">check_circle</span> Validé
+                    </span>
+                  }
+                  @case ('REJETEE') {
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-label-sm">
+                      <span class="material-symbols-outlined text-sm">cancel</span> Rejeté
+                    </span>
+                  }
+                  @default {
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-label-sm">
+                      <span class="material-symbols-outlined text-sm">hourglass_empty</span> En attente
+                    </span>
+                  }
+                }
+              </td>
+              <td class="px-6 py-4 text-center">
+                @if (anomalyCount(d) > 0) {
+                  <span class="font-label-md text-error inline-flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">warning</span>
+                    {{ anomalyCount(d) }}
+                  </span>
+                } @else {
+                  <span class="font-label-md text-on-surface-variant inline-flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    0
+                  </span>
+                }
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button class="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined">visibility</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination -->
+    <div class="p-4 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between gap-4 flex-wrap">
+      <span class="text-body-sm text-on-surface-variant">Affichage de {{ filteredDeclarations().length }} déclaration(s) pour {{ currentMonth() + '-01' | date:'MMMM yyyy':'':'fr' }}</span>
+      <div class="flex gap-2 items-center">
+        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+          class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">chevron_left</span>
+        </button>
+        @for (page of visiblePages(); track $index) {
+          @if (page === '...') {
+            <span class="w-8 text-center font-label-sm text-on-surface-variant">…</span>
+          } @else {
+            <button (click)="goToPage(page)"
+              class="min-w-8 h-8 px-2 rounded flex items-center justify-center text-label-sm transition-colors cursor-pointer"
+              [class.bg-primary]="page === currentPage()" [class.text-white]="page === currentPage()"
+              [class.border]="page !== currentPage()" [class.border-outline-variant]="page !== currentPage()"
+              [class.hover:bg-surface-container]="page !== currentPage()">
+              {{ page }}
+            </button>
+          }
+        }
+        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+          class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

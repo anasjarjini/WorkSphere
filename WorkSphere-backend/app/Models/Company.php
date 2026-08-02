@@ -20,6 +20,7 @@ class Company extends Model
         'address',
         'logo',
         'is_active',
+        'default_annual_leave_days',
     ];
 
     /**
@@ -33,6 +34,7 @@ class Company extends Model
         return [
             'is_active' => 'boolean',
             'modules_enabled' => 'array',
+            'default_annual_leave_days' => 'integer',
         ];
     }
 

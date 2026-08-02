@@ -161,4 +161,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaskComment::class);
     }
+
+    // ── Relations présences ──
+
+    public function attendanceDeclarations()
+    {
+        return $this->hasMany(AttendanceDeclaration::class);
+    }
+
+    // ── Relations congés ──
+
+    public function absences()
+    {
+        return $this->hasMany(Absence::class);
+    }
+
+    public function leaveBalances()
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
 }

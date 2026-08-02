@@ -1,0 +1,171 @@
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-heading text-headline-lg text-on-surface">Résumé mensuel</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Vue d'ensemble des présences de votre équipe.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="px-4 py-2.5 border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+        {{ monthLabel() }}
+      </button>
+      <button (click)="exportCsv()"
+        class="px-4 py-2.5 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity inline-flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">download</span>
+        Exporter CSV
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-surface border border-outline-variant rounded-xl p-6 animate-pulse space-y-4">
+      @for (_ of [1,2,3]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
+    </div>
+  } @else {
+    <!-- Bento Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Primary Card -->
+      <div class="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden min-h-[140px]">
+        <span class="material-symbols-outlined absolute right-2 top-2 opacity-10 text-[120px]">auto_awesome</span>
+        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/70 mb-2">Taux de présence</p>
+        <p class="font-heading text-headline-lg font-bold">{{ stats().rate }}%</p>
+        <p class="font-body-sm text-body-sm text-on-primary/70 mt-1">sur {{ stats().size }} employé(s) ce mois</p>
+      </div>
+      <!-- Heures validées -->
+      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
+        <div class="w-12 h-12 rounded-lg bg-secondary-container/30 text-secondary flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">schedule</span>
+        </div>
+        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Heures validées</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().totalHours | number:'1.0-1':'fr' }}h</p>
+      </div>
+      <!-- Jours d'absence -->
+      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
+        <div class="w-12 h-12 rounded-lg bg-error-container/30 text-error flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">event_busy</span>
+        </div>
+        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Jours d'absence</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().totalAbsent }}</p>
+      </div>
+      <!-- Employés actifs -->
+      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
+        <div class="w-12 h-12 rounded-lg bg-primary-container/30 text-primary flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Employés dans l'équipe</p>
+        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().size }}</p>
+      </div>
+    </div>
+
+    <!-- Team Table -->
+    <div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+      <div class="p-5 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 class="font-heading text-lg font-bold text-on-surface">Détails par employé</h3>
+        <div class="flex items-center gap-1">
+          <button (click)="previousMonth()" class="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors cursor-pointer" title="Mois précédent">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <span class="font-label-md text-label-md text-on-surface min-w-[120px] text-center">{{ monthLabel() }}</span>
+          <button (click)="nextMonth()" class="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors cursor-pointer" title="Mois suivant">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead class="bg-surface-container-lowest">
+            <tr class="border-b border-outline-variant">
+              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
+              <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Jours présents</th>
+              <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Jours absents</th>
+              <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Total heures</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            @for (row of summary(); track row.employee.id) {
+              <tr class="hover:bg-surface-container-lowest transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary-container/30 text-primary flex items-center justify-center font-bold text-xs shrink-0">{{ initials(row.employee.first_name, row.employee.last_name) }}</div>
+                    <div>
+                      <p class="font-body-md text-body-md text-on-surface font-medium">{{ row.employee.first_name }} {{ row.employee.last_name }}</p>
+                      <p class="font-body-sm text-body-sm text-on-surface-variant">{{ row.employee.job_title }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm px-3 py-1 rounded-full bg-secondary-container/50 text-on-secondary-container">
+                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                    {{ row.presentDays }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm px-3 py-1 rounded-full bg-error-container/50 text-on-error-container">
+                    <span class="material-symbols-outlined text-[14px]">cancel</span>
+                    {{ row.absentDays }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center font-body-md text-body-md text-on-surface font-bold">{{ row.totalHours | number:'1.1-1':'fr' }}h</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Répartition -->
+      <div class="bg-surface border border-outline-variant rounded-xl p-6">
+        <h3 class="font-heading text-lg font-bold text-on-surface mb-5">Répartition des présences</h3>
+        <div class="space-y-5">
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-label-sm text-label-sm text-on-surface">Présents</span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">{{ stats().totalPresent }}</span>
+            </div>
+            <div class="bg-surface-container-low h-2 rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full transition-all duration-500"
+                [style.width.%]="(stats().totalPresent + stats().totalAbsent) > 0 ? (stats().totalPresent / (stats().totalPresent + stats().totalAbsent)) * 100 : 0"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-label-sm text-label-sm text-on-surface">Absents</span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">{{ stats().totalAbsent }}</span>
+            </div>
+            <div class="bg-surface-container-low h-2 rounded-full overflow-hidden">
+              <div class="h-full bg-secondary rounded-full transition-all duration-500"
+                [style.width.%]="(stats().totalPresent + stats().totalAbsent) > 0 ? (stats().totalAbsent / (stats().totalPresent + stats().totalAbsent)) * 100 : 0"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-label-sm text-label-sm text-on-surface">Jours non déclarés</span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">—</span>
+            </div>
+            <div class="bg-surface-container-low h-2 rounded-full overflow-hidden">
+              <div class="h-full bg-tertiary/60 rounded-full" style="width: 12%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- AI Insight Card -->
+      <div class="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
+        <span class="material-symbols-outlined absolute right-4 top-4 text-3xl text-primary opacity-20">auto_awesome</span>
+        <h3 class="font-heading text-lg font-bold text-on-surface mb-2">Insight du mois</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Votre équipe affiche un taux de présence de <span class="font-semibold text-primary">{{ stats().rate }}%</span>.
+          @if (stats().rate >= 90) {
+            Excellente assiduité, maintenez ce rythme !
+          } @else if (stats().rate >= 70) {
+            Quelques absences à surveiller ce mois-ci.
+          } @else {
+            Le taux de présence est faible, un suivi est recommandé.
+          }
+        </p>
+      </div>
+    </div>
+  }
+</div>

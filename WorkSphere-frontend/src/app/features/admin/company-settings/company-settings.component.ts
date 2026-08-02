@@ -43,7 +43,8 @@ export class CompanySettingsComponent implements OnInit {
     name: ['', [Validators.required]],
     email: ['', [Validators.email]],
     phone: [''],
-    address: ['']
+    address: [''],
+    default_annual_leave_days: [18, [Validators.required, Validators.min(0), Validators.max(365)]]
   });
 
   /**
@@ -62,7 +63,8 @@ export class CompanySettingsComponent implements OnInit {
           name: response.company.name,
           email: response.company.email ?? '',
           phone: response.company.phone ?? '',
-          address: response.company.address ?? ''
+          address: response.company.address ?? '',
+          default_annual_leave_days: response.company.default_annual_leave_days ?? 18
         });
         this.isLoading.set(false);
       },

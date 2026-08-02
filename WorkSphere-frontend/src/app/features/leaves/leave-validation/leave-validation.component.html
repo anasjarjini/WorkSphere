@@ -1,0 +1,123 @@
+<div class="flex flex-col gap-4 w-full">
+  @if (error()) {
+    <div class="bg-error-container border border-error/20 rounded-lg p-4 flex items-start gap-2">
+      <span class="material-symbols-outlined text-error shrink-0 mt-0.5">error</span>
+      <span class="text-sm font-medium text-error">{{ error() }}</span>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="bg-secondary-container/30 border border-secondary/20 rounded-lg p-4 flex items-start gap-2">
+      <span class="material-symbols-outlined text-secondary shrink-0 mt-0.5">check_circle</span>
+      <span class="text-sm font-medium text-secondary">{{ success() }}</span>
+    </div>
+  }
+
+  <div class="flex items-center justify-between">
+    <p class="text-sm text-text-secondary">
+      {{ pendingCount() }} demande(s) en attente de validation
+    </p>
+    <button (click)="loadAbsences()" class="text-sm text-primary hover:text-primary-dark flex items-center gap-1 cursor-pointer">
+      <span class="material-symbols-outlined text-base">refresh</span>
+      Actualiser
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+  } @else if (pendingAbsences().length === 0) {
+    <div class="bg-white border border-outline-variant rounded-xl py-16 flex flex-col items-center gap-3 custom-shadow">
+      <span class="material-symbols-outlined text-[40px] text-text-muted">task_alt</span>
+      <p class="font-sans font-medium text-sm text-text-secondary">Aucune demande de congé en attente</p>
+    </div>
+  } @else {
+    <div class="flex flex-col gap-4">
+      @for (absence of pendingAbsences(); track absence.id) {
+        <div class="bg-white border border-outline-variant rounded-xl p-5 custom-shadow">
+          <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-heading font-bold text-sm shrink-0">
+                {{ initials(absence.user?.first_name ?? '', absence.user?.last_name ?? '') }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-sans font-semibold text-sm text-text-heading truncate">
+                  {{ absence.user?.first_name }} {{ absence.user?.last_name }}
+                </p>
+                <p class="text-xs text-on-surface-variant font-mono mt-0.5">{{ absence.reference_code }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-base text-primary">{{ typeIcon(absence.type) }}</span>
+              <span class="text-sm font-medium text-text-heading">{{ typeLabel(absence.type) }}</span>
+            </div>
+
+            <div class="text-sm text-on-surface-variant flex items-center gap-1">
+              <span class="material-symbols-outlined text-base">calendar_month</span>
+              {{ absence.start_date | date:'dd/MM/yyyy' }} → {{ absence.end_date | date:'dd/MM/yyyy' }}
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-background-alt text-xs font-medium text-text-heading">
+                {{ absence.duration_days }} jour(s) ouvré(s)
+              </span>
+              <app-leave-status-badge [status]="absence.status" />
+            </div>
+
+            <div class="lg:ml-auto flex items-center gap-2 shrink-0">
+              <button (click)="onApprove(absence)" [disabled]="loading()"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-success text-white text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer">
+                <span class="material-symbols-outlined text-base">check</span>
+                Approuver
+              </button>
+              <button (click)="openReject(absence)" [disabled]="loading()"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-error/30 text-error text-xs font-semibold hover:bg-error-container/40 transition-colors disabled:opacity-50 cursor-pointer">
+                <span class="material-symbols-outlined text-base">close</span>
+                Rejeter
+              </button>
+            </div>
+          </div>
+
+          @if (absence.reason) {
+            <p class="mt-3 text-sm text-on-surface-variant bg-background-alt border border-outline-variant rounded-lg px-4 py-3">
+              <span class="font-semibold text-text-heading">Motif : </span>{{ absence.reason }}
+            </p>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (rejectAbsenceId() !== null) {
+  <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" (click)="closeReject()">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md custom-shadow" (click)="$event.stopPropagation()">
+      <h3 class="font-heading font-bold text-lg text-text-heading mb-1">Rejeter la demande</h3>
+      <p class="text-sm text-on-surface-variant mb-4">Le motif sera visible par l'employé.</p>
+      <textarea [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)" rows="3" placeholder="Motif du rejet (obligatoire)..."
+        class="w-full rounded-lg border-outline-variant focus:ring-2 focus:ring-primary/50 text-sm px-4 py-3 border outline-none transition-all resize-none"></textarea>
+      <div class="mt-4 flex justify-end gap-3">
+        <button (click)="closeReject()"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-background-alt transition-colors cursor-pointer">
+          Annuler
+        </button>
+        <button (click)="onReject()" [disabled]="rejecting() || !rejectReason().trim()"
+          class="px-5 py-2 rounded-lg bg-error text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer">
+          @if (rejecting()) {
+            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          } @else {
+            Rejeter la demande
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

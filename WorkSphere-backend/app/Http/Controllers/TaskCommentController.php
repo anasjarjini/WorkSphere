@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\TaskComment;
+use App\Models\User;
+use App\Notifications\TaskCommentAddedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -40,6 +42,20 @@ class TaskCommentController extends Controller
             'comment' => $validated['content'],
             'parent_id' => $validated['parent_id'] ?? null,
         ]);
+
+        $author = $request->user();
+        $recipients = collect([$task->creator_id, $task->user_id])
+            ->filter()
+            ->unique()
+            ->reject(fn ($id) => (int) $id === $author->id);
+
+        foreach ($recipients as $userId) {
+            User::find($userId)?->notify(new TaskCommentAddedNotification(
+                $task,
+                $author->first_name . ' ' . $author->last_name,
+                mb_strimwidth($comment->comment, 0, 80, '…'),
+            ));
+        }
 
         $comment->load('user');
 

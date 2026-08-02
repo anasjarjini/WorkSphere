@@ -1,7 +1,5 @@
 @let mobileMenuOpen = isMobileMenuOpen();
-@let notificationOpen = isNotificationOpen();
 @let profileMenuOpen = isProfileMenuOpen();
-@let showBadge = showNotificationBadge();
 @let displayName = userName();
 @let avatarUrl = currentAvatarUrl();
 @let role = roleLabel();
@@ -45,6 +43,18 @@
           Mes tâches
         </a>
       </li>
+      <li>
+        <a routerLink="/employee/attendance" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Ma présence
+        </a>
+      </li>
+      <li>
+        <a routerLink="/employee/leaves" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Mes congés
+        </a>
+      </li>
 
       <li>
         <a routerLink="/employee/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
@@ -61,25 +71,7 @@
       <div class="flex items-center gap-4">
         <!-- Sélecteur de thème -->
         <app-theme-switcher />
-        <div class="relative">
-          <button class="relative flex items-center justify-center w-10 h-10 rounded-full text-text-secondary transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 cursor-pointer"
-                  title="Notifications"
-                  (click)="toggleNotifications(); $event.stopPropagation()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-            </svg>
-            @if (showBadge) {
-              <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface"></span>
-            }
-          </button>
-          @if (notificationOpen) {
-            <div class="absolute right-0 mt-2 w-72 bg-surface border border-border rounded-md shadow-md z-50 p-4"
-                 (click)="$event.stopPropagation()">
-              <p class="font-sans text-[14px] text-text-secondary text-center py-6">Aucune notification pour l'instant</p>
-            </div>
-          }
-        </div>
+        <app-notification-bell />
         <div class="relative">
           <button class="flex items-center justify-center w-10 h-10 rounded-full transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 cursor-pointer"
                   title="Profil"

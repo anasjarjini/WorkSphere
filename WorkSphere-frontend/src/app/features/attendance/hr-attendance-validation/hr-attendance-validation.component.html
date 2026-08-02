@@ -1,0 +1,202 @@
+<div class="flex flex-col gap-6">
+
+  @if (success()) {
+    <div class="bg-success-light border border-success/20 rounded-lg p-4 flex items-start gap-2.5">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-success shrink-0 mt-0.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span class="text-sm font-medium text-success-dark flex-1">{{ success() }}</span>
+      <button (click)="success.set(null)" class="text-success-dark/60 hover:text-success-dark transition-colors shrink-0 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="bg-error-light border border-error/20 rounded-lg p-4 flex items-start gap-2.5">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-error shrink-0 mt-0.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span class="text-sm font-medium text-error-dark flex-1">{{ error() }}</span>
+      <button (click)="error.set(null)" class="text-error-dark/60 hover:text-error-dark transition-colors shrink-0 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  }
+
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-label-sm text-on-surface-variant mb-2">
+        <span>Espace RH</span>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span>Présences</span>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-primary font-bold">Validation</span>
+      </nav>
+      <h2 class="font-heading text-headline-lg text-on-surface">Déclarations des Managers</h2>
+    </div>
+    <div class="flex gap-2">
+      <button class="px-4 py-2 border border-outline-variant rounded-lg font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">filter_list</span>
+        Filtrer
+      </button>
+      <button class="px-4 py-2 border border-outline-variant rounded-lg font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-[18px]">download</span>
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  @if (loading() && declarations().length === 0) {
+    <div class="bg-surface border border-outline-variant rounded-xl p-6 animate-pulse space-y-4">
+      @for (_ of [1,2,3]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
+    </div>
+  } @else if (managerGroups().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface border border-outline-variant rounded-xl">
+      <span class="material-symbols-outlined text-5xl text-on-surface-variant mb-4">task_alt</span>
+      <h3 class="font-heading text-lg font-semibold text-on-surface mb-1">Aucune déclaration en attente</h3>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Toutes les déclarations des managers ont été traitées.</p>
+    </div>
+  } @else {
+    <!-- Selection / Action Bar (Sticky) -->
+    @if (selectedCount() > 0) {
+      <div class="sticky top-0 mb-4 bg-primary-container text-on-primary-container p-4 rounded-xl flex items-center justify-between shadow-lg z-10">
+        <div class="flex items-center gap-4 flex-wrap">
+          <span class="font-label-md font-bold">{{ selectedCount() }} élément{{ selectedCount() > 1 ? 's' : '' }} sélectionné{{ selectedCount() > 1 ? 's' : '' }}</span>
+          <div class="h-6 w-px bg-on-primary-container/20"></div>
+          <button (click)="onBulkApprove()" [disabled]="loading()"
+            class="bg-secondary text-on-secondary px-4 py-1.5 rounded-lg font-label-md flex items-center gap-2 hover:opacity-90 disabled:opacity-50 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            Valider tout
+          </button>
+          <button (click)="onBulkReject()" [disabled]="rejecting()"
+            class="border border-on-primary-container/30 px-4 py-1.5 rounded-lg font-label-md flex items-center gap-2 hover:bg-white/10 disabled:opacity-50 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">block</span>
+            Refuser
+          </button>
+        </div>
+        <button (click)="clearSelection()" class="text-label-sm underline cursor-pointer">Tout désélectionner</button>
+      </div>
+    }
+
+    <!-- Grid Content -->
+    <div class="grid grid-cols-12 gap-6">
+      <!-- Summary Sidebar -->
+      <div class="col-span-12 lg:col-span-3 space-y-4">
+        <div class="bg-surface-container p-6 rounded-xl border border-outline-variant">
+          <h3 class="font-label-md font-bold mb-4">Aperçu rapide</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-body-sm text-on-surface-variant">Total en attente</span>
+              <span class="font-heading text-headline-sm font-bold">{{ totalPending() }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-body-sm text-on-surface-variant">Équipes incomplètes</span>
+              <span class="text-error font-bold font-heading text-headline-sm">{{ criticalCount() }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-body-sm text-on-surface-variant">Absences déclarées</span>
+              <span class="font-heading text-headline-sm font-bold">{{ leaveCount() }}</span>
+            </div>
+          </div>
+          <div class="mt-6 pt-4 border-t border-outline-variant">
+            <p class="text-[11px] text-on-surface-variant italic">Dernière mise à jour : maintenant</p>
+          </div>
+        </div>
+        <div class="bg-secondary-container text-on-secondary-fixed-variant p-6 rounded-xl border border-secondary/20">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-secondary">info</span>
+            <p class="font-label-md font-bold">Conseil IA</p>
+          </div>
+          <p class="text-body-sm opacity-90">{{ criticalCount() > 0 ? `${criticalCount()} équipe(s) ont des déclarations incomplètes à examiner avant la clôture mensuelle.` : 'Toutes les équipes ont des déclarations complètes. Vous pouvez valider en un clic.' }}</p>
+        </div>
+      </div>
+
+      <!-- Main Validation List -->
+      <div class="col-span-12 lg:col-span-9 space-y-4">
+        <!-- Table Header -->
+        <div class="hidden lg:grid grid-cols-[48px_2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-2 text-label-sm text-on-surface-variant font-bold uppercase tracking-wider">
+          <div class="flex justify-center">
+            <input type="checkbox" [checked]="selectAllChecked()" (change)="toggleSelectAll()"
+              class="rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" />
+          </div>
+          <div>Manager / Équipe</div>
+          <div>Période</div>
+          <div>Statut Équipe</div>
+          <div>Anomalies</div>
+          <div>Actions</div>
+        </div>
+
+        @for (group of paginatedGroups(); track group.managerId) {
+          <div class="group grid grid-cols-[48px_2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 bg-surface border border-outline-variant rounded-xl items-center hover:shadow-md hover:border-primary/30 transition-all">
+            <div class="flex justify-center">
+              <input type="checkbox" [checked]="group.declarations.every(d => selectedIds().has(d.id))" (change)="toggleGroup(group)"
+                class="rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" />
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-primary-container/15 text-primary flex items-center justify-center font-bold text-xs border border-outline-variant shrink-0">{{ initialsFromName(group.managerName) }}</div>
+              <div>
+                <p class="font-label-md font-bold text-on-surface">{{ group.managerName }}</p>
+                <p class="text-[12px] text-on-surface-variant">{{ group.teamName }} ({{ teamSize(group) }} pers.)</p>
+              </div>
+            </div>
+            <div class="text-body-sm text-on-surface-variant font-medium">{{ formatPeriod(group.declarations) }}</div>
+            <div>
+              <span [class.bg-secondary-container]="group.complete" [class.text-on-secondary-fixed-variant]="group.complete"
+                [class.bg-surface-container-highest]="!group.complete" [class.text-on-surface-variant]="!group.complete"
+                class="px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                {{ group.complete ? 'COMPLET' : 'INCOMPLET' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1" [class.text-on-surface-variant]="group.complete" [class.text-error]="!group.complete">
+              @if (group.complete) {
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+              } @else {
+                <span class="material-symbols-outlined text-[16px]">warning</span>
+              }
+              <span class="text-body-sm font-bold">{{ group.anomalies }}</span>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="approveGroup(group)" [disabled]="loading() || rejecting()" title="Valider"
+                class="p-2 hover:bg-secondary-container hover:text-secondary rounded-lg transition-colors disabled:opacity-40 cursor-pointer">
+                <span class="material-symbols-outlined">done</span>
+              </button>
+              <button (click)="rejectGroup(group)" [disabled]="loading() || rejecting()" title="Refuser"
+                class="p-2 hover:bg-error-container hover:text-error rounded-lg transition-colors disabled:opacity-40 cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+              <button class="p-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer" title="Détails">
+                <span class="material-symbols-outlined">visibility</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Pagination -->
+        <div class="flex justify-between items-center py-4 px-2">
+          <p class="text-body-sm text-on-surface-variant">Affichage de {{ pageStart() }}-{{ pageEnd() }} sur {{ managerGroups().length }} équipe(s)</p>
+          <div class="flex gap-2">
+            <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            @for (page of [].constructor(totalPages()); track $index) {
+              <button (click)="goToPage($index + 1)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[12px] transition-colors cursor-pointer"
+                [class.bg-primary]="$index + 1 === currentPage()" [class.text-on-primary]="$index + 1 === currentPage()"
+                [class.border]="$index + 1 !== currentPage()" [class.border-outline-variant]="$index + 1 !== currentPage()"
+                [class.hover:bg-surface-container]="$index + 1 !== currentPage()">
+                {{ $index + 1 }}
+              </button>
+            }
+            <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

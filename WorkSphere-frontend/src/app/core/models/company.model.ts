@@ -12,6 +12,7 @@ export interface Company {
   address?: string;
   logo?: string;
   logo_url?: string;
+  default_annual_leave_days?: number;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;

@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+  <div>
+    <h1 class="font-heading text-2xl font-bold text-text-heading">Congés de l'équipe</h1>
+    <p class="text-sm text-text-secondary mt-1">Validez les demandes de congé de vos collaborateurs et suivez leurs soldes</p>
+  </div>
+
+  <div class="border-b border-border">
+    <nav class="flex gap-8">
+      <a routerLink="/manager/team/leaves/validation" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer inline-flex items-center gap-2">
+        À valider
+        @if (pendingCount() > 0) {
+          <span class="inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold bg-error text-text-inverse rounded-full">{{ pendingCount() > 9 ? '9+' : pendingCount() }}</span>
+        }
+      </a>
+      <a routerLink="/manager/team/leaves/history" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Historique congés
+      </a>
+      <a routerLink="/manager/team/leaves/balances" routerLinkActive="text-primary border-b-2 border-primary font-semibold"
+        class="pb-3 text-sm font-medium text-text-secondary hover:text-text transition-colors cursor-pointer">
+        Balances équipe
+      </a>
+    </nav>
+  </div>
+
+  <router-outlet />
+</div>
