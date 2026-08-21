@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { EmployeeService } from '../../../core/services/employee.service';
+import { ExportService } from '../../../core/services/export.service';
 import { AttendanceDeclaration, AttendanceValidationStatus } from '../../../core/models/attendance-declaration.model';
 import { Employee } from '../../../core/models/employee.model';
 
@@ -15,6 +16,7 @@ import { Employee } from '../../../core/models/employee.model';
 export class HrAttendanceHistoryComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceDeclarationService);
   private readonly employeeService = inject(EmployeeService);
+  private readonly exportService = inject(ExportService);
 
   readonly allEmployees = signal<Employee[]>([]);
   readonly declarations = signal<AttendanceDeclaration[]>([]);
@@ -160,10 +162,6 @@ export class HrAttendanceHistoryComponent implements OnInit {
     return emp?.department?.name ?? '—';
   }
 
-  hoursOf(d: AttendanceDeclaration): string {
-    return d.hours_worked ? `${d.hours_worked}h` : '—';
-  }
-
   anomalyCount(d: AttendanceDeclaration): number {
     return d.status === 'ABSENT' || d.validation_status === 'REJETEE' ? 1 : 0;
   }
@@ -174,5 +172,41 @@ export class HrAttendanceHistoryComponent implements OnInit {
       case 'REJETEE': return 'Rejeté';
       default: return 'En attente';
     }
+  }
+
+  private monthLabel(): string {
+    return new Date(this.currentMonth() + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  private exportRows(): string[][] {
+    return this.filteredDeclarations().map((d) => [
+      new Date(d.date).toLocaleDateString('fr-FR'),
+      this.employeeName(d.user_id),
+      this.teamOf(d.user_id),
+      this.statusLabel(d.validation_status),
+      this.anomalyCount(d).toString(),
+    ]);
+  }
+
+  exportPdf(): void {
+    this.exportService.pdf({
+      title: 'Suivi des Présences',
+      subtitle: 'Espace RH',
+      period: this.monthLabel(),
+      columns: ['Date', 'Employé', 'Département', 'Statut', 'Anomalies'],
+      rows: this.exportRows(),
+      filename: `presences_historique_${this.currentMonth()}.pdf`,
+    });
+  }
+
+  exportExcel(): void {
+    this.exportService.xlsx({
+      title: 'Suivi des Présences',
+      period: this.monthLabel(),
+      columns: ['Date', 'Employé', 'Département', 'Statut', 'Anomalies'],
+      rows: this.exportRows(),
+      filename: `presences_historique_${this.currentMonth()}.xlsx`,
+      sheetName: 'Présences',
+    });
   }
 }

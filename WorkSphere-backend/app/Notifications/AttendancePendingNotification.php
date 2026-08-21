@@ -25,7 +25,7 @@ class AttendancePendingNotification extends Notification
         $isManager = $notifiable instanceof User && $notifiable->role === 'MANAGER';
 
         $detail = $this->declaration->status === 'PRESENT'
-            ? 'sa présence' . ($this->declaration->hours_worked ? ' (' . number_format((float) $this->declaration->hours_worked, 1, ',', ' ') . ' h)' : '')
+            ? 'sa présence'
             : 'son absence';
 
         return [

@@ -12,11 +12,13 @@ import { CompanyBrandComponent } from '../../shared/components/company-brand/com
 import { ImageUrlService } from '../../core/services/image-url.service';
 import { ThemeSwitcherComponent } from '../../shared/components/theme-switcher/theme-switcher.component';
 import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
+import { GlobalSearchComponent } from '../../shared/components/global-search/global-search.component';
+import { ChatUnreadBadgeComponent } from '../../shared/components/chat-unread-badge/chat-unread-badge.component';
 
 @Component({
   selector: 'app-employee-layout',
   standalone: true,
-  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent, ThemeSwitcherComponent, NotificationBellComponent],
+  imports: [RouterModule, BreadcrumbComponent, AvatarComponent, CompanyBrandComponent, ThemeSwitcherComponent, NotificationBellComponent, GlobalSearchComponent, ChatUnreadBadgeComponent],
   templateUrl: './employee-layout.component.html',
   styles: []
 })
@@ -29,6 +31,7 @@ export class EmployeeLayoutComponent {
   isNotificationOpen = signal(false);
   isProfileMenuOpen = signal(false);
   readonly showNotificationBadge = signal(false);
+  readonly isChatRoute = computed(() => this.router.url.includes('/chat'));
   private readonly imageUrlService = inject(ImageUrlService);
 
   readonly currentAvatarUrl = computed(() =>

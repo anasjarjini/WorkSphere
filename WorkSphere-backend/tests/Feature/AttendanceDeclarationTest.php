@@ -56,7 +56,6 @@ class AttendanceDeclarationTest extends TestCase
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->date('date');
             $table->string('status');
-            $table->decimal('hours_worked', 5, 2)->nullable();
             $table->string('validation_status')->default('EN_ATTENTE');
             $table->foreignId('validated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('validated_at')->nullable();
@@ -146,29 +145,26 @@ class AttendanceDeclarationTest extends TestCase
         $declaration = $this->service->declare(
             $this->employee,
             Carbon::today(),
-            AttendanceStatus::PRESENT,
-            7.5
+            AttendanceStatus::PRESENT
         );
 
         $this->assertSame($this->employee->id, $declaration->user_id);
         $this->assertSame('PRESENT', $declaration->status->value);
-        $this->assertSame(7.5, (float) $declaration->hours_worked);
         $this->assertSame('EN_ATTENTE', $declaration->validation_status->value);
     }
 
     public function test_employee_can_update_declaration_if_not_validated(): void
     {
-        $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $updated = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 8.0);
+        $updated = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $this->assertSame(8.0, (float) $updated->hours_worked);
         $this->assertSame('EN_ATTENTE', $updated->validation_status->value);
     }
 
     public function test_cannot_update_validated_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         AttendanceDeclaration::withoutGlobalScopes()->where('id', $declaration->id)->update([
             'validation_status' => AttendanceValidationStatus::VALIDEE,
@@ -177,12 +173,12 @@ class AttendanceDeclarationTest extends TestCase
         ]);
 
         $this->expectException(\DomainException::class);
-        $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 8.0);
+        $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
     }
 
     public function test_manager_approve_employee_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         $approved = $this->service->approve($declaration, $this->manager);
 
@@ -194,7 +190,7 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_manager_cannot_approve_own_declaration(): void
     {
-        $declaration = $this->service->declare($this->manager, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->manager, Carbon::today(), AttendanceStatus::PRESENT);
 
         $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
         $this->service->approve($declaration, $this->manager);
@@ -213,7 +209,7 @@ class AttendanceDeclarationTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
-        $declaration = $this->service->declare($otherManager, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($otherManager, Carbon::today(), AttendanceStatus::PRESENT);
 
         $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
         $this->service->approve($declaration, $this->manager);
@@ -221,7 +217,7 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_hr_admin_can_approve_manager_declaration(): void
     {
-        $declaration = $this->service->declare($this->manager, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->manager, Carbon::today(), AttendanceStatus::PRESENT);
 
         $approved = $this->service->approve($declaration, $this->hrAdmin);
 
@@ -231,7 +227,7 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_hr_admin_cannot_approve_employee_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
         $this->service->approve($declaration, $this->hrAdmin);
@@ -244,7 +240,7 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_employee_cannot_approve_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
         $this->service->approve($declaration, $this->employee);
@@ -252,17 +248,17 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_can_reject_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $rejected = $this->service->reject($declaration, $this->manager, 'Heures incorrectes');
+        $rejected = $this->service->reject($declaration, $this->manager, 'Justification insuffisante');
 
         $this->assertSame('REJETEE', $rejected->validation_status->value);
-        $this->assertSame('Heures incorrectes', $rejected->rejection_reason);
+        $this->assertSame('Justification insuffisante', $rejected->rejection_reason);
     }
 
     public function test_cannot_reject_validated_declaration(): void
     {
-        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         AttendanceDeclaration::withoutGlobalScopes()->where('id', $declaration->id)->update([
             'validation_status' => AttendanceValidationStatus::VALIDEE,
@@ -276,8 +272,8 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_bulk_approve_mixed_ids(): void
     {
-        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
-        $decl2 = $this->service->declare($this->employee, Carbon::yesterday(), AttendanceStatus::PRESENT, 6.0);
+        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
+        $decl2 = $this->service->declare($this->employee, Carbon::yesterday(), AttendanceStatus::PRESENT);
 
         $result = $this->service->bulkApprove([$decl1->id, $decl2->id, 99999], $this->manager);
 
@@ -288,7 +284,7 @@ class AttendanceDeclarationTest extends TestCase
 
     public function test_bulk_approve_skips_already_validated(): void
     {
-        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
         AttendanceDeclaration::withoutGlobalScopes()->where('id', $decl1->id)->update([
             'validation_status' => AttendanceValidationStatus::VALIDEE,
@@ -296,7 +292,7 @@ class AttendanceDeclarationTest extends TestCase
             'validated_at' => now(),
         ]);
 
-        $decl2 = $this->service->declare($this->employee, Carbon::yesterday(), AttendanceStatus::PRESENT, 6.0);
+        $decl2 = $this->service->declare($this->employee, Carbon::yesterday(), AttendanceStatus::PRESENT);
 
         $result = $this->service->bulkApprove([$decl1->id, $decl2->id], $this->manager);
 
@@ -329,8 +325,8 @@ class AttendanceDeclarationTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
-        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
-        $decl2 = $this->service->declare($otherEmployee, Carbon::today(), AttendanceStatus::PRESENT, 7.0);
+        $decl1 = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
+        $decl2 = $this->service->declare($otherEmployee, Carbon::today(), AttendanceStatus::PRESENT);
 
         $result = $this->service->bulkApprove([$decl1->id, $decl2->id], $this->manager);
 
@@ -340,15 +336,4 @@ class AttendanceDeclarationTest extends TestCase
         $this->assertContains($decl2->id, $result['skipped']);
     }
 
-    public function test_present_declaration_abs_has_no_hours(): void
-    {
-        $declaration = $this->service->declare(
-            $this->employee,
-            Carbon::today(),
-            AttendanceStatus::ABSENT
-        );
-
-        $this->assertSame('ABSENT', $declaration->status->value);
-        $this->assertNull($declaration->hours_worked);
-    }
 }

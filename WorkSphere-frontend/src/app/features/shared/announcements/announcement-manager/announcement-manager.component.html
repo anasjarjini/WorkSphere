@@ -1,0 +1,194 @@
+<div class="p-6 lg:p-8 max-w-5xl mx-auto flex flex-col gap-6">
+
+  <!-- Header Section -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h2 class="font-headline-lg text-headline-lg text-on-surface">Gestion des annonces</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant">
+        @if (tab() === 'team') {
+          Affichage des annonces destinées à votre équipe uniquement.
+        } @else {
+          Centralisez la communication pour l'entreprise et votre équipe.
+        }
+      </p>
+    </div>
+    <div class="flex gap-1 bg-surface-container-high p-1 rounded-lg">
+      <button (click)="switchTab('all')"
+        class="px-4 py-1.5 rounded-md font-label-md text-label-md transition-colors cursor-pointer"
+        [class]="tab() === 'all' ? 'bg-white shadow-sm font-bold text-primary' : 'text-on-surface-variant hover:bg-white/50'">
+        Toutes
+      </button>
+      <button (click)="switchTab('team')"
+        class="px-4 py-1.5 rounded-md font-label-md text-label-md transition-colors cursor-pointer"
+        [class]="tab() === 'team' ? 'bg-white shadow-sm font-bold text-primary' : 'text-on-surface-variant hover:bg-white/50'">
+        Mon équipe
+      </button>
+    </div>
+  </div>
+
+  <!-- Announcements Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    @if (loading()) {
+      @for (_ of [1,2,3]; track _) {
+        <div class="bg-surface border border-outline-variant rounded-xl p-6 animate-pulse">
+          <div class="h-4 bg-surface-variant rounded w-1/3 mb-4"></div>
+          <div class="h-5 bg-surface-variant rounded w-2/3 mb-3"></div>
+          <div class="h-4 bg-surface-variant rounded w-full mb-2"></div>
+          <div class="h-4 bg-surface-variant rounded w-4/5"></div>
+        </div>
+      }
+    } @else if (filtered().length === 0) {
+      <div class="md:col-span-2 bg-surface border border-outline-variant rounded-xl p-16 text-center">
+        <span class="material-symbols-outlined text-4xl text-on-surface-variant/40 block mb-3">campaign</span>
+        <p class="font-label-md text-label-md text-on-surface-variant">Aucune annonce pour le moment</p>
+      </div>
+    } @else {
+      @for (ann of filtered(); track ann.id) {
+        <div class="bg-surface border border-outline-variant rounded-xl p-6 flex flex-col gap-4 relative group hover:shadow-lg transition-all border-l-4"
+          [class]="isCompany(ann) ? 'border-l-secondary' : 'border-l-primary'">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full font-label-sm text-[11px] flex items-center gap-1 uppercase tracking-wider"
+                [class]="isCompany(ann) ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-primary-container text-on-primary-container'">
+                <span class="material-symbols-outlined text-[14px]">{{ isCompany(ann) ? 'domain' : 'groups' }}</span>
+                {{ scopeLabel(ann.target_scope) }}
+              </span>
+              <span class="font-label-sm text-label-sm text-on-surface-variant">{{ formatRelative(ann.published_at ?? ann.created_at) }}</span>
+            </div>
+            @if (canManage(ann)) {
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button (click)="openEditModal(ann)" title="Modifier"
+                  class="p-1.5 hover:bg-primary-fixed rounded-md text-primary transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined text-[20px]">edit</span>
+                </button>
+                <button (click)="deleteAnnouncement(ann)" title="Supprimer"
+                  class="p-1.5 hover:bg-error-container rounded-md text-error transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">{{ ann.title }}</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 whitespace-pre-wrap">{{ ann.content }}</p>
+          </div>
+          <div class="mt-auto pt-4 flex items-center justify-between border-t border-outline-variant/30">
+            <div class="flex items-center gap-2">
+              <app-avatar [imageUrl]="resolveAvatarUrl(ann.creator?.avatar_url)" [name]="authorName(ann)" size="sm" />
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md font-bold">{{ authorName(ann) }}{{ isMine(ann) ? ' (Moi)' : '' }}</span>
+                <span class="text-[11px] text-on-surface-variant">{{ authorTitle(ann) }}</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant opacity-50">{{ isCompany(ann) ? 'visibility' : 'forum' }}</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Add New Announcement Placeholder Card -->
+    <button (click)="openCreateModal()"
+      class="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center gap-4 p-8 hover:bg-surface-container-low transition-all group cursor-pointer">
+      <div class="w-16 h-16 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-all">
+        <span class="material-symbols-outlined text-3xl">add_circle</span>
+      </div>
+      <div class="text-center">
+        <span class="font-headline-sm block text-on-surface-variant group-hover:text-primary">Nouvelle annonce</span>
+        <p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">Publiez une note pour votre équipe uniquement.</p>
+      </div>
+    </button>
+  </div>
+
+  <!-- Statistics & Context (Bento Style) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-surface border border-outline-variant rounded-xl p-6">
+      <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-4">Visibilité Equipe</h4>
+      <div class="flex items-center justify-center py-4">
+        <div class="relative w-24 h-24">
+          <svg class="w-full h-full" viewBox="0 0 36 36">
+            <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
+            <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="85, 100" stroke-linecap="round" stroke-width="3"></circle>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="font-display-lg-mobile text-primary leading-none">85%</span>
+            <span class="text-[10px] uppercase font-bold text-on-surface-variant">Lus</span>
+          </div>
+        </div>
+      </div>
+      <p class="font-body-sm text-body-sm text-center text-on-surface-variant mt-2">Votre équipe est très réactive aux annonces cette semaine.</p>
+    </div>
+    <div class="md:col-span-2 bg-surface border border-outline-variant rounded-xl p-6 flex items-center gap-6">
+      <div class="flex-1">
+        <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Dernière annonce Corporate</h4>
+        @if (lastCompanyAnnouncement(); as last) {
+          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">{{ last.title }}</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mb-3 line-clamp-2">{{ last.content }}</p>
+          <button class="text-primary font-bold font-label-md text-label-md flex items-center gap-1 hover:gap-2 transition-all cursor-pointer">
+            Lire les détails <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        } @else {
+          <p class="font-body-sm text-body-sm text-on-surface-variant">Aucune annonce d'entreprise pour le moment.</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Form -->
+@if (modalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-overlay" (click)="closeModal()">
+    <div class="bg-surface w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-transform duration-300 scale-100"
+      (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+            <span class="material-symbols-outlined">campaign</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">{{ modalTitle() }}</h3>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">Scope : <strong>Mon Équipe</strong></p>
+          </div>
+        </div>
+        <button (click)="closeModal()"
+          class="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors cursor-pointer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <form class="px-6 py-5 space-y-5" (ngSubmit)="submit()">
+        <div class="space-y-1">
+          <label class="font-label-md text-label-md text-on-surface-variant">Titre de l'annonce</label>
+          <input [(ngModel)]="formData.title" name="title" type="text"
+            placeholder="Ex: Décalage réunion, Pizza Friday..."
+            class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary text-body-md transition-all bg-surface text-on-surface placeholder:text-on-surface-variant outline-none" />
+        </div>
+        <div class="space-y-1">
+          <label class="font-label-md text-label-md text-on-surface-variant">Contenu</label>
+          <textarea [(ngModel)]="formData.content" name="content" rows="4"
+            placeholder="Saisissez votre message ici..."
+            class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary text-body-md transition-all resize-none bg-surface text-on-surface placeholder:text-on-surface-variant outline-none"></textarea>
+        </div>
+        <div class="bg-surface-container px-4 py-3 rounded-xl flex items-start gap-3">
+          <span class="material-symbols-outlined text-primary mt-0.5">info</span>
+          <p class="font-body-sm text-body-sm text-on-surface-variant italic">
+            En tant que manager, cette annonce sera automatiquement diffusée à tous les membres de votre équipe directe uniquement.
+          </p>
+        </div>
+        @if (modalError()) {
+          <p class="font-body-sm text-body-sm text-error">{{ modalError() }}</p>
+        }
+        <div class="flex gap-4 pt-2">
+          <button type="button" (click)="closeModal()"
+            class="flex-1 py-3 px-5 rounded-xl border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors cursor-pointer">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="modalSaving()"
+            class="flex-1 py-3 px-5 rounded-xl bg-primary text-on-primary font-label-md text-label-md hover:brightness-110 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer">
+            {{ modalSaving() ? 'Publication...' : 'Publier l\'annonce' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

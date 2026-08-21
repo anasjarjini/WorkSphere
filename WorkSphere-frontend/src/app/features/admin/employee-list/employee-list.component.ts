@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, signal, computed, OnDestroy } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, Subscription, take, debounceTime, distinctUntilChanged } from 'rxjs';
 import { AvatarComponent } from '../../../shared/components/avatar/avatar.component';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee, PaginatedResponse, EmployeeQueryParams } from '../../../core/models/employee.model';
@@ -18,6 +18,7 @@ import { ImageUrlService } from '../../../core/services/image-url.service';
 export class EmployeeListComponent implements OnInit, OnDestroy {
   private readonly employeeService = inject(EmployeeService);
   readonly imageUrlService = inject(ImageUrlService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly employees = signal<Employee[]>([]);
   readonly total = signal(0);
@@ -86,6 +87,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       this.loadEmployees();
     });
     this.subscriptions.push(searchSub);
+    this.route.queryParamMap.pipe(take(1)).subscribe((params) => {
+      const q = params.get('search');
+      if (q) {
+        this.searchTerm.set(q);
+        this.loadEmployees();
+      }
+    });
     this.loadEmployees();
   }
 

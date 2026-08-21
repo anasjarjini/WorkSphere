@@ -4,110 +4,144 @@
 @let avatarUrl = currentAvatarUrl();
 @let role = roleLabel();
 
-<div class="flex min-h-screen bg-background w-full">
-  <div class="md:hidden bg-surface border-b border-border p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-30">
-    <app-company-brand [homeRoute]="'/employee'" [contextLabel]="'Espace Employé'" class="flex-1 min-w-0"></app-company-brand>
-    <button (click)="toggleMobileMenu()" class="text-text p-1 cursor-pointer">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full lg:w-[calc(100%-280px)] h-topbar-height z-40 flex items-center justify-between border-b border-outline-variant bg-surface/80 px-margin-mobile md:px-margin-desktop shadow-sm backdrop-blur-xl">
+  <div class="flex items-center gap-4 w-full justify-between">
+    <div class="flex items-center gap-2 lg:hidden min-w-0">
+      <button (click)="toggleMobileMenu()" aria-label="Ouvrir le menu" class="p-2 -ml-2 text-secondary hover:bg-surface-container-high rounded-full transition-colors cursor-pointer shrink-0">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <app-company-brand [homeRoute]="'/employee'" [contextLabel]="'Espace Employé'" class="min-w-0 flex-1"></app-company-brand>
+    </div>
+    <div class="hidden md:block w-1/3 min-w-[250px]">
+      <app-global-search />
+    </div>
+    <div class="flex items-center gap-4">
+      <app-theme-switcher />
+      <app-notification-bell />
+      <button class="hidden sm:flex p-2 text-secondary hover:bg-surface-container-high rounded-full transition-all items-center justify-center" title="Aide">
+        <span class="material-symbols-outlined">help</span>
+      </button>
+      <div class="h-8 w-px bg-outline-variant mx-1 hidden sm:block"></div>
+      <div class="relative">
+        <button (click)="toggleProfileMenu(); $event.stopPropagation()"
+                class="flex items-center gap-3 hover:bg-surface-container-high p-1 pr-3 rounded-full transition-all cursor-pointer">
+          <app-avatar [imageUrl]="avatarUrl" [name]="displayName" size="sm" />
+          <div class="hidden sm:flex flex-col items-start leading-tight">
+            <span class="font-label-md text-label-md text-on-surface">{{ displayName }}</span>
+            <span class="font-label-sm text-label-sm text-secondary">{{ role }}</span>
+          </div>
+        </button>
+        @if (profileMenuOpen) {
+          <div class="absolute right-0 mt-2 w-56 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 overflow-hidden"
+               (click)="$event.stopPropagation()">
+            <div class="px-4 py-3 border-b border-outline-variant">
+              <p class="font-label-md text-label-md font-semibold text-on-surface truncate">{{ displayName }}</p>
+              <p class="font-label-sm text-label-sm text-secondary">{{ role }}</p>
+            </div>
+            <div class="py-1">
+              <button (click)="navigateToProfile()"
+                      class="w-full flex items-center gap-3 px-4 py-2.5 text-body-sm text-on-surface transition-colors hover:bg-surface-container cursor-pointer">
+                <span class="material-symbols-outlined text-secondary">account_circle</span>
+                Mon profil
+              </button>
+              <button (click)="onLogout()"
+                      class="w-full flex items-center gap-3 px-4 py-2.5 text-body-sm text-error transition-colors hover:bg-error-container/50 cursor-pointer">
+                <span class="material-symbols-outlined">logout</span>
+                Déconnexion
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Overlay mobile -->
+@if (mobileMenuOpen) {
+  <div class="fixed inset-0 bg-on-surface/50 z-40 lg:hidden" (click)="toggleMobileMenu()"></div>
+}
+
+<!-- SideNavBar -->
+<nav class="fixed top-0 left-0 h-screen z-50 w-sidebar-width bg-surface-container-lowest border-r border-outline-variant flex flex-col py-6 transition-transform duration-300 -translate-x-full lg:translate-x-0"
+     [class.translate-x-0]="mobileMenuOpen">
+  <div class="px-6 pb-6 border-b border-outline-variant mb-6 flex items-center justify-between gap-3">
+    <app-company-brand [homeRoute]="'/employee'" [contextLabel]="'Espace Employé'" class="min-w-0 flex-1"></app-company-brand>
+    <button (click)="toggleMobileMenu()" aria-label="Fermer le menu" class="lg:hidden p-2 text-secondary hover:bg-surface-container-high rounded-full transition-colors cursor-pointer shrink-0">
+      <span class="material-symbols-outlined">close</span>
     </button>
   </div>
 
-  @if (mobileMenuOpen) {
-    <div class="fixed inset-0 bg-text/50 z-40 md:hidden" (click)="toggleMobileMenu()"></div>
-  }
+  <div class="flex-1 flex flex-col gap-1 w-full overflow-y-auto">
+    <a routerLink="/employee/dashboard" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2" [routerLinkActiveOptions]="{exact: true}"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="font-label-md text-label-md">Tableau de bord</span>
+    </a>
+    <a routerLink="/employee/tasks" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">checklist</span>
+      <span class="font-label-md text-label-md">Mes tâches</span>
+    </a>
+    <a routerLink="/employee/attendance" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">event_available</span>
+      <span class="font-label-md text-label-md">Ma présence</span>
+    </a>
+    <a routerLink="/employee/leaves" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">calendar_today</span>
+      <span class="font-label-md text-label-md">Mes congés</span>
+    </a>
+    <a routerLink="/employee/announcements" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">campaign</span>
+      <span class="font-label-md text-label-md">Annonces</span>
+    </a>
+    <a routerLink="/employee/chat" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="font-label-md text-label-md">Messagerie</span>
+      <app-chat-unread-badge />
+    </a>
+    <a routerLink="/employee/profile" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">account_circle</span>
+      <span class="font-label-md text-label-md">Profil</span>
+    </a>
+  </div>
 
-  <nav class="fixed md:sticky top-0 h-screen z-50 w-64 bg-surface border-r border-border flex flex-col py-6 px-4 shrink-0 transition-transform duration-300 md:translate-x-0"
-       [class.-translate-x-full]="!mobileMenuOpen"
-       [class.translate-x-0]="mobileMenuOpen">
-    <div class="px-3 mb-8 flex justify-between items-center">
-      <app-company-brand [homeRoute]="'/employee'" [contextLabel]="'Espace Employé'" class="flex-1 min-w-0"></app-company-brand>
-      <button (click)="toggleMobileMenu()" class="md:hidden text-text-secondary hover:text-text p-1 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
+  <div class="mt-auto px-2 pt-6 border-t border-outline-variant flex flex-col gap-1">
+    <button class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 rounded-lg cursor-pointer" title="Aide">
+      <span class="material-symbols-outlined">help</span>
+      <span class="font-label-md text-label-md">Centre d'aide</span>
+    </button>
+    <button (click)="onLogout()"
+            class="flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/50 transition-colors duration-200 rounded-lg cursor-pointer">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="font-label-md text-label-md">Déconnexion</span>
+    </button>
+  </div>
+</nav>
 
-    <ul class="flex flex-col gap-1 flex-1">
-      <li>
-        <a routerLink="/employee/dashboard" routerLinkActive="bg-primary-50 text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Dashboard
-        </a>
-      </li>
-      <li>
-        <a routerLink="/employee/tasks" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          Mes tâches
-        </a>
-      </li>
-      <li>
-        <a routerLink="/employee/attendance" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Ma présence
-        </a>
-      </li>
-      <li>
-        <a routerLink="/employee/leaves" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Mes congés
-        </a>
-      </li>
-
-      <li>
-        <a routerLink="/employee/profile" routerLinkActive="bg-primary-50 text-primary font-semibold" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-text-secondary font-medium transition-colors hover:bg-background-alt hover:text-text cursor-pointer" (click)="isMobileMenuOpen.set(false)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Profil
-        </a>
-      </li>
-    </ul>
-  </nav>
-
-  <main class="flex-1 flex flex-col w-full min-w-0 pt-16 md:pt-0">
-    <div class="hidden md:flex items-center justify-between h-16 px-8 bg-surface border-b border-border shrink-0">
+<!-- Main Content -->
+<main [class]="isChatRoute()
+  ? 'lg:ml-[280px] pt-topbar-height h-screen overflow-hidden bg-surface relative'
+  : 'lg:ml-[280px] pt-topbar-height h-screen overflow-y-auto bg-surface relative'">
+  <div [class]="isChatRoute()
+    ? 'flex flex-col h-full min-h-0 relative z-10'
+    : 'px-margin-mobile md:px-margin-desktop py-8 max-w-7xl mx-auto flex flex-col gap-6 relative z-10'">
+    @if (!isChatRoute()) {
       <app-breadcrumb />
-      <div class="flex items-center gap-4">
-        <!-- Sélecteur de thème -->
-        <app-theme-switcher />
-        <app-notification-bell />
-        <div class="relative">
-          <button class="flex items-center justify-center w-10 h-10 rounded-full transition-colors hover:bg-background-alt focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 cursor-pointer"
-                  title="Profil"
-                  (click)="toggleProfileMenu(); $event.stopPropagation()">
-            <app-avatar [imageUrl]="avatarUrl" [name]="displayName" size="sm" />
-          </button>
-          @if (profileMenuOpen) {
-            <div class="absolute right-0 mt-2 w-56 bg-surface border border-border rounded-md shadow-md z-50"
-                 (click)="$event.stopPropagation()">
-              <div class="px-4 py-3 border-b border-border">
-                <p class="font-sans text-[14px] font-semibold text-text truncate">{{ displayName }}</p>
-                <p class="font-sans text-[12px] text-text-secondary">{{ role }}</p>
-              </div>
-              <div class="py-1">
-                <button (click)="navigateToProfile()"
-                        class="w-full flex items-center gap-3 px-4 py-2.5 font-sans text-[14px] text-text transition-colors hover:bg-background-alt cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Mon profil
-                </button>
-                <button (click)="onLogout()"
-                        class="w-full flex items-center gap-3 px-4 py-2.5 font-sans text-[14px] text-error transition-colors hover:bg-error-light cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
-                  Déconnexion
-                </button>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-    <div class="flex-1 p-6 sm:p-8">
-      <router-outlet />
-    </div>
-  </main>
-</div>
+    }
+    <router-outlet />
+  </div>
+</main>

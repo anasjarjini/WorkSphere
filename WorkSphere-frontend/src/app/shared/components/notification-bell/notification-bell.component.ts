@@ -32,12 +32,12 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
     attendance_validated: { label: 'Déclaration validée', icon: 'check', colorClass: 'bg-success/10 text-success', route: '/employee/attendance/history', defaultMessage: 'Votre déclaration de présence a été validée' },
     attendance_rejected: { label: 'Déclaration refusée', icon: 'x', colorClass: 'bg-error/10 text-error', route: '/employee/attendance/history', defaultMessage: 'Votre déclaration de présence a été refusée' },
     clock_in_reminder: { label: 'Rappel de présence', icon: 'clock', colorClass: 'bg-primary/10 text-primary', route: '/employee/attendance', defaultMessage: 'Rappel de présence' },
-    clock_out_reminder: { label: 'Rappel de pointage', icon: 'clock', colorClass: 'bg-warning/10 text-warning', route: '/employee/attendance', defaultMessage: 'Rappel heures travaillées' },
     pending_approvals: { label: 'Déclarations en attente', icon: 'clipboard', colorClass: 'bg-primary/10 text-primary', route: '/manager/attendance', defaultMessage: 'Déclarations en attente' },
     task_assigned: { label: 'Tâche assignée', icon: 'calendar', colorClass: 'bg-primary/10 text-primary', route: '', defaultMessage: 'Une tâche vous a été assignée' },
     task_status_changed: { label: 'Statut de tâche', icon: 'check', colorClass: 'bg-primary/10 text-primary', route: '', defaultMessage: 'Le statut d\'une tâche a changé' },
     task_comment: { label: 'Commentaire', icon: 'message', colorClass: 'bg-primary/10 text-primary', route: '', defaultMessage: 'Nouveau commentaire sur une tâche' },
     task_deadline_reminder: { label: 'Échéance de tâche', icon: 'clock', colorClass: 'bg-warning/10 text-warning', route: '', defaultMessage: 'Une tâche arrive à échéance' },
+    announcement_created: { label: 'Annonce', icon: 'message', colorClass: 'bg-primary/10 text-primary', route: '', defaultMessage: 'Nouvelle annonce publiée' },
   };
 
   ngOnInit(): void {

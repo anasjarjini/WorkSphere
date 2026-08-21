@@ -9,7 +9,6 @@ export interface AttendanceDeclaration {
   user_id: number;
   date: string;
   status: AttendanceStatus;
-  hours_worked: number | null;
   validation_status: AttendanceValidationStatus;
   validated_by: number | null;
   validated_at: string | null;

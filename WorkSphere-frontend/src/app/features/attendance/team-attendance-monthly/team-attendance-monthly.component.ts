@@ -33,20 +33,17 @@ export class TeamAttendanceMonthlyComponent implements OnInit {
         employee: m,
         presentDays: validated.filter((d) => d.status === 'PRESENT').length,
         absentDays: userDecls.filter((d) => d.status === 'ABSENT').length,
-        totalHours: validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0),
       };
     });
   });
 
   readonly stats = computed(() => {
     const rows = this.summary();
-    const totalHours = rows.reduce((sum, r) => sum + r.totalHours, 0);
     const totalPresent = rows.reduce((sum, r) => sum + r.presentDays, 0);
     const totalAbsent = rows.reduce((sum, r) => sum + r.absentDays, 0);
     const total = totalPresent + totalAbsent;
     const rate = total > 0 ? Math.round((totalPresent / total) * 100) : 0;
     return {
-      totalHours,
       totalPresent,
       totalAbsent,
       rate,
@@ -106,12 +103,11 @@ export class TeamAttendanceMonthlyComponent implements OnInit {
           employe: emp ? `${emp.first_name} ${emp.last_name}` : `#${d.user_id}`,
           date: d.date,
           statut: d.status === 'PRESENT' ? 'Présent' : 'Absent',
-          heures: d.hours_worked?.toFixed(2) ?? '',
         };
       });
 
-    const header = 'Employé,Date,Statut,Heures';
-    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut},${r.heures}`)].join('\n');
+    const header = 'Employé,Date,Statut';
+    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut}`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

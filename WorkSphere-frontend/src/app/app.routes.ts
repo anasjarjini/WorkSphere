@@ -108,13 +108,23 @@ export const routes: Routes = [
       },
       {
         path: 'announcements',
-        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        loadComponent: () => import('./features/shared/announcements/announcement-admin/announcement-admin.component').then((m) => m.AnnouncementAdminComponent),
         data: { breadcrumb: 'Annonces' }
       },
       {
+        path: 'chat',
+        loadComponent: () => import('./features/chat/chat-layout.component').then((m) => m.ChatLayoutComponent),
+        data: { breadcrumb: 'Messagerie' }
+      },
+      {
         path: 'announcements/new',
-        loadComponent: () => import('./features/shared/announcements/announcement-form/announcement-form.component').then((m) => m.AnnouncementFormComponent),
-        data: { breadcrumb: 'Nouvelle annonce' }
+        redirectTo: 'announcements',
+        pathMatch: 'full'
+      },
+      {
+        path: 'announcements/:id/edit',
+        redirectTo: 'announcements',
+        pathMatch: 'full'
       },
       {
         path: 'profile',
@@ -211,13 +221,23 @@ export const routes: Routes = [
       },
       {
         path: 'announcements',
-        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        loadComponent: () => import('./features/shared/announcements/announcement-manager/announcement-manager.component').then((m) => m.AnnouncementManagerComponent),
         data: { breadcrumb: 'Annonces' }
       },
       {
+        path: 'chat',
+        loadComponent: () => import('./features/chat/chat-layout.component').then((m) => m.ChatLayoutComponent),
+        data: { breadcrumb: 'Messagerie' }
+      },
+      {
         path: 'announcements/new',
-        loadComponent: () => import('./features/shared/announcements/announcement-form/announcement-form.component').then((m) => m.AnnouncementFormComponent),
-        data: { breadcrumb: 'Nouvelle annonce' }
+        redirectTo: 'announcements',
+        pathMatch: 'full'
+      },
+      {
+        path: 'announcements/:id/edit',
+        redirectTo: 'announcements',
+        pathMatch: 'full'
       },
       {
         path: 'profile',
@@ -288,8 +308,13 @@ export const routes: Routes = [
       },
       {
         path: 'announcements',
-        loadComponent: () => import('./features/shared/announcements/announcement-feed/announcement-feed.component').then((m) => m.AnnouncementFeedComponent),
+        loadComponent: () => import('./features/shared/announcements/announcement-employee/announcement-employee.component').then((m) => m.AnnouncementEmployeeComponent),
         data: { breadcrumb: 'Annonces' }
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./features/chat/chat-layout.component').then((m) => m.ChatLayoutComponent),
+        data: { breadcrumb: 'Messagerie' }
       },
       {
         path: 'profile',

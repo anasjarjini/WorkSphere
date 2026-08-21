@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { AbsenceService } from '../../../core/services/absence.service';
+import { ExportService } from '../../../core/services/export.service';
 import { AttendanceDeclaration } from '../../../core/models/attendance-declaration.model';
 import { Employee } from '../../../core/models/employee.model';
 
@@ -18,6 +19,7 @@ export class HrAttendanceTodayComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceDeclarationService);
   private readonly employeeService = inject(EmployeeService);
   private readonly absenceService = inject(AbsenceService);
+  private readonly exportService = inject(ExportService);
 
   readonly todayStr = new Date().toISOString().slice(0, 10);
   readonly allEmployees = signal<Employee[]>([]);
@@ -116,5 +118,41 @@ export class HrAttendanceTodayComponent implements OnInit {
       case 'EMPLOYE': return 'Employé';
       default: return 'Membre';
     }
+  }
+
+  statusLabel(item: { employee: Employee; declaration: AttendanceDeclaration | null }): string {
+    switch (this.statusOf(item)) {
+      case 'PRESENT': return 'Présent';
+      case 'EN_ATTENTE': return 'En attente';
+      case 'EN_CONGE': return 'En congé';
+      default: return 'Absent';
+    }
+  }
+
+  lastDeclarationLabel(item: { employee: Employee; declaration: AttendanceDeclaration | null }): string {
+    const d = item.declaration;
+    if (!d) return '—';
+    if (d.date === this.todayStr) {
+      return "Aujourd'hui, déclaré";
+    }
+    return new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  }
+
+  exportCsv(): void {
+    const period = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const rows = this.filteredStatus().map((item) => [
+      `${item.employee.first_name} ${item.employee.last_name}`,
+      item.employee.email,
+      item.employee.department?.name ?? '—',
+      this.roleLabel(item.employee.role),
+      this.lastDeclarationLabel(item),
+      this.statusLabel(item),
+    ]);
+    this.exportService.csv(
+      `presences_aujourdhui_${this.todayStr}.csv`,
+      ['Collaborateur', 'Email', 'Département', 'Rôle', 'Dernière déclaration', 'Statut'],
+      rows,
+      { title: 'Statut Global de l\'Entreprise', period }
+    );
   }
 }

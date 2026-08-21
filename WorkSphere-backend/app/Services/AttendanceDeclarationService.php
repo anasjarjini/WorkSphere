@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AttendanceDeclarationService
 {
-    public function declare(User $user, Carbon $date, AttendanceStatus $status, ?float $hoursWorked = null): AttendanceDeclaration
+    public function declare(User $user, Carbon $date, AttendanceStatus $status): AttendanceDeclaration
     {
         $this->ensureNotOnApprovedLeave($user, $date);
 
@@ -37,12 +37,6 @@ class AttendanceDeclarationService
             'status' => $status,
             'validation_status' => AttendanceValidationStatus::EN_ATTENTE,
         ];
-
-        if ($status === AttendanceStatus::PRESENT) {
-            $data['hours_worked'] = $hoursWorked;
-        } else {
-            $data['hours_worked'] = null;
-        }
 
         if ($existing) {
             $existing->update($data);

@@ -67,7 +67,6 @@
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Date</th>
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Statut</th>
-              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Heures</th>
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Validation</th>
             </tr>
           </thead>
@@ -90,7 +89,6 @@
                     {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
                   </span>
                 </td>
-                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ decl.hours_worked ? decl.hours_worked + 'h' : '—' }}</td>
                 <td class="px-6 py-4">
                   <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm px-3 py-1 rounded-lg"
                     [class.bg-surface-container-high]="decl.validation_status === 'EN_ATTENTE'" [class.text-on-surface-variant]="decl.validation_status === 'EN_ATTENTE'"

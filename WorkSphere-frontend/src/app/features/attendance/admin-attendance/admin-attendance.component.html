@@ -9,7 +9,7 @@
     <app-team-approval />
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
     <div class="bg-surface border border-border rounded-xl p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Total présents (mois)</p>
       <p class="text-2xl font-bold text-success">{{ companyMonthTotal().presentDays }}</p>
@@ -17,10 +17,6 @@
     <div class="bg-surface border border-border rounded-xl p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Total absents (mois)</p>
       <p class="text-2xl font-bold text-warning-dark">{{ companyMonthTotal().absentDays }}</p>
-    </div>
-    <div class="bg-surface border border-border rounded-xl p-5 shadow-sm">
-      <p class="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Total heures (mois)</p>
-      <p class="text-2xl font-bold text-primary">{{ companyMonthTotal().totalHours | number:'1.1-1':'fr' }}h</p>
     </div>
     <div class="bg-surface border border-border rounded-xl p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Employés</p>
@@ -75,7 +71,7 @@
 
   <div class="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
     <div class="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <h2 class="font-heading text-lg font-bold text-text-heading">Historique company</h2>
+      <h2 class="font-heading text-lg font-bold text-text-heading">Historique entreprise</h2>
       <div class="flex items-center gap-2">
         <select [ngModel]="historyEmployeeFilter()" (ngModelChange)="filterByEmployee($any($event))"
           class="px-3 py-1.5 text-xs font-medium bg-surface-bright border border-border rounded-lg text-text outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer">
@@ -116,7 +112,6 @@
               <th class="px-4 py-3.5 text-left text-xs font-bold text-text-muted uppercase tracking-wider">Employé</th>
               <th class="px-4 py-3.5 text-left text-xs font-bold text-text-muted uppercase tracking-wider">Date</th>
               <th class="px-4 py-3.5 text-left text-xs font-bold text-text-muted uppercase tracking-wider">Statut</th>
-              <th class="px-4 py-3.5 text-left text-xs font-bold text-text-muted uppercase tracking-wider">Heures</th>
               <th class="px-4 py-3.5 text-left text-xs font-bold text-text-muted uppercase tracking-wider">Validation</th>
             </tr>
           </thead>
@@ -137,7 +132,6 @@
                     {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
                   </span>
                 </td>
-                <td class="px-4 py-3.5 text-sm text-text-secondary">{{ decl.hours_worked ? decl.hours_worked + 'h' : '—' }}</td>
                 <td class="px-4 py-3.5">
                   <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
                     [class.bg-background-alt]="decl.validation_status === 'EN_ATTENTE'"
@@ -194,7 +188,6 @@
             <th class="px-4 py-3 text-center text-xs font-bold text-text-muted uppercase tracking-wider">Rôle</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-text-muted uppercase tracking-wider">Jours présents</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-text-muted uppercase tracking-wider">Jours absents</th>
-            <th class="px-4 py-3 text-center text-xs font-bold text-text-muted uppercase tracking-wider">Total heures</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border">
@@ -214,7 +207,6 @@
               </td>
               <td class="px-4 py-3 text-center text-sm text-success font-semibold">{{ row.presentDays }}</td>
               <td class="px-4 py-3 text-center text-sm text-warning-dark font-semibold">{{ row.absentDays }}</td>
-              <td class="px-4 py-3 text-center text-sm text-text font-semibold">{{ row.totalHours | number:'1.1-1':'fr' }}h</td>
             </tr>
           }
         </tbody>

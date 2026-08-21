@@ -59,7 +59,7 @@ export class HrAttendanceValidationComponent implements OnInit {
       group.declarations.push(d);
       if (d.date < group.dateFrom) group.dateFrom = d.date;
       if (d.date > group.dateTo) group.dateTo = d.date;
-      const anomaly = d.status === 'ABSENT' || d.hours_worked == null;
+      const anomaly = d.status === 'ABSENT';
       if (anomaly) group.anomalies += 1;
       map.set(managerId, group);
     }

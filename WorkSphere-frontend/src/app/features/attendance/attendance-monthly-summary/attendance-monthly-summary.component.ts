@@ -32,13 +32,11 @@ export class AttendanceMonthlySummaryComponent implements OnInit {
 
   readonly summary = computed(() => {
     const decls = this.monthDeclarations();
-    const validated = decls.filter((d) => d.validation_status === 'VALIDEE' as AttendanceValidationStatus);
     const present = decls.filter((d) => d.status === 'PRESENT');
     const totalDays = new Date(Number(this.currentMonth().split('-')[0]), Number(this.currentMonth().split('-')[1]), 0).getDate();
     return {
       daysPresent: present.length,
       daysAbsent: decls.filter((d) => d.status === 'ABSENT').length,
-      totalHours: validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0),
       pendingCount: decls.filter((d) => d.validation_status === 'EN_ATTENTE' as AttendanceValidationStatus).length,
       totalDays,
       presencePercent: totalDays > 0 ? Math.round((present.length / totalDays) * 100) : 0,
@@ -48,7 +46,7 @@ export class AttendanceMonthlySummaryComponent implements OnInit {
   readonly weeks = computed(() => {
     const [year, month] = this.currentMonth().split('-').map(Number);
     const decls = this.monthDeclarations();
-    const weeksData: { label: string; range: string; hours: number; status: string; }[] = [];
+    const weeksData: { label: string; range: string; status: string; }[] = [];
     const firstDate = new Date(year, month - 1, 1);
     const lastDate = new Date(year, month, 0);
     let weekStart = new Date(firstDate);
@@ -62,15 +60,12 @@ export class AttendanceMonthlySummaryComponent implements OnInit {
         const dDate = new Date(d.date);
         return dDate >= weekStart && dDate <= weekEnd;
       });
-      const weekValidated = weekDecls.filter((d) => d.validation_status === 'VALIDEE' as AttendanceValidationStatus);
-      const hours = weekValidated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0);
       const pending = weekDecls.some((d) => d.validation_status === 'EN_ATTENTE' as AttendanceValidationStatus);
       const weekNum = Math.ceil((weekStart.getDate() + firstDate.getDay()) / 7);
 
       weeksData.push({
         label: `Semaine ${weekNum + (firstDate.getDay() > 0 ? 0 : 0)}`,
         range: `${weekStart.getDate()} ${weekStart.toLocaleDateString('fr', { month: 'short' })} - ${weekEnd.getDate()} ${weekEnd.toLocaleDateString('fr', { month: 'short' })}`,
-        hours,
         status: pending ? 'pending' : weekDecls.length > 0 ? 'validated' : 'empty',
       });
 

@@ -50,7 +50,6 @@ export class AdminAttendancePageComponent implements OnInit {
         employee: e,
         presentDays: validated.filter((d) => d.status === 'PRESENT').length,
         absentDays: userDecls.filter((d) => d.status === 'ABSENT').length,
-        totalHours: validated.reduce((sum, d) => sum + (d.hours_worked ?? 0), 0),
       };
     });
   });
@@ -60,7 +59,6 @@ export class AdminAttendancePageComponent implements OnInit {
     return {
       presentDays: rows.reduce((s, r) => s + r.presentDays, 0),
       absentDays: rows.reduce((s, r) => s + r.absentDays, 0),
-      totalHours: rows.reduce((s, r) => s + r.totalHours, 0),
     };
   });
 
@@ -176,12 +174,11 @@ export class AdminAttendancePageComponent implements OnInit {
           employe: emp ? `${emp.first_name} ${emp.last_name}` : `#${d.user_id}`,
           date: d.date,
           statut: d.status === 'PRESENT' ? 'Présent' : 'Absent',
-          heures: d.hours_worked?.toFixed(2) ?? '',
         };
       });
 
-    const header = 'Employé,Date,Statut,Heures';
-    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut},${r.heures}`)].join('\n');
+    const header = 'Employé,Date,Statut';
+    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut}`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

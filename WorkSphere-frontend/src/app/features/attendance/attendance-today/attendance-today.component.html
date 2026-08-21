@@ -1,5 +1,5 @@
 <div class="space-y-8">
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
       <div class="flex justify-between items-start mb-2">
         <span class="font-sans font-medium text-xs text-on-surface-variant">Jours présents</span>
@@ -15,21 +15,6 @@
         <div class="h-full bg-secondary transition-all duration-1000 ease-in-out"
           [style.width]="(summary().daysPresent / 22 * 100) + '%'"></div>
       </div>
-    </div>
-    <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-sans font-medium text-xs text-on-surface-variant">Heures ce mois</span>
-        <div class="p-2 bg-primary-fixed rounded-lg">
-          <span class="material-symbols-outlined text-primary">timer</span>
-        </div>
-      </div>
-      <p class="font-heading font-bold text-headline-md text-on-surface">
-        {{ summary().totalHours }}
-        <span class="text-sm font-normal text-on-surface-variant">heures</span>
-      </p>
-      @if (summary().overtime > 0) {
-        <p class="text-xs text-secondary font-medium mt-2">+{{ summary().overtime }}h sup. validées</p>
-      }
     </div>
     <div class="bg-surface border border-outline-variant p-4 rounded-xl custom-shadow">
       <div class="flex justify-between items-start mb-2">

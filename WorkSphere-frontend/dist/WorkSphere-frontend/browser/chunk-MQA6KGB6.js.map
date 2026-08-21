@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/core/services/department.service.ts"],
-  "sourcesContent": ["import { Injectable, inject } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport { environment } from '../../../environments/environment';\nimport { Department } from '../models/department.model';\n\n@Injectable({ providedIn: 'root' })\nexport class DepartmentService {\n  private readonly http = inject(HttpClient);\n  private readonly apiUrl = environment.apiUrl;\n\n  getDepartments(): Observable<Department[]> {\n    return this.http.get<Department[]>(`${this.apiUrl}/departments`);\n  }\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;AAOM,IAAO,oBAAP,MAAO,mBAAiB;EACX,OAAO,OAAO,UAAU;EACxB,SAAS,YAAY;EAEtC,iBAAc;AACZ,WAAO,KAAK,KAAK,IAAkB,GAAG,KAAK,MAAM,cAAc;EACjE;;qCANW,oBAAiB;EAAA;4EAAjB,oBAAiB,SAAjB,mBAAiB,WAAA,YADJ,OAAM,CAAA;;;sEACnB,mBAAiB,CAAA;UAD7B;WAAW,EAAE,YAAY,OAAM,CAAE;;;",
-  "names": []
-}

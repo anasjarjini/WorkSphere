@@ -24,21 +24,13 @@
     </div>
   } @else {
     <!-- Bento Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- Primary Card -->
       <div class="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden min-h-[140px]">
         <span class="material-symbols-outlined absolute right-2 top-2 opacity-10 text-[120px]">auto_awesome</span>
         <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/70 mb-2">Taux de présence</p>
         <p class="font-heading text-headline-lg font-bold">{{ stats().rate }}%</p>
         <p class="font-body-sm text-body-sm text-on-primary/70 mt-1">sur {{ stats().size }} employé(s) ce mois</p>
-      </div>
-      <!-- Heures validées -->
-      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
-        <div class="w-12 h-12 rounded-lg bg-secondary-container/30 text-secondary flex items-center justify-center mb-4">
-          <span class="material-symbols-outlined">schedule</span>
-        </div>
-        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Heures validées</p>
-        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().totalHours | number:'1.0-1':'fr' }}h</p>
       </div>
       <!-- Jours d'absence -->
       <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
@@ -79,7 +71,6 @@
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
               <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Jours présents</th>
               <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Jours absents</th>
-              <th class="px-6 py-4 text-center font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Total heures</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant">
@@ -106,7 +97,6 @@
                     {{ row.absentDays }}
                   </span>
                 </td>
-                <td class="px-6 py-4 text-center font-body-md text-body-md text-on-surface font-bold">{{ row.totalHours | number:'1.1-1':'fr' }}h</td>
               </tr>
             }
           </tbody>

@@ -1,7 +1,6 @@
 <?php
 
 use App\Console\Commands\InitYearlyLeaveBalances;
-use App\Console\Commands\SendEveningReminders;
 use App\Console\Commands\SendMorningReminders;
 use App\Console\Commands\SendTaskDeadlineReminders;
 use Illuminate\Support\Facades\Schedule;
@@ -9,11 +8,6 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command(SendMorningReminders::class)
     ->weekdays()
     ->at('08:00')
-    ->timezone('Africa/Casablanca');
-
-Schedule::command(SendEveningReminders::class)
-    ->weekdays()
-    ->at('17:00')
     ->timezone('Africa/Casablanca');
 
 Schedule::command(SendTaskDeadlineReminders::class)

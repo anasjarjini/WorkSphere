@@ -6,10 +6,13 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyRegistrationController;
 use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DirectoryController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\ManagerTeamController;
+use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
@@ -34,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/company', [CompanySettingsController::class, 'show']);
+    Route::get('/company/logo-file', [CompanySettingsController::class, 'logoFile']);
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show']);
@@ -45,6 +49,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // Chat / Messagerie
+    Route::get('/users/directory', [DirectoryController::class, 'index']);
+    Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount']);
+    Route::post('/conversations', [ConversationController::class, 'store']);
+    Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'messages']);
+    Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'storeMessage']);
+    Route::get('/message-attachments/{attachment}/download', [MessageAttachmentController::class, 'download']);
 
     // HR_ADMIN routes
     Route::middleware('check_role:HR_ADMIN')->group(function () {
@@ -71,6 +84,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show']);
     Route::put('/announcements/{announcement}', [AnnouncementController::class, 'update']);
     Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy']);
+    Route::delete('/announcements/{announcement}/force', [AnnouncementController::class, 'forceDestroy']);
+    Route::get('/managers', [AnnouncementController::class, 'managers']);
 
     // Service Requests
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);

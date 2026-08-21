@@ -29,7 +29,7 @@
     </div>
   } @else {
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Taux de présence global -->
       <div class="glass-card rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group hover:border-primary/30 transition-all duration-300 custom-shadow">
         <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform"></div>
@@ -49,21 +49,6 @@
         <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
           <div class="bg-primary h-full rounded-full transition-all duration-500" [style.width.%]="overallConformity()"></div>
         </div>
-      </div>
-      <!-- Total heures travaillées -->
-      <div class="glass-card rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group hover:border-secondary/30 transition-all duration-300 custom-shadow">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform"></div>
-        <div class="flex items-center justify-between relative">
-          <div class="p-3 bg-secondary/10 text-secondary rounded-lg">
-            <span class="material-symbols-outlined">schedule</span>
-          </div>
-          <span class="text-on-surface-variant text-label-sm font-label-sm">Total company</span>
-        </div>
-        <div>
-          <p class="text-on-surface-variant font-label-md text-label-md">Total heures travaillées</p>
-          <h3 class="font-heading text-display-lg text-on-surface mt-2">{{ totals().totalHours | number:'1.0-0' }}<span class="text-body-lg text-on-surface-variant">h</span></h3>
-        </div>
-        <p class="text-on-surface-variant text-label-sm font-label-sm italic opacity-60">Basé sur {{ allEmployees().length }} collaborateurs</p>
       </div>
       <!-- Anomalies critiques -->
       <div class="glass-card rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group border-error/20 hover:border-error/40 transition-all duration-300 custom-shadow">
@@ -110,7 +95,7 @@
               <tr class="bg-surface-container-low/50 border-b border-outline-variant">
                 <th class="px-6 py-3.5 font-label-md text-on-surface-variant">Département</th>
                 <th class="px-6 py-3.5 font-label-md text-on-surface-variant">Effectif</th>
-                <th class="px-6 py-3.5 font-label-md text-on-surface-variant">Jours présent (avg)</th>
+                <th class="px-6 py-3.5 font-label-md text-on-surface-variant">Jours présent (moy.)</th>
                 <th class="px-6 py-3.5 font-label-md text-on-surface-variant w-[220px]">Taux de conformité</th>
                 <th class="px-6 py-3.5 font-label-md text-on-surface-variant"></th>
               </tr>
@@ -137,8 +122,8 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 text-right">
-                    <button class="flex items-center gap-1 font-label-sm text-primary group-hover:translate-x-[-4px] transition-transform cursor-pointer">
-                      View report
+                    <button (click)="exportDeptReport(dept.name)" class="flex items-center gap-1 font-label-sm text-primary group-hover:translate-x-[-4px] transition-transform cursor-pointer">
+                      Voir le rapport
                       <span class="material-symbols-outlined text-sm">arrow_forward</span>
                     </button>
                   </td>

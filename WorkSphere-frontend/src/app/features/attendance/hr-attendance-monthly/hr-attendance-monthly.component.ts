@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { EmployeeService } from '../../../core/services/employee.service';
+import { ExportService } from '../../../core/services/export.service';
 import { AttendanceValidationStatus } from '../../../core/models/attendance-declaration.model';
 import { Employee } from '../../../core/models/employee.model';
 
@@ -9,18 +10,18 @@ interface SummaryRow {
   employee: Employee;
   presentDays: number;
   absentDays: number;
-  totalHours: number;
 }
 
 @Component({
   selector: 'app-hr-attendance-monthly',
   standalone: true,
-  imports: [DecimalPipe, DatePipe],
+  imports: [DatePipe],
   templateUrl: './hr-attendance-monthly.component.html',
 })
 export class HrAttendanceMonthlyComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceDeclarationService);
   private readonly employeeService = inject(EmployeeService);
+  private readonly exportService = inject(ExportService);
 
   readonly allEmployees = signal<Employee[]>([]);
   readonly declarations = signal<any[]>([]);
@@ -44,7 +45,6 @@ export class HrAttendanceMonthlyComponent implements OnInit {
         employee: e,
         presentDays: validated.filter((d) => d.status === 'PRESENT').length,
         absentDays: userDecls.filter((d) => d.status === 'ABSENT').length,
-        totalHours: validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0),
       };
     });
   });
@@ -52,7 +52,6 @@ export class HrAttendanceMonthlyComponent implements OnInit {
   readonly totals = computed(() => ({
     presentDays: this.summary().reduce((s, r) => s + r.presentDays, 0),
     absentDays: this.summary().reduce((s, r) => s + r.absentDays, 0),
-    totalHours: this.summary().reduce((s, r) => s + r.totalHours, 0),
   }));
 
   readonly departments = computed(() => {
@@ -74,7 +73,6 @@ export class HrAttendanceMonthlyComponent implements OnInit {
         size: total,
         avgPresent: Math.round(avgPresent * 10) / 10,
         conformity,
-        totalHours: g.rows.reduce((s, r) => s + r.totalHours, 0),
       };
     });
   });
@@ -126,31 +124,61 @@ export class HrAttendanceMonthlyComponent implements OnInit {
   }
 
   exportCsv(): void {
-    const [year, month] = this.currentMonth().split('-').map(Number);
-    const rows = this.declarations()
-      .filter((d) => {
-        const dDate = new Date(d.date);
-        return dDate.getFullYear() === year && dDate.getMonth() === month - 1
-          && d.validation_status === 'VALIDEE' as AttendanceValidationStatus;
-      })
-      .map((d) => {
-        const emp = this.allEmployees().find((e) => e.id === d.user_id);
-        return {
-          employe: emp ? `${emp.first_name} ${emp.last_name}` : `#${d.user_id}`,
-          date: d.date,
-          statut: d.status === 'PRESENT' ? 'Présent' : 'Absent',
-          heures: d.hours_worked?.toFixed(2) ?? '',
-        };
-      });
+    const monthLabel = new Date(this.currentMonth() + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const rows = this.monthDeclarations().map((d) => {
+      const emp = this.allEmployees().find((e) => e.id === d.user_id);
+      return [
+        emp ? `${emp.first_name} ${emp.last_name}` : `#${d.user_id}`,
+        emp?.department?.name ?? '—',
+        new Date(d.date).toLocaleDateString('fr-FR'),
+        d.status === 'PRESENT' ? 'Présent' : 'Absent',
+        this.validationLabel(d.validation_status),
+      ];
+    });
+    this.exportService.csv(
+      `presences_company_${this.currentMonth()}.csv`,
+      ['Employé', 'Département', 'Date', 'Statut', 'Validation'],
+      rows,
+      { title: 'Présences — Résumé mensuel', period: monthLabel }
+    );
+  }
 
-    const header = 'Employé,Date,Statut,Heures';
-    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut},${r.heures}`)].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `presences_company_${this.currentMonth()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  private validationLabel(status: string): string {
+    switch (status) {
+      case 'VALIDEE': return 'Validé';
+      case 'REJETEE': return 'Rejeté';
+      default: return 'En attente';
+    }
+  }
+
+  exportDeptReport(deptName: string): void {
+    const dept = this.departments().find((d) => d.name === deptName);
+    if (!dept) return;
+    const monthLabel = new Date(this.currentMonth() + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const employees = this.summary().filter(
+      (r) => (r.employee.department?.name ?? 'Sans département') === deptName
+    );
+    const rows = employees.map((r) => [
+      `${r.employee.first_name} ${r.employee.last_name}`,
+      `${r.employee.role === 'MANAGER' ? 'Manager' : r.employee.role === 'HR_ADMIN' ? 'RH' : 'Employé'}`,
+      `${r.presentDays}`,
+      `${r.absentDays}`,
+      `${r.presentDays + r.absentDays > 0 ? Math.round((r.presentDays / (r.presentDays + r.absentDays)) * 100) : 0}%`,
+    ]);
+    rows.push([
+      'TOTAL',
+      `${dept.size} employé(s)`,
+      `${dept.avgPresent} jours moy.`,
+      '',
+      `${dept.conformity}%`,
+    ]);
+    this.exportService.pdf({
+      title: `Rapport mensuel — ${deptName}`,
+      subtitle: 'Présences par employé',
+      period: monthLabel,
+      columns: ['Employé', 'Rôle', 'Jours présents', 'Jours absents', 'Taux'],
+      rows,
+      filename: `rapport_${deptName.toLowerCase().replace(/\s+/g, '_')}_${this.currentMonth()}.pdf`,
+    });
   }
 }

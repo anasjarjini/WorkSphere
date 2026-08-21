@@ -18,7 +18,6 @@ class AttendanceDeclaration extends Model
         'user_id',
         'date',
         'status',
-        'hours_worked',
         'validation_status',
         'validated_by',
         'validated_at',
@@ -33,7 +32,6 @@ class AttendanceDeclaration extends Model
             'date' => 'date',
             'status' => AttendanceStatus::class,
             'validation_status' => AttendanceValidationStatus::class,
-            'hours_worked' => 'decimal:2',
             'validated_at' => 'datetime',
             'manager_validated_at' => 'datetime',
         ];

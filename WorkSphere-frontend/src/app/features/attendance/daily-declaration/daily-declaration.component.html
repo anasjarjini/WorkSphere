@@ -79,17 +79,6 @@
 
     <div class="flex-grow flex flex-col md:flex-row gap-6 w-full">
       <div class="flex-1">
-        <label class="font-sans font-medium text-xs text-on-surface-variant mb-2 block">Heures travaillées</label>
-        <div class="flex items-center gap-4">
-          <input type="number" step="0.5" min="0" max="24"
-            [ngModel]="hoursWorked()" (ngModelChange)="hoursWorked.set($any($event))"
-            [disabled]="isLocked()"
-            placeholder="Ex: 7.5"
-            class="w-full h-12 rounded-lg border-outline-variant focus:ring-2 focus:ring-primary/50 text-sm px-4 border outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
-          <span class="font-sans text-sm text-on-surface-variant">heures</span>
-        </div>
-      </div>
-      <div class="flex-1">
         <label class="font-sans font-medium text-xs text-on-surface-variant mb-2 block">Note ou motif (Optionnel)</label>
         <input type="text" placeholder="Commentaires sur la journée..."
           class="w-full h-12 rounded-lg border-outline-variant focus:ring-2 focus:ring-primary/50 text-sm px-4 border outline-none transition-all" />

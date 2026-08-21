@@ -32,7 +32,7 @@ export class AttendanceDeclarationService {
     return this.http.get<AttendanceDeclaration[]>(`${this.apiUrl}/attendance-declarations`, { params: httpParams });
   }
 
-  declare(data: { date: string; status: 'PRESENT' | 'ABSENT'; hours_worked?: number | null }): Observable<AttendanceDeclaration> {
+  declare(data: { date: string; status: 'PRESENT' | 'ABSENT' }): Observable<AttendanceDeclaration> {
     return this.http.post<AttendanceDeclaration>(`${this.apiUrl}/attendance-declarations`, data);
   }
 

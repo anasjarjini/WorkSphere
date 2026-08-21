@@ -15,11 +15,11 @@
           <span class="material-symbols-outlined">chevron_right</span>
         </button>
       </div>
-      <button class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
+      <button (click)="exportPdf()" class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
         <span class="material-symbols-outlined">picture_as_pdf</span>
         PDF
       </button>
-      <button class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
+      <button (click)="exportExcel()" class="border border-outline-variant px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-colors cursor-pointer">
         <span class="material-symbols-outlined">table_chart</span>
         Excel
       </button>
@@ -79,7 +79,6 @@
           <tr class="bg-surface-container border-b border-outline-variant">
             <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Date</th>
             <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Manager / Équipe</th>
-            <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Période</th>
             <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Statut</th>
             <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider text-center">Anomalies</th>
             <th class="px-6 py-4 font-label-sm text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
@@ -98,7 +97,6 @@
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 font-body-sm text-on-surface-variant">{{ hoursOf(d) }}</td>
               <td class="px-6 py-4">
                 @switch (d.validation_status) {
                   @case ('VALIDEE') {

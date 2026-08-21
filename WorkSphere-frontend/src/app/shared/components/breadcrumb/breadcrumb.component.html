@@ -1,4 +1,4 @@
-<nav aria-label="Fil d'Ariane" class="flex items-center gap-2 text-[0.8125rem] py-3 flex-wrap mb-4">
+<nav aria-label="Fil d'Ariane" class="flex items-center text-[0.8125rem] flex-wrap">
   <a [routerLink]="homeRoute()" class="text-text-muted no-underline font-medium transition-colors duration-200 hover:text-accent cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25">Accueil</a>
   @for (crumb of breadcrumbs(); track crumb.path; let last = $last) {
     <span aria-hidden="true" class="text-border font-light">/</span>

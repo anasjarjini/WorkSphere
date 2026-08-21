@@ -1,13 +1,12 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { AttendanceDeclaration, AttendanceValidationStatus } from '../../../core/models/attendance-declaration.model';
 
 @Component({
   selector: 'app-attendance-history',
   standalone: true,
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe],
   templateUrl: './attendance-history.component.html',
 })
 export class AttendanceHistoryComponent implements OnInit {
@@ -41,12 +40,10 @@ export class AttendanceHistoryComponent implements OnInit {
 
   readonly summary = computed(() => {
     const decls = this.monthDeclarations();
-    const validated = decls.filter((d) => d.validation_status === 'VALIDEE' as AttendanceValidationStatus);
     const totalDays = new Date(Number(this.currentMonth().split('-')[0]), Number(this.currentMonth().split('-')[1]), 0).getDate();
     return {
       daysPresent: decls.filter((d) => d.status === 'PRESENT').length,
       daysAbsent: decls.filter((d) => d.status === 'ABSENT').length,
-      totalHours: validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0),
       pendingCount: decls.filter((d) => d.validation_status === 'EN_ATTENTE' as AttendanceValidationStatus).length,
       totalDays,
     };
@@ -54,7 +51,6 @@ export class AttendanceHistoryComponent implements OnInit {
 
   readonly correctionDate = signal<string | null>(null);
   readonly correctionStatus = signal<'PRESENT' | 'ABSENT'>('PRESENT');
-  readonly correctionHours = signal<number | null>(null);
   readonly correctionSaving = signal(false);
   readonly correctionError = signal<string | null>(null);
 
@@ -98,7 +94,6 @@ export class AttendanceHistoryComponent implements OnInit {
   openCorrection(decl: AttendanceDeclaration): void {
     this.correctionDate.set(decl.date);
     this.correctionStatus.set(decl.status);
-    this.correctionHours.set(decl.hours_worked);
     this.correctionError.set(null);
   }
 
@@ -110,16 +105,11 @@ export class AttendanceHistoryComponent implements OnInit {
   submitCorrection(): void {
     const date = this.correctionDate();
     if (!date) return;
-    if (this.correctionStatus() === 'PRESENT' && (this.correctionHours() === null || this.correctionHours() === 0)) {
-      this.correctionError.set('Veuillez saisir vos heures travaillées.');
-      return;
-    }
     this.correctionSaving.set(true);
     this.correctionError.set(null);
     this.attendanceService.declare({
       date,
       status: this.correctionStatus(),
-      hours_worked: this.correctionStatus() === 'PRESENT' ? this.correctionHours() : null,
     }).subscribe({
       next: () => { this.correctionSaving.set(false); this.closeCorrection(); this.loadMonth(); },
       error: (err) => { this.correctionSaving.set(false); this.correctionError.set(err.error?.message || 'Erreur.'); },

@@ -107,7 +107,6 @@ class LeaveManagementTest extends TestCase
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->date('date');
             $table->string('status');
-            $table->decimal('hours_worked', 5, 2)->nullable();
             $table->string('validation_status')->default('EN_ATTENTE');
             $table->foreignId('validated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('validated_at')->nullable();

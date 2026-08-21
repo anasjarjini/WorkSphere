@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { AttendanceDeclaration, AttendanceValidationStatus } from '../../../core/models/attendance-declaration.model';
 import { DailyDeclarationComponent } from '../daily-declaration/daily-declaration.component';
@@ -8,7 +7,7 @@ import { DailyDeclarationComponent } from '../daily-declaration/daily-declaratio
 @Component({
   selector: 'app-employee-attendance',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, FormsModule, DailyDeclarationComponent],
+  imports: [DatePipe, DailyDeclarationComponent],
   templateUrl: './employee-attendance.component.html',
 })
 export class EmployeeAttendancePageComponent implements OnInit {
@@ -41,12 +40,6 @@ export class EmployeeAttendancePageComponent implements OnInit {
     this.monthDeclarations().filter((d) => d.status === 'ABSENT').length
   );
 
-  readonly totalHours = computed(() =>
-    this.monthValidated()
-      .filter((d) => d.hours_worked !== null)
-      .reduce((sum, d) => sum + (d.hours_worked ?? 0), 0)
-  );
-
   readonly pendingCount = computed(() =>
     this.monthDeclarations().filter((d) => d.validation_status === 'EN_ATTENTE' as AttendanceValidationStatus).length
   );
@@ -70,7 +63,6 @@ export class EmployeeAttendancePageComponent implements OnInit {
 
   readonly correctionDate = signal<string | null>(null);
   readonly correctionStatus = signal<'PRESENT' | 'ABSENT'>('PRESENT');
-  readonly correctionHours = signal<number | null>(null);
   readonly correctionSaving = signal(false);
   readonly correctionError = signal<string | null>(null);
 
@@ -121,7 +113,6 @@ export class EmployeeAttendancePageComponent implements OnInit {
   openCorrection(decl: AttendanceDeclaration): void {
     this.correctionDate.set(decl.date);
     this.correctionStatus.set(decl.status);
-    this.correctionHours.set(decl.hours_worked);
     this.correctionError.set(null);
   }
 
@@ -134,18 +125,12 @@ export class EmployeeAttendancePageComponent implements OnInit {
     const date = this.correctionDate();
     if (!date) return;
 
-    if (this.correctionStatus() === 'PRESENT' && (this.correctionHours() === null || this.correctionHours() === 0)) {
-      this.correctionError.set('Veuillez saisir vos heures travaillées.');
-      return;
-    }
-
     this.correctionSaving.set(true);
     this.correctionError.set(null);
 
     this.attendanceService.declare({
       date,
       status: this.correctionStatus(),
-      hours_worked: this.correctionStatus() === 'PRESENT' ? this.correctionHours() : null,
     }).subscribe({
       next: () => {
         this.correctionSaving.set(false);

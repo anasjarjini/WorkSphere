@@ -48,7 +48,6 @@ export class ManagerAttendancePageComponent implements OnInit {
         employee: m,
         presentDays: validated.filter((d) => d.status === 'PRESENT').length,
         absentDays: userDecls.filter((d) => d.status === 'ABSENT').length,
-        totalHours: validated.reduce((sum, d) => sum + (d.hours_worked ?? 0), 0),
       };
     });
   });
@@ -165,12 +164,11 @@ export class ManagerAttendancePageComponent implements OnInit {
           employe: emp ? `${emp.first_name} ${emp.last_name}` : `#${d.user_id}`,
           date: d.date,
           statut: d.status === 'PRESENT' ? 'Présent' : 'Absent',
-          heures: d.hours_worked?.toFixed(2) ?? '',
         };
       });
 
-    const header = 'Employé,Date,Statut,Heures';
-    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut},${r.heures}`)].join('\n');
+    const header = 'Employé,Date,Statut';
+    const csv = [header, ...rows.map((r) => `${r.employe},${r.date},${r.statut}`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

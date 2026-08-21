@@ -21,14 +21,11 @@ export class AttendanceTodayComponent implements OnInit {
       const dDate = new Date(d.date);
       return dDate.getFullYear() === year && dDate.getMonth() === month - 1;
     });
-    const validated = monthDecls.filter((d) => d.validation_status === 'VALIDEE' as AttendanceValidationStatus);
     const present = monthDecls.filter((d) => d.status === 'PRESENT');
     return {
       daysPresent: present.length,
       daysAbsent: monthDecls.filter((d) => d.status === 'ABSENT').length,
-      totalHours: validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0),
       pendingCount: monthDecls.filter((d) => d.validation_status === 'EN_ATTENTE' as AttendanceValidationStatus).length,
-      overtime: Math.max(0, Math.round(validated.reduce((sum: number, d: any) => sum + (d.hours_worked ?? 0), 0) - 151.67)),
       unjustified: monthDecls.filter((d) => d.status === 'ABSENT' && d.validation_status !== 'VALIDEE' as AttendanceValidationStatus).length,
     };
   });

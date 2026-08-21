@@ -4,18 +4,7 @@ import { AnnouncementService } from '../../../../core/services/announcement.serv
 import { AuthService } from '../../../../core/services/auth.service';
 import { ImageUrlService } from '../../../../core/services/image-url.service';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
-import { Announcement, AnnouncementType } from '../../../../core/models/announcement.model';
-
-const TYPE_LABELS: Record<AnnouncementType, string> = {
-  GENERAL: 'Général', MEETING: 'Réunion', TRAINING: 'Formation', POLICY: 'Politique'
-};
-
-const TYPE_CLASSES: Record<AnnouncementType, string> = {
-  GENERAL: 'bg-primary-light text-primary-dark',
-  MEETING: 'bg-accent-light text-accent-dark',
-  TRAINING: 'bg-info-light text-info-dark',
-  POLICY: 'bg-warning-light text-warning-dark'
-};
+import { Announcement, AnnouncementScope } from '../../../../core/models/announcement.model';
 
 @Component({
   selector: 'app-announcement-feed',
@@ -27,6 +16,7 @@ export class AnnouncementFeedComponent {
   private readonly announcementService = inject(AnnouncementService);
   private readonly authService = inject(AuthService);
   private readonly imageUrlService = inject(ImageUrlService);
+  private readonly router = inject(Router);
 
   readonly user = this.authService.currentUser;
   readonly announcements = signal<Announcement[]>([]);
@@ -44,7 +34,19 @@ export class AnnouncementFeedComponent {
     return role === 'MANAGER' || role === 'HR_ADMIN';
   });
 
+  readonly isAdmin = computed(() => this.user()?.role === 'HR_ADMIN');
+
   constructor() {
+    this.loadAnnouncements();
+  }
+
+  formatDate(announcement: Announcement): string {
+    const date = announcement.published_at ?? announcement.created_at;
+    return date ? new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  }
+
+  private loadAnnouncements(): void {
+    this.loading.set(true);
     this.announcementService.getAnnouncements().subscribe({
       next: (data) => {
         this.announcements.set(data);
@@ -54,12 +56,28 @@ export class AnnouncementFeedComponent {
     });
   }
 
-  getTypeLabel(type: AnnouncementType): string {
-    return TYPE_LABELS[type];
+  getScopeLabel(announcement: Announcement): string {
+    if (announcement.target_scope === 'COMPANY') {
+      return "Toute l'entreprise";
+    }
+    const user = this.user();
+    if (user && (user.id === announcement.target_manager_id || user.manager_id === announcement.target_manager_id)) {
+      return 'Mon équipe';
+    }
+    const manager = announcement.targetManager;
+    return manager ? `Équipe de ${manager.first_name} ${manager.last_name}` : 'Équipe';
   }
 
-  getTypeClass(type: AnnouncementType): string {
-    return TYPE_CLASSES[type];
+  getScopeClass(scope: AnnouncementScope): string {
+    return scope === 'COMPANY'
+      ? 'bg-primary-light text-primary-dark'
+      : 'bg-accent-light text-accent-dark';
+  }
+
+  canManage(announcement: Announcement): boolean {
+    const user = this.user();
+    if (!user) return false;
+    return user.id === announcement.creator_id;
   }
 
   resolveAvatarUrl(url: string | null | undefined): string | null {
@@ -67,7 +85,22 @@ export class AnnouncementFeedComponent {
   }
 
   newAnnouncement(): void {
-    const router = inject(Router);
-    router.navigate([`${this.baseRoute()}/announcements/new`]);
+    this.router.navigate([`${this.baseRoute()}/announcements/new`]);
+  }
+
+  editAnnouncement(announcement: Announcement): void {
+    this.router.navigate([`${this.baseRoute()}/announcements/${announcement.id}/edit`]);
+  }
+
+  deleteAnnouncement(announcement: Announcement): void {
+    const confirmed = window.confirm(`Supprimer l'annonce « ${announcement.title} » ?`);
+    if (!confirmed) return;
+
+    this.announcementService.deleteAnnouncement(announcement.id).subscribe({
+      next: () => {
+        this.announcements.update((list) => list.filter((a) => a.id !== announcement.id));
+      },
+      error: () => {}
+    });
   }
 }

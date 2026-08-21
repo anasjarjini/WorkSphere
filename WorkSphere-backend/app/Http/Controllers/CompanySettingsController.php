@@ -56,6 +56,29 @@ class CompanySettingsController extends Controller
     }
 
     /**
+     * Sert le fichier logo de l'entreprise via l'API (auth + CORS).
+     * Nécessaire pour l'embarquement du logo dans les exports PDF/Excel.
+     */
+    public function logoFile(Request $request)
+    {
+        $company = $request->user()->company;
+
+        if (! $company->logo) {
+            abort(404, 'Aucun logo.');
+        }
+
+        $path = Storage::disk('public')->path($company->logo);
+        if (! is_file($path)) {
+            abort(404, 'Logo introuvable.');
+        }
+
+        return response(file_get_contents($path), 200, [
+            'Content-Type'  => mime_content_type($path) ?: 'application/octet-stream',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
      * Upload / remplacement du logo de l'entreprise.
      *
      * - Si un logo existe déjà, on supprime l'ancien fichier avant d'enregistrer le nouveau

@@ -77,23 +77,13 @@ class AttendanceDeclarationController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'status' => 'required|in:PRESENT,ABSENT',
-            'hours_worked' => 'nullable|numeric|min:0|max:24',
         ]);
-
-        if ($validated['status'] === 'ABSENT') {
-            $validated['hours_worked'] = null;
-        }
-
-        if ($validated['status'] === 'PRESENT' && empty($validated['hours_worked'])) {
-            return response()->json(['message' => 'Les heures travaillées sont requises pour un statut Présent.'], 422);
-        }
 
         try {
             $declaration = $this->attendanceDeclarationService->declare(
                 $request->user(),
                 Carbon::parse($validated['date']),
-                AttendanceStatus::from($validated['status']),
-                $validated['hours_worked'] !== null ? (float) $validated['hours_worked'] : null
+                AttendanceStatus::from($validated['status'])
             );
 
             $declaration->load('user', 'validator');

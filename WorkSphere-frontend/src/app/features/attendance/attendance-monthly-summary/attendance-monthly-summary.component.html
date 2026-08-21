@@ -25,7 +25,7 @@
     </div>
   } @else {
     <!-- Metrics Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div class="bg-white border border-outline-variant rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
         <div>
           <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider mb-2">Jours présents</p>
@@ -51,16 +51,6 @@
         </div>
         <div class="bg-error-container p-3 rounded-full">
           <span class="material-symbols-outlined text-error">warning</span>
-        </div>
-      </div>
-      <div class="bg-white border border-outline-variant rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-        <div>
-          <p class="font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider mb-2">Total heures</p>
-          <span class="font-heading font-bold text-headline-md text-primary">{{ summary().totalHours }} h</span>
-          <p class="text-on-surface-variant text-[10px] uppercase font-bold mt-2 tracking-tight">Validées uniquement</p>
-        </div>
-        <div class="bg-primary-fixed p-3 rounded-full">
-          <span class="material-symbols-outlined text-primary">schedule</span>
         </div>
       </div>
       <div class="bg-white border border-outline-variant rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
@@ -92,7 +82,6 @@
             <thead>
               <tr class="bg-surface-container-low border-b border-outline-variant">
                 <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Période</th>
-                <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Heures</th>
                 <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider">Statut</th>
                 <th class="px-6 py-4 font-sans font-bold text-xs text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -103,9 +92,6 @@
                   <td class="px-6 py-4">
                     <p class="font-sans font-medium text-sm text-on-surface">{{ week.label }}</p>
                     <p class="font-sans text-xs text-on-surface-variant">{{ week.range }}</p>
-                  </td>
-                  <td class="px-6 py-4">
-                    <span class="font-heading font-bold text-headline-sm">{{ week.hours > 0 ? week.hours + 'h' : '-- h' }}</span>
                   </td>
                   <td class="px-6 py-4">
                     @if (week.status === 'validated') {

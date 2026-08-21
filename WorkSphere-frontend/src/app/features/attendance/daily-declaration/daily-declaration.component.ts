@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
@@ -9,7 +8,7 @@ import { AttendanceDeclaration, AttendanceValidationStatus } from '../../../core
 @Component({
   selector: 'app-daily-declaration',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [DatePipe],
   templateUrl: './daily-declaration.component.html',
 })
 export class DailyDeclarationComponent implements OnInit {
@@ -19,7 +18,6 @@ export class DailyDeclarationComponent implements OnInit {
 
   readonly today = new Date().toISOString().slice(0, 10);
   readonly isPresent = signal(true);
-  readonly hoursWorked = signal<number | null>(null);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
@@ -67,7 +65,6 @@ export class DailyDeclarationComponent implements OnInit {
           const decl = declarations[0];
           this.declaration.set(decl);
           this.isPresent.set(decl.status === 'PRESENT');
-          this.hoursWorked.set(decl.hours_worked);
         }
       },
     });
@@ -79,16 +76,10 @@ export class DailyDeclarationComponent implements OnInit {
     this.error.set(null);
     this.success.set(null);
 
-    if (this.isPresent() && (this.hoursWorked() === null || this.hoursWorked() === 0)) {
-      this.error.set('Veuillez saisir vos heures travaillées.');
-      return;
-    }
-
     this.saving.set(true);
     this.attendanceService.declare({
       date: this.today,
       status: this.isPresent() ? 'PRESENT' : 'ABSENT',
-      hours_worked: this.isPresent() ? this.hoursWorked() : null,
     }).subscribe({
       next: (decl) => {
         this.declaration.set(decl);
