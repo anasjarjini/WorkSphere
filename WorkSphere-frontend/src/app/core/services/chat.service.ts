@@ -176,7 +176,11 @@ export class ChatService {
               this.uploadProgress.set(Math.round((100 * event.loaded) / total));
             } else if (event.type === HttpEventType.Response && event.body) {
               const message = event.body.data;
-              this.messages.update((list) => [...list, message]);
+              // L'utilisateur a pu ouvrir un autre fil avant la réponse.
+              // Ne jamais injecter le message du premier fil dans le second.
+              if (this.activeConversationId() === conversationId) {
+                this.messages.update((list) => [...list, message]);
+              }
               subscriber.next(message);
               subscriber.complete();
             }

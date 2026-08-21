@@ -330,11 +330,16 @@ export class MessageThreadComponent implements OnChanges {
   onSend(): void {
     if (!this.canSend() || this.chatService.sending()) return;
 
+    const conversationId = this.conversation.id;
+
     this.chatService
-      .sendMessage(this.conversation.id, this.draft(), this.selectedFiles().map((s) => s.file))
+      .sendMessage(conversationId, this.draft(), this.selectedFiles().map((s) => s.file))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.resetComposer(),
+        // Ne pas effacer le brouillon du nouveau contact après un changement de fil.
+        next: () => {
+          if (this.conversation.id === conversationId) this.resetComposer();
+        },
         error: (error: HttpErrorResponse) => this.fileError.set(this.sendErrorMessage(error)),
       });
   }
