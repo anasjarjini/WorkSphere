@@ -38,6 +38,7 @@ export class ChatService {
   private lastPage = 1;
   private readonly loadedPages = new Set<number>();
   private messagesRequestVersion = 0;
+  private sessionVersion = 0;
 
   private chatTimer: ReturnType<typeof setInterval> | null = null;
   private messagesTimer: ReturnType<typeof setInterval> | null = null;
@@ -45,17 +46,22 @@ export class ChatService {
   // ── Liste des conversations + badge non-lus ──────────────────────────────
 
   fetchChatOverview(): void {
+    const sessionVersion = this.sessionVersion;
     this.loadingConversations.set(true);
     this.http
       .get<{ data: ChatConversation[] }>(`${this.apiUrl}/conversations`)
       .pipe(finalize(() => this.loadingConversations.set(false)))
       .subscribe({
-        next: (res) => this.conversations.set(res.data),
+        next: (res) => {
+          if (this.sessionVersion === sessionVersion) this.conversations.set(res.data);
+        },
       });
     this.http
       .get<{ unread_count: number }>(`${this.apiUrl}/conversations/unread-count`)
       .subscribe({
-        next: (res) => this.unreadCount.set(res.unread_count),
+        next: (res) => {
+          if (this.sessionVersion === sessionVersion) this.unreadCount.set(res.unread_count);
+        },
       });
   }
 
@@ -105,6 +111,35 @@ export class ChatService {
       clearInterval(this.messagesTimer);
       this.messagesTimer = null;
     }
+  }
+
+  /**
+   * Supprime tout état lié à un utilisateur avant une déconnexion ou un
+   * changement de compte. Les réponses HTTP de l'ancienne session sont
+   * ignorées grâce aux versions de requête/session.
+   */
+  resetSession(): void {
+    this.sessionVersion++;
+    this.messagesRequestVersion++;
+    this.stopChatPolling();
+    this.stopMessagePolling();
+
+    for (const url of this.objectUrlCache.values()) URL.revokeObjectURL(url);
+    this.objectUrlCache.clear();
+    this.attachmentUrlRequests.clear();
+    this.loadedPages.clear();
+    this.currentPage = 1;
+    this.lastPage = 1;
+
+    this.conversations.set([]);
+    this.messages.set([]);
+    this.unreadCount.set(0);
+    this.activeConversationId.set(null);
+    this.canLoadOlder.set(false);
+    this.loadingConversations.set(false);
+    this.loadingMessages.set(false);
+    this.sending.set(false);
+    this.uploadProgress.set(0);
   }
 
   fetchMessages(page = 1, silent = false): void {
@@ -169,6 +204,13 @@ export class ChatService {
           reportProgress: true,
           observe: 'events',
         })
+        .pipe(
+          finalize(() => {
+            this.sending.set(false);
+            this.uploadProgress.set(0);
+            this.fetchChatOverview();
+          })
+        )
         .subscribe({
           next: (event) => {
             if (event.type === HttpEventType.UploadProgress) {
@@ -185,16 +227,7 @@ export class ChatService {
               subscriber.complete();
             }
           },
-          error: (err) => {
-            this.sending.set(false);
-            this.uploadProgress.set(0);
-            subscriber.error(err);
-          },
-          complete: () => {
-            this.sending.set(false);
-            this.uploadProgress.set(0);
-            this.fetchChatOverview();
-          },
+          error: (err) => subscriber.error(err),
         });
 
       return () => req.unsubscribe();

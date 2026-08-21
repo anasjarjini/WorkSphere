@@ -53,81 +53,83 @@ const IMAGE_MIME = /^image\/(jpeg|png|webp|gif)$/;
       </div>
 
       <!-- Messages -->
-      <div #scrollContainer (scroll)="onScroll()" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6 bg-surface">
-        @if (chatService.loadingMessages() && messages().length === 0) {
-          <div class="flex justify-center py-10">
-            <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        } @else if (messages().length === 0) {
-          <div class="flex items-center justify-center py-10">
-            <p class="text-body-md text-on-surface-variant">Aucun message — commencez la discussion !</p>
-          </div>
-        }
-
-        @if (chatService.canLoadOlder()) {
-          <div class="flex justify-center">
-            <button (click)="onLoadOlder()" [disabled]="chatService.loadingMessages()"
-              class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer disabled:opacity-50">
-              Charger les messages précédents
-            </button>
-          </div>
-        }
-
-        <!-- Divider date -->
-        <div class="flex justify-center">
-          <span class="text-label-sm text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">Aujourd'hui</span>
-        </div>
-
-        @for (message of messages(); track message.id) {
-          <div class="flex items-end gap-3 max-w-[80%] {{ message.sender_id === currentUserId ? 'ml-auto justify-end' : '' }}">
-            @if (message.sender_id !== currentUserId) {
-              <app-chat-avatar [user]="message.sender" size="sm" class="mb-1 shrink-0" />
-            }
-            <div class="px-3 py-2.5 font-body-md {{ message.sender_id === currentUserId
-              ? 'bg-primary text-white rounded-2xl rounded-br-none shadow-sm'
-              : 'bg-surface-container-high text-on-surface rounded-2xl rounded-bl-none border border-outline-variant/30' }}">
-              @if (message.content) {
-                <p class="text-body-md whitespace-pre-wrap break-words">{{ message.content }}</p>
-              }
-              @for (attachment of message.attachments; track attachment.id) {
-                @if (attachment.type === 'image') {
-                  <div class="relative group mt-2 rounded-lg overflow-hidden border {{ message.sender_id === currentUserId ? 'border-primary-fixed-dim/30' : 'border-outline-variant' }}">
-                    @if (imageUrl(attachment) | async; as url) {
-                      <img [src]="url" [alt]="attachment.file_name" class="max-w-64 max-h-64 rounded-lg object-cover" />
-                    }
-                    <div (click)="openLightbox(attachment)"
-                      class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                      <span class="material-symbols-outlined text-white text-3xl">zoom_in</span>
-                    </div>
-                  </div>
-                } @else {
-                  <button (click)="chatService.downloadAttachment(attachment); $event.stopPropagation()"
-                    class="mt-2 flex items-center gap-3 w-full text-left p-3 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors cursor-pointer">
-                    <div class="w-10 h-10 {{ docIconColor(attachment.mime_type) }} rounded flex items-center justify-center shrink-0">
-                      <span class="material-symbols-outlined">{{ docIcon(attachment.mime_type) }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-label-md text-sm font-semibold truncate text-on-surface">{{ attachment.file_name }}</p>
-                      <p class="text-label-sm text-on-surface-variant">{{ formatSize(attachment.file_size) }}</p>
-                    </div>
-                    <button (click)="chatService.downloadAttachment(attachment); $event.stopPropagation()"
-                      class="p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors" title="Télécharger">
-                      <span class="material-symbols-outlined">download</span>
-                    </button>
-                  </button>
-                }
-              }
-              <p class="mt-1 text-right {{ message.sender_id === currentUserId ? 'text-primary-fixed-dim' : 'text-on-surface-variant' }} text-[10px]">
-                {{ message.created_at | date:'HH:mm':'':'fr' }}
-                @if (message.sender_id === currentUserId && message.read_at) {
-                  <span class="inline-flex align-middle ml-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M20 6 9 17l-5-5"/></svg>
-                  </span>
-                }
-              </p>
+      <div #scrollContainer (scroll)="onScroll()" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 bg-surface">
+        <div class="space-y-6">
+          @if (chatService.loadingMessages() && messages().length === 0) {
+            <div class="flex justify-center py-10">
+              <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
-          </div>
-        }
+          } @else if (messages().length === 0) {
+            <div class="flex items-center justify-center py-10">
+              <p class="text-body-md text-on-surface-variant">Aucun message — commencez la discussion !</p>
+            </div>
+          } @else {
+            @if (chatService.canLoadOlder()) {
+              <div class="flex justify-center">
+                <button (click)="onLoadOlder()" [disabled]="chatService.loadingMessages()"
+                  class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer disabled:opacity-50">
+                  Charger les messages précédents
+                </button>
+              </div>
+            }
+
+            <!-- Divider date -->
+            <div class="flex justify-center">
+              <span class="text-label-sm text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">Aujourd'hui</span>
+            </div>
+
+            @for (message of messages(); track message.id) {
+              <div class="w-full min-w-0 flex items-end gap-3 {{ message.sender_id === currentUserId ? 'justify-end' : '' }}">
+                @if (message.sender_id !== currentUserId) {
+                  <app-chat-avatar [user]="message.sender" size="sm" class="mb-1 shrink-0" />
+                }
+                <div class="min-w-0 max-w-[80%] px-3 py-2.5 font-body-md {{ message.sender_id === currentUserId
+                  ? 'bg-primary text-white rounded-2xl rounded-br-none shadow-sm'
+                  : 'bg-surface-container-high text-on-surface rounded-2xl rounded-bl-none border border-outline-variant/30' }}">
+                  @if (message.content) {
+                    <p class="text-body-md whitespace-pre-wrap break-words">{{ message.content }}</p>
+                  }
+                  @for (attachment of message.attachments; track attachment.id) {
+                    @if (attachment.type === 'image') {
+                      <div class="relative group mt-2 rounded-lg overflow-hidden border {{ message.sender_id === currentUserId ? 'border-primary-fixed-dim/30' : 'border-outline-variant' }}">
+                        @if (imageUrl(attachment) | async; as url) {
+                          <img [src]="url" [alt]="attachment.file_name" class="max-w-64 max-h-64 rounded-lg object-cover" />
+                        }
+                        <div (click)="openLightbox(attachment)"
+                          class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                          <span class="material-symbols-outlined text-white text-3xl">zoom_in</span>
+                        </div>
+                      </div>
+                    } @else {
+                      <div (click)="chatService.downloadAttachment(attachment)"
+                        class="mt-2 flex items-center gap-3 w-full text-left p-3 rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-primary transition-colors cursor-pointer">
+                        <div class="w-10 h-10 {{ docIconColor(attachment.mime_type) }} rounded flex items-center justify-center shrink-0">
+                          <span class="material-symbols-outlined">{{ docIcon(attachment.mime_type) }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="font-label-md text-sm font-semibold truncate text-on-surface">{{ attachment.file_name }}</p>
+                          <p class="text-label-sm text-on-surface-variant">{{ formatSize(attachment.file_size) }}</p>
+                        </div>
+                        <button type="button" (click)="chatService.downloadAttachment(attachment); $event.stopPropagation()"
+                          class="p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors" title="Télécharger">
+                          <span class="material-symbols-outlined">download</span>
+                        </button>
+                      </div>
+                    }
+                  }
+                  <p class="mt-1 text-right {{ message.sender_id === currentUserId ? 'text-primary-fixed-dim' : 'text-on-surface-variant' }} text-[10px]">
+                    {{ message.created_at | date:'HH:mm':'':'fr' }}
+                    @if (message.sender_id === currentUserId && message.read_at) {
+                      <span class="inline-flex align-middle ml-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M20 6 9 17l-5-5"/></svg>
+                      </span>
+                    }
+                  </p>
+                </div>
+              </div>
+            }
+          }
+        </div>
       </div>
 
       <!-- Aperçu des fichiers sélectionnés -->
@@ -218,10 +220,10 @@ export class MessageThreadComponent implements OnChanges {
       const list = this.messages();
       if (list.length === 0) return;
       if (!this.stickToBottom()) return;
-      setTimeout(() => {
-        const container = this.scrollContainerRef()?.nativeElement;
-        if (container) container.scrollTop = container.scrollHeight;
-      }, 0);
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => this.scrollToBottom());
+      });
     });
   }
 
@@ -273,6 +275,12 @@ export class MessageThreadComponent implements OnChanges {
     setTimeout(() => {
       if (container) container.scrollTop = container.scrollHeight - previousHeight;
     }, 50);
+  }
+
+  private scrollToBottom(): void {
+    const container = this.scrollContainerRef()?.nativeElement;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
   }
 
   onFilesPicked(event: Event): void {

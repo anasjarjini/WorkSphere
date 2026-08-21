@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/features/admin/employee-import/employee-import.component.scss", "src/app/features/admin/employee-import/employee-import.component.scss"],
+  "sourcesContent": [".drop-zone-active {\n  border-color: var(--color-primary, #7c3aed) !important;\n  background-color: #f3ebfa;\n}\n\n.scale-\\[1\\.02\\] {\n  transform: scale(1.02);\n}\n", ".drop-zone-active {\n  border-color: var(--color-primary, #7c3aed) !important;\n  background-color: #f3ebfa;\n}\n\n.scale-\\[1\\.02\\] {\n  transform: scale(1.02);\n}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL2hvbWUvYW5hc2phcmppbmkvTXVzaWMvUHJvamVjdCUyMHN0YWdlL1dvcmtTcGhlcmUvV29ya1NwaGVyZS1mcm9udGVuZC9zcmMvYXBwL2ZlYXR1cmVzL2FkbWluL2VtcGxveWVlLWltcG9ydC9lbXBsb3llZS1pbXBvcnQuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDRTtFQUNBOzs7QUFHRjtFQUNFIiwic291cmNlc0NvbnRlbnQiOlsiLmRyb3Atem9uZS1hY3RpdmUge1xuICBib3JkZXItY29sb3I6IHZhcigtLWNvbG9yLXByaW1hcnksICM3YzNhZWQpICFpbXBvcnRhbnQ7XG4gIGJhY2tncm91bmQtY29sb3I6ICNmM2ViZmE7XG59XG5cbi5zY2FsZS1cXFsxXFwuMDJcXF0ge1xuICB0cmFuc2Zvcm06IHNjYWxlKDEuMDIpO1xufVxuIl19 */"],
+  "mappings": ";AAAA,CAAA;AACE,gBAAA,IAAA,eAAA,EAAA;AACA,oBAAA;ACCF;ADEA,CAAA;AACE,aAAA,MAAA;ACCF;",
+  "names": []
+}

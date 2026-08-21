@@ -1,5 +1,4 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatService } from '../../core/services/chat.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -10,7 +9,7 @@ import { MessageThreadComponent } from './message-thread.component';
 @Component({
   selector: 'app-chat-layout',
   standalone: true,
-  imports: [DatePipe, ChatAvatarComponent, MessageThreadComponent],
+  imports: [ChatAvatarComponent, MessageThreadComponent],
   host: {
     class: 'flex flex-1 min-h-0 min-w-0',
   },

@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, input, output, signal } from '@angular/core';
 
 @Component({
   selector: 'app-file-uploader',
@@ -10,6 +10,8 @@ export class FileUploaderComponent {
   readonly maxSizeMB = input<number>(10);
   readonly label = input<string>('Fichier');
   readonly fileSelected = output<File>();
+
+  @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
 
   readonly isDragOver = signal(false);
   readonly selectedFile = signal<File | null>(null);
@@ -43,6 +45,10 @@ export class FileUploaderComponent {
   clear(): void {
     this.selectedFile.set(null);
     this.errorMessage.set(null);
+    this.isDragOver.set(false);
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   private validateAndEmit(file: File): void {

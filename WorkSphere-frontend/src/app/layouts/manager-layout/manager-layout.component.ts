@@ -4,7 +4,9 @@
  */
 
 import { Component, inject, computed, signal, HostListener } from '@angular/core';
-import { RouterModule, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -31,7 +33,14 @@ export class ManagerLayoutComponent {
   isNotificationOpen = signal(false);
   isProfileMenuOpen = signal(false);
   readonly showNotificationBadge = signal(false);
-  readonly isChatRoute = computed(() => this.router.url.includes('/chat'));
+  readonly isChatRoute = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects.includes('/chat')),
+      startWith(this.router.url.includes('/chat')),
+    ),
+    { initialValue: this.router.url.includes('/chat') },
+  );
   private readonly imageUrlService = inject(ImageUrlService);
 
   readonly currentAvatarUrl = computed(() =>

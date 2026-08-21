@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/features/leaves/team-leave-validation/team-leave-validation.component.ts"],
+  "sourcesContent": ["import { Component } from '@angular/core';\nimport { LeaveValidationComponent } from '../leave-validation/leave-validation.component';\n\n@Component({\n  selector: 'app-team-leave-validation',\n  standalone: true,\n  imports: [LeaveValidationComponent],\n  template: `<app-leave-validation queue=\"manager\" />`,\n})\nexport class TeamLeaveValidationComponent {}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;AASM,IAAO,+BAAP,MAAO,8BAA4B;;qCAA5B,+BAA4B;EAAA;yEAA5B,+BAA4B,WAAA,CAAA,CAAA,2BAAA,CAAA,GAAA,OAAA,GAAA,MAAA,GAAA,QAAA,CAAA,CAAA,SAAA,SAAA,CAAA,GAAA,UAAA,SAAA,sCAAA,IAAA,KAAA;AAAA,QAAA,KAAA,GAAA;AAF5B,MAAA,oBAAA,GAAA,wBAAA,CAAA;;oBADD,wBAAwB,GAAA,eAAA,EAAA,CAAA;;;sEAGvB,8BAA4B,CAAA;UANxC;WAAU;MACT,UAAU;MACV,YAAY;MACZ,SAAS,CAAC,wBAAwB;MAClC,UAAU;KACX;;;;6EACY,8BAA4B,EAAA,WAAA,gCAAA,UAAA,oFAAA,YAAA,GAAA,CAAA;AAAA,GAAA;",
+  "names": []
+}

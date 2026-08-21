@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, input, output, signal, computed, OnInit, OnChanges, SimpleChanges, inject, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../../../core/services/task.service';
@@ -57,6 +57,7 @@ export class TaskDetailPanelComponent implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  @ViewChild(FileUploaderComponent) private fileUploader?: FileUploaderComponent;
 
   readonly currentUserId = computed(() => this.user()?.id);
   readonly currentUserRole = computed(() => this.user()?.role);
@@ -388,7 +389,10 @@ export class TaskDetailPanelComponent implements OnInit {
     const taskId = this.currentTask()?.id;
     if (!taskId) return;
     this.attachmentService.uploadAttachment(taskId, file).subscribe({
-      next: () => this.loadAttachments(taskId),
+      next: () => {
+        this.loadAttachments(taskId);
+        this.fileUploader?.clear();
+      },
     });
   }
 

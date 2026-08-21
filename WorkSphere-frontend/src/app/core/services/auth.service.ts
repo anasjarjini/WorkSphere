@@ -12,6 +12,7 @@ import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {  User } from '../models/user.model';
 import { AuthResponse } from '../models/uthResponse.model';
+import { ChatService } from './chat.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +21,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly apiUrl = environment.apiUrl;
   private readonly tokenKey = 'auth_token';
+  private readonly chatService = inject(ChatService);
 
   /** Signal contenant l'utilisateur actuellement connecté, ou null */
   readonly currentUser = signal<User | null>(null);
@@ -56,6 +58,7 @@ export class AuthService {
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
       tap((response) => {
+        this.chatService.resetSession();
         sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
@@ -77,6 +80,7 @@ export class AuthService {
       password_confirmation
     }).pipe(
       tap((response) => {
+        this.chatService.resetSession();
         sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
@@ -101,6 +105,7 @@ export class AuthService {
   registerCompany(payload: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register-company`, payload).pipe(
       tap((response) => {
+        this.chatService.resetSession();
         sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
@@ -216,6 +221,7 @@ export class AuthService {
    * ou quand le token est invalide/expiré.
    */
   clearSession(): void {
+    this.chatService.resetSession();
     sessionStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.authReady.set(true);

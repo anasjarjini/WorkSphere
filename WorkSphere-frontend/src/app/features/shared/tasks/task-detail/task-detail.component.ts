@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, ViewChild, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -53,6 +53,7 @@ export class TaskDetailComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly history = signal<TaskHistoryEntry[]>([]);
   readonly newCommentContent = signal('');
+  @ViewChild(FileUploaderComponent) private fileUploader?: FileUploaderComponent;
 
   private taskId!: number;
 
@@ -253,7 +254,10 @@ export class TaskDetailComponent implements OnInit {
 
   onAttachmentSelected(file: File): void {
     this.attachmentService.uploadAttachment(this.taskId, file).subscribe({
-      next: () => this.loadAttachments(this.taskId),
+      next: () => {
+        this.loadAttachments(this.taskId);
+        this.fileUploader?.clear();
+      },
       error: () => {}
     });
   }
