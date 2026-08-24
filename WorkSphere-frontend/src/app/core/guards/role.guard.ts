@@ -29,10 +29,10 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
   const expectedRoles: string[] = route.data['roles'] || [];
 
   // 4. On utilise le nouveau champ `role` (ENUM) comme rôle principal
-  const userRole = user.role || '';
+  const userRole = (user.role || '').trim().toUpperCase();
 
   // 5. Si le rôle est autorisé, on laisse passer
-  if (expectedRoles.includes(userRole)) {
+  if (expectedRoles.map(r => r.toUpperCase()).includes(userRole)) {
     return true;
   }
 

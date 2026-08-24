@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/features/home/home.component.scss", "src/app/features/home/home.component.scss"],
-  "sourcesContent": ["@keyframes bounce-subtle {\n  0%, 100% { transform: translateY(0); }\n  50% { transform: translateY(-8px); }\n}\n.animate-bounce-subtle {\n  animation: bounce-subtle 4s ease-in-out infinite;\n}\n", "@keyframes bounce-subtle {\n  0%, 100% {\n    transform: translateY(0);\n  }\n  50% {\n    transform: translateY(-8px);\n  }\n}\n.animate-bounce-subtle {\n  animation: bounce-subtle 4s ease-in-out infinite;\n}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL2hvbWUvYW5hc2phcmppbmkvTXVzaWMvUHJvamVjdCUyMHN0YWdlL1dvcmtTcGhlcmUvV29ya1NwaGVyZS1mcm9udGVuZC9zcmMvYXBwL2ZlYXR1cmVzL2hvbWUvaG9tZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFO0lBQVc7O0VBQ1g7SUFBTTs7O0FBRVI7RUFDRSIsInNvdXJjZXNDb250ZW50IjpbIkBrZXlmcmFtZXMgYm91bmNlLXN1YnRsZSB7XG4gIDAlLCAxMDAlIHsgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDApOyB9XG4gIDUwJSB7IHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtOHB4KTsgfVxufVxuLmFuaW1hdGUtYm91bmNlLXN1YnRsZSB7XG4gIGFuaW1hdGlvbjogYm91bmNlLXN1YnRsZSA0cyBlYXNlLWluLW91dCBpbmZpbml0ZTtcbn1cbiJdfQ== */"],
-  "mappings": ";AAAA,WAAA;AACE;AAAW,eAAA,WAAA;ACEX;ADDA;AAAM,eAAA,WAAA;ACIN;AACF;ADHA,CAAA;AACE,aAAA,cAAA,GAAA,YAAA;ACKF;",
-  "names": []
-}

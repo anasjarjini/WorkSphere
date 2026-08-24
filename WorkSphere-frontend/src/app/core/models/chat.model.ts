@@ -6,6 +6,8 @@ export interface ChatUserLite {
   role: string;
   job_title: string | null;
   avatar_url: string | null;
+  is_online?: boolean;
+  last_active_at?: string | null;
 }
 
 export interface ChatAttachment {
@@ -43,6 +45,7 @@ export interface DirectoryUser {
   role: string;
   job_title: string | null;
   avatar_url: string | null;
+  is_online?: boolean;
 }
 
 export interface MessagesPage {

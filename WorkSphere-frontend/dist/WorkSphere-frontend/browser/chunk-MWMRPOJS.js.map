@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/features/leaves/hr-leave-history/hr-leave-history.component.ts"],
-  "sourcesContent": ["import { Component } from '@angular/core';\nimport { LeaveHistoryComponent } from '../leave-history/leave-history.component';\n\n@Component({\n  selector: 'app-hr-leave-history',\n  standalone: true,\n  imports: [LeaveHistoryComponent],\n  template: `<app-leave-history scope=\"all\" />`,\n})\nexport class HrLeaveHistoryComponent {}\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;AASM,IAAO,0BAAP,MAAO,yBAAuB;;qCAAvB,0BAAuB;EAAA;yEAAvB,0BAAuB,WAAA,CAAA,CAAA,sBAAA,CAAA,GAAA,OAAA,GAAA,MAAA,GAAA,QAAA,CAAA,CAAA,SAAA,KAAA,CAAA,GAAA,UAAA,SAAA,iCAAA,IAAA,KAAA;AAAA,QAAA,KAAA,GAAA;AAFvB,MAAA,oBAAA,GAAA,qBAAA,CAAA;;oBADD,qBAAqB,GAAA,eAAA,EAAA,CAAA;;;sEAGpB,yBAAuB,CAAA;UANnC;WAAU;MACT,UAAU;MACV,YAAY;MACZ,SAAS,CAAC,qBAAqB;MAC/B,UAAU;KACX;;;;6EACY,yBAAuB,EAAA,WAAA,2BAAA,UAAA,0EAAA,YAAA,GAAA,CAAA;AAAA,GAAA;",
-  "names": []
-}

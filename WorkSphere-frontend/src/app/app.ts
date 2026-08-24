@@ -10,6 +10,7 @@ import { AuthService } from './core/services/auth.service';
 import { LoadingComponent } from './shared/components/loading/loading.component';
 import { ToastContainerComponent } from './shared/components/toast/toast.component';
 import { ThemeService } from './core/services/theme.service';
+import { HeartbeatService } from './core/services/heartbeat.service';
 
 @Component({
   selector: 'app-root',
@@ -22,6 +23,8 @@ export class App implements OnInit {
   // ThemeService est injecté ici pour garantir son initialisation
   // (constructeur → applyTheme) avant tout rendu de layout.
   private readonly themeService = inject(ThemeService);
+  // Ensure heartbeat service is constructed so it can react to auth state.
+  private readonly heartbeatService = inject(HeartbeatService);
   protected readonly isAuthReady = this.authService.authReady;
 
   ngOnInit(): void {

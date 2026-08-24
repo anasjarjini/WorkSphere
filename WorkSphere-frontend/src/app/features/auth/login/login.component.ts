@@ -45,12 +45,20 @@ export class LoginComponent {
     const { email, password } = this.loginForm.getRawValue();
 
     this.authService.login(email, password).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading.set(false);
+        // Debug: log API response and computed redirect to help diagnose why
+        // the app might remain on the login page despite a stored token.
+
+
         const user = this.authService.currentUser();
         const role = user?.role || '';
         const redirectPath = this.authService.getRedirectPathForRole(role);
-        this.router.navigate([redirectPath]);
+        // Use window.location.href instead of this.router.navigate
+        // to force a full Angular bootstrap on the new route.
+        // This bypasses any strict timing issues with guards and signals
+        // that could cancel the navigation right after login.
+        window.location.href = redirectPath;
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);

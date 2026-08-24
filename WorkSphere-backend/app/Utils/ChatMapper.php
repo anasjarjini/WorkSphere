@@ -58,6 +58,8 @@ class ChatMapper
             'role' => $user->role,
             'job_title' => $user->job_title,
             'avatar_url' => $user->avatar_url,
+            'is_online' => (bool) ($user->is_online ?? false),
+            'last_active_at' => $user->last_active_at?->toISOString(),
         ];
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\ManagerTeamController;
 use App\Http\Controllers\MessageAttachmentController;
+use App\Http\Controllers\HeartbeatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
@@ -58,6 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'storeMessage']);
     Route::get('/message-attachments/{attachment}/download', [MessageAttachmentController::class, 'download']);
+    // Lightweight presence heartbeat (called frequently)
+    Route::post('/heartbeat', [HeartbeatController::class, 'store']);
 
     // HR_ADMIN routes
     Route::middleware('check_role:HR_ADMIN')->group(function () {

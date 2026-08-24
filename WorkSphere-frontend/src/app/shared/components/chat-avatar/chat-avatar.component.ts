@@ -16,7 +16,7 @@ import { ChatUserLite } from '../../../core/models/chat.model';
         </div>
       }
       @if (showOnline) {
-        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 {{ borderColor }} rounded-full"></span>
+        <span class="absolute bottom-0 right-0 w-3 h-3 border-2 {{ borderColor }} rounded-full {{ user?.is_online ? 'bg-green-500' : 'bg-on-surface-variant' }}"></span>
       }
     </div>
   `,

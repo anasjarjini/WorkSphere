@@ -190,7 +190,8 @@ export class AuthService {
    * @returns Chemin de redirection
    */
   getRedirectPathForRole(role: string): string {
-    switch (role) {
+    const normalizedRole = role ? role.trim().toUpperCase() : '';
+    switch (normalizedRole) {
       case 'HR_ADMIN':
         return '/admin/dashboard';
       case 'MANAGER':

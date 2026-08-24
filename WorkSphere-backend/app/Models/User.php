@@ -43,7 +43,8 @@ class User extends Authenticatable
      * Les attributs qui doivent être inclus dans la sérialisation JSON
      * même s'ils ne sont pas dans la base de données (accesseurs dynamiques).
      */
-    protected $appends = ['avatar_url'];
+    protected $appends = ['avatar_url', 'is_online'];
+
 
     /**
      * Get the attributes that should be cast.
@@ -57,7 +58,29 @@ class User extends Authenticatable
             'password' => 'hashed',
             'hire_date' => 'date',
             'salary' => 'decimal:2',
+            'last_active_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Indique si l'utilisateur est considéré comme "en ligne".
+     * Actif si `last_active_at` est dans la dernière minute.
+     */
+    public function getIsOnlineAttribute(): bool
+    {
+        if (! $this->last_active_at) {
+            return false;
+        }
+
+        return $this->last_active_at->gt(now()->subMinute());
+    }
+
+    /**
+     * Backwards-compatible method used by tests and callers.
+     */
+    public function isOnline(): bool
+    {
+        return $this->getIsOnlineAttribute();
     }
 
     /**

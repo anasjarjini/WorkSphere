@@ -31,6 +31,7 @@ class UserResource extends JsonResource
             'salary' => $this->salary,
             'is_active' => $this->status === 'ACTIVE',
             'avatar_url' => $this->avatar_url,
+            'last_active_at' => $this->last_active_at,
             'created_at' => $this->created_at,
         ];
     }

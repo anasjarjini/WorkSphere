@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
+import { LastSeenPipe } from '../../shared/pipes/last-seen.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatService } from '../../core/services/chat.service';
@@ -30,7 +31,7 @@ const IMAGE_MIME = /^image\/(jpeg|png|webp|gif)$/;
 @Component({
   selector: 'app-message-thread',
   standalone: true,
-  imports: [DatePipe, AsyncPipe, ChatAvatarComponent],
+  imports: [DatePipe, AsyncPipe, ChatAvatarComponent, LastSeenPipe],
   host: {
     class: 'flex flex-1 min-h-0 min-w-0 w-full',
   },
@@ -47,7 +48,9 @@ const IMAGE_MIME = /^image\/(jpeg|png|webp|gif)$/;
           </div>
           <div>
             <h2 class="font-label-md text-label-md font-bold text-on-surface">{{ displayName(conversation.other_user) }}</h2>
-            <p class="text-label-sm text-on-surface-variant">En ligne</p>
+            <p class="text-label-sm {{ conversation.other_user?.is_online ? 'text-primary' : 'text-on-surface-variant' }}"> 
+              @if (conversation.other_user?.is_online) { En ligne } @else { {{ conversation.other_user?.last_active_at | lastSeen }} }
+            </p>
           </div>
         </div>
       </div>
@@ -73,10 +76,10 @@ const IMAGE_MIME = /^image\/(jpeg|png|webp|gif)$/;
               </div>
             }
 
-            <!-- Divider date -->
+            <!-- Divider date
             <div class="flex justify-center">
               <span class="text-label-sm text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">Aujourd'hui</span>
-            </div>
+            </div> -->
 
             @for (message of messages(); track message.id) {
               <div class="w-full min-w-0 flex items-end gap-3 {{ message.sender_id === currentUserId ? 'justify-end' : '' }}">

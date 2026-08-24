@@ -37,7 +37,7 @@ class AnnouncementTest extends TestCase
             $table->id();
             $table->string('name');
             $table->string('first_name');
-            $table->string('last_namSendEveningReminderse');
+            $table->string('last_name');
             $table->string('email')->unique();
             $table->string('password');
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();

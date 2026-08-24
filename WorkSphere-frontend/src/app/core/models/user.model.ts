@@ -32,6 +32,7 @@ export interface User {
   company?: Company;
   department?: Department;
   roles?: Role[];
+  last_active_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }

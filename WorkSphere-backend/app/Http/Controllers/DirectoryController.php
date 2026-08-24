@@ -49,6 +49,7 @@ class DirectoryController extends Controller
                 'role' => $user->role,
                 'job_title' => $user->job_title,
                 'avatar_url' => $user->avatar_url,
+                'is_online' => (bool) ($user->is_online ?? false),
             ]),
         ]);
     }
