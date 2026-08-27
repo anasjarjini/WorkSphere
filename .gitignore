@@ -3,4 +3,5 @@
 vendor/
 dist/
 node_modules/
-*.log
+*.log.env
+.envv
