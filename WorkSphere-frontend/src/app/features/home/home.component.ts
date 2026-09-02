@@ -1,11 +1,5 @@
-/**
- * Page d'accueil statique (landing page) de WorkSphere.
- * Présente la plateforme avec un hero, des fonctionnalités et un footer.
- */
-
-import { Component, inject, computed } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnDestroy, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -14,21 +8,62 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
-  private authService = inject(AuthService);
+export class HomeComponent implements AfterViewInit, OnDestroy {
+  readonly isMenuOpen = signal(false);
+  readonly isScrolled = signal(false);
+  readonly currentYear = new Date().getFullYear();
 
-  readonly isAuthenticated = this.authService.isAuthenticated;
+  private revealObserver?: IntersectionObserver;
 
+  ngAfterViewInit(): void {
+    this.onWindowScroll();
+    const elements = document.querySelectorAll<HTMLElement>('[data-reveal]');
 
-
-  /**
-   * Défilement fluide vers une section de la page.
-   * @param elementId ID de l'élément cible
-   */
-  scrollTo(elementId: string): void {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((element) => element.classList.add('is-visible'));
+      return;
     }
+
+    this.revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            this.revealObserver?.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -48px' }
+    );
+
+    elements.forEach((element, index) => {
+      element.style.setProperty('--reveal-delay', `${Math.min(index % 4, 3) * 70}ms`);
+      this.revealObserver?.observe(element);
+    });
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.isScrolled.set(window.scrollY > 24);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (window.innerWidth >= 900 && this.isMenuOpen()) {
+      this.isMenuOpen.set(false);
+    }
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  scrollTo(elementId: string): void {
+    this.isMenuOpen.set(false);
+    document.getElementById(elementId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  ngOnDestroy(): void {
+    this.revealObserver?.disconnect();
   }
 }
