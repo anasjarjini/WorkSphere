@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AttendanceDeclarationService } from '../../../core/services/attendance-declaration.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { AbsenceService } from '../../../core/services/absence.service';
@@ -10,7 +11,7 @@ import { AttendanceStatusBadgeComponent } from '../attendance-status-badge/atten
 @Component({
   selector: 'app-team-attendance-today',
   standalone: true,
-  imports: [DatePipe, AttendanceStatusBadgeComponent],
+  imports: [DatePipe, FormsModule, AttendanceStatusBadgeComponent],
   templateUrl: './team-attendance-today.component.html',
 })
 export class TeamAttendanceTodayComponent implements OnInit {
@@ -23,16 +24,39 @@ export class TeamAttendanceTodayComponent implements OnInit {
   readonly todayDeclarations = signal<AttendanceDeclaration[]>([]);
   readonly onLeaveIds = signal<Set<number>>(new Set());
   readonly loading = signal(false);
+  readonly searchQuery = signal('');
+
+  // Modal Signals
+  readonly selectedEmployeeForHistory = signal<Employee | null>(null);
+  readonly employeeHistory = signal<AttendanceDeclaration[]>([]);
+  readonly loadingHistory = signal(false);
+  readonly selectedEmployeeForEdit = signal<{ employee: Employee; declaration: AttendanceDeclaration | null } | null>(null);
+  readonly editSelectedStatus = signal<'PRESENT' | 'ABSENT' | null>(null);
+  readonly processingAction = signal(false);
+  readonly rejectionReason = signal('');
 
   readonly teamStatus = computed(() => {
     const members = this.teamMembers();
     const todayDecls = this.todayDeclarations();
     const onLeave = this.onLeaveIds();
-    return members.map((m) => ({
+    const query = this.searchQuery().toLowerCase().trim();
+
+    let list = members.map((m) => ({
       employee: m,
       declaration: todayDecls.find((d) => d.user_id === m.id) ?? null,
       isOnLeave: onLeave.has(m.id),
     }));
+
+    if (query) {
+      list = list.filter((i) => {
+        const fullName = `${i.employee.first_name} ${i.employee.last_name}`.toLowerCase();
+        const email = (i.employee.email || '').toLowerCase();
+        const job = (i.employee.job_title || '').toLowerCase();
+        return fullName.includes(query) || email.includes(query) || job.includes(query);
+      });
+    }
+
+    return list;
   });
 
   readonly counts = computed(() => {
@@ -66,7 +90,7 @@ export class TeamAttendanceTodayComponent implements OnInit {
   }
 
   private loadTeam(): void {
-    this.employeeService.getManagerTeam().subscribe({
+    this.employeeService.getManagerTeam({ per_page: 100 }).subscribe({
       next: (res) => this.teamMembers.set(res.data),
     });
   }
@@ -77,6 +101,10 @@ export class TeamAttendanceTodayComponent implements OnInit {
       next: (decls) => { this.todayDeclarations.set(decls); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
   }
 
   initials(firstName: string, lastName: string): string {
@@ -91,4 +119,100 @@ export class TeamAttendanceTodayComponent implements OnInit {
       default: return 'Membre';
     }
   }
+
+  // Modal Handlers
+  openHistoryModal(emp: Employee): void {
+    this.selectedEmployeeForHistory.set(emp);
+    this.loadingHistory.set(true);
+    this.attendanceService.getDeclarations({ user_id: emp.id }).subscribe({
+      next: (decls) => {
+        this.employeeHistory.set(decls);
+        this.loadingHistory.set(false);
+      },
+      error: () => {
+        this.employeeHistory.set([]);
+        this.loadingHistory.set(false);
+      }
+    });
+  }
+
+  closeHistoryModal(): void {
+    this.selectedEmployeeForHistory.set(null);
+    this.employeeHistory.set([]);
+  }
+
+  openEditModal(item: { employee: Employee; declaration: AttendanceDeclaration | null }): void {
+    this.selectedEmployeeForEdit.set(item);
+    this.editSelectedStatus.set(item.declaration?.status ?? null);
+    this.rejectionReason.set('');
+  }
+
+  closeEditModal(): void {
+    this.selectedEmployeeForEdit.set(null);
+    this.rejectionReason.set('');
+  }
+
+  approveDeclaration(declId: number): void {
+    this.processingAction.set(true);
+    this.attendanceService.approve(declId).subscribe({
+      next: () => {
+        this.processingAction.set(false);
+        this.closeEditModal();
+        this.loadToday();
+      },
+      error: () => {
+        this.processingAction.set(false);
+      }
+    });
+  }
+
+  rejectDeclaration(declId: number): void {
+    this.processingAction.set(true);
+    const reason = this.rejectionReason().trim() || 'Rejeté par le manager';
+    this.attendanceService.reject(declId, reason).subscribe({
+      next: () => {
+        this.processingAction.set(false);
+        this.closeEditModal();
+        this.loadToday();
+      },
+      error: () => {
+        this.processingAction.set(false);
+      }
+    });
+  }
+
+  forceDeclare(status: 'PRESENT' | 'ABSENT'): void {
+    const editData = this.selectedEmployeeForEdit();
+    if (!editData) return;
+    const userId = editData.employee.id;
+    this.processingAction.set(true);
+
+    if (editData.declaration) {
+      this.attendanceService.update(editData.declaration.id, { status, validation_status: 'VALIDEE' }).subscribe({
+        next: () => {
+          this.processingAction.set(false);
+          this.closeEditModal();
+          this.loadToday();
+        },
+        error: () => {
+          this.processingAction.set(false);
+          this.closeEditModal();
+        }
+      });
+    } else {
+      // @ts-ignore
+      this.attendanceService.declare({ date: this.todayStr, status, user_id: userId }).subscribe({
+        next: () => {
+          this.processingAction.set(false);
+          this.closeEditModal();
+          this.loadToday();
+        },
+        error: () => {
+          this.processingAction.set(false);
+          this.closeEditModal();
+        }
+      });
+    }
+  }
 }
+

@@ -12,7 +12,7 @@ import { Task } from '../../../core/models/task.model';
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [RouterModule, DatePipe],
+  imports: [RouterModule],
   templateUrl: './dashboard.component.html'
 })
 export class ManagerDashboardComponent implements OnInit {
@@ -58,7 +58,7 @@ export class ManagerDashboardComponent implements OnInit {
 
   donutGradient = computed(() => {
     const p = this.taskPct();
-    const colors = ['#7c3aed', '#0d9488', '#f59e0b', '#ef4444'];
+    const colors = ['#0ea5e9', '#0d9488', '#f59e0b', '#ef4444'];
     const segments = [p.todo, p.inProgress, p.review, p.done];
     const stops: string[] = [];
     let current = 0;

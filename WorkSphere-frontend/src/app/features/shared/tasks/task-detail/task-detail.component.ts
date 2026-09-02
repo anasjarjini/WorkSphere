@@ -262,8 +262,8 @@ export class TaskDetailComponent implements OnInit {
     });
   }
 
-  getAttachmentUrl(attachment: TaskAttachment): string {
-    return this.attachmentService.getDownloadUrl(attachment);
+  downloadAttachment(attachment: TaskAttachment): void {
+    this.attachmentService.downloadAttachment(attachment).subscribe();
   }
 
   formatFileSize(bytes: number): string {

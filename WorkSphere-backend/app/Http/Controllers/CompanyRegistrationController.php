@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Company;
 use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ class CompanyRegistrationController extends Controller
             $validated = $request->validated();
 
             // 1. Create Company
-            $slug = Str::slug($validated['company_name']) . '-' . Str::random(6);
+            $slug = Str::slug($validated['company_name']).'-'.Str::random(6);
             $company = Company::create([
                 'name' => $validated['company_name'],
                 'slug' => $slug,
@@ -33,30 +34,30 @@ class CompanyRegistrationController extends Controller
 
             // 2. Create User (avec tous les champs, plus de table Employee)
             $user = User::create([
-                'name'       => $validated['admin_first_name'] . ' ' . $validated['admin_last_name'],
+                'name' => $validated['admin_first_name'].' '.$validated['admin_last_name'],
                 'first_name' => $validated['admin_first_name'],
-                'last_name'  => $validated['admin_last_name'],
-                'email'      => $validated['admin_email'],
-                'password'   => Hash::make($validated['admin_password']),
+                'last_name' => $validated['admin_last_name'],
+                'email' => $validated['admin_email'],
+                'password' => Hash::make($validated['admin_password']),
                 'company_id' => $company->id,
-                'role'       => 'HR_ADMIN',
-                'status'     => 'ACTIVE',
-                'job_title'  => 'Administrateur RH',
+                'role' => 'HR_ADMIN',
+                'status' => 'ACTIVE',
+                'job_title' => 'Administrateur RH',
             ]);
-
-            // 3. Generate Sanctum token
-            $token = $user->createToken('auth_token')->plainTextToken;
 
             DB::commit();
 
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+
             return response()->json([
                 'company' => new CompanyResource($company),
-                'user'    => new UserResource($user),
-                'token'   => $token,
+                'user' => new UserResource($user),
             ], 201);
 
         } catch (Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de l\'inscription.',
             ], 500);

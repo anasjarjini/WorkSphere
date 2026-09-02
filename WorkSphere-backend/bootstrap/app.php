@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\CheckUserRole;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,11 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
+        $middleware->append(SecurityHeaders::class);
+
         $middleware->alias([
-            'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'check_role'         => \App\Http\Middleware\CheckUserRole::class,
+            'check_role' => CheckUserRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

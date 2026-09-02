@@ -1,21 +1,27 @@
-/**
- * Intercepteur fonctionnel injectant le token d'authentification Bearer
- * dans l'en-tête d'autorisation de chaque requête vers l'API.
- */
-
 import { HttpInterceptorFn } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+function cookieValue(name: string): string | null {
+  const prefix = `${encodeURIComponent(name)}=`;
+  const item = document.cookie.split('; ').find((cookie) => cookie.startsWith(prefix));
+  return item ? decodeURIComponent(item.slice(prefix.length)) : null;
+}
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = sessionStorage.getItem('auth_token');
+  const isApiRequest = req.url.startsWith(environment.apiUrl)
+    || req.url.includes('/sanctum/csrf-cookie');
 
-  if (token) {
-    const clonedRequest = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(clonedRequest);
+  if (!isApiRequest) {
+    return next(req);
   }
 
-  return next(req);
+  const csrfToken = cookieValue('XSRF-TOKEN');
+  const isStateChanging = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+
+  return next(req.clone({
+    withCredentials: true,
+    setHeaders: isStateChanging && csrfToken
+      ? { 'X-XSRF-TOKEN': csrfToken }
+      : {},
+  }));
 };

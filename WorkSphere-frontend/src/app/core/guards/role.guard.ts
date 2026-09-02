@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { map } from 'rxjs/operators';
 
 /**
  * Garde de navigation basé sur le rôle de l'utilisateur.
@@ -14,7 +15,16 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
 
   // 1. On s'assure d'abord que l'initialisation d'authentification est terminée
   if (!authService.authReady()) {
-    return true;
+    return authService.checkAuth().pipe(
+      map((authenticated) => {
+        if (!authenticated) return router.createUrlTree(['/login']);
+        const userRole = (authService.currentUser()?.role || '').trim().toUpperCase();
+        const expectedRoles: string[] = route.data['roles'] || [];
+        return expectedRoles.map((role) => role.toUpperCase()).includes(userRole)
+          ? true
+          : router.createUrlTree([authService.getRedirectPathForRole(userRole)]);
+      })
+    );
   }
 
   // 2. On s'assure d'abord que l'utilisateur est bien connecté 

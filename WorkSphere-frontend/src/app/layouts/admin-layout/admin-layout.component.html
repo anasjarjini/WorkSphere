@@ -86,12 +86,6 @@
       <span class="material-symbols-outlined">group</span>
       <span class="font-label-md text-label-md">Employés</span>
     </a>
-    <a routerLink="/admin/employees/import" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
-       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
-       (click)="isMobileMenuOpen.set(false)">
-      <span class="material-symbols-outlined">upload_file</span>
-      <span class="font-label-md text-label-md">Import CSV</span>
-    </a>
     <a routerLink="/admin/projects" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
        class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
        (click)="isMobileMenuOpen.set(false)">
@@ -110,18 +104,24 @@
       <span class="material-symbols-outlined">calendar_today</span>
       <span class="font-label-md text-label-md">Congés</span>
     </a>
-    <a routerLink="/admin/announcements" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
-       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
-       (click)="isMobileMenuOpen.set(false)">
-      <span class="material-symbols-outlined">campaign</span>
-      <span class="font-label-md text-label-md">Annonces</span>
-    </a>
     <a routerLink="/admin/chat" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
        class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
        (click)="isMobileMenuOpen.set(false)">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span class="font-label-md text-label-md">Messagerie</span>
       <app-chat-unread-badge />
+    </a>
+    <a routerLink="/admin/announcements" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">campaign</span>
+      <span class="font-label-md text-label-md">Annonces</span>
+    </a>
+    <a routerLink="/admin/employees/import" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
+       class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"
+       (click)="isMobileMenuOpen.set(false)">
+      <span class="material-symbols-outlined">upload_file</span>
+      <span class="font-label-md text-label-md">Import CSV</span>
     </a>
     <a routerLink="/admin/company" routerLinkActive="bg-primary-container/10 text-primary font-bold border-r-4 border-primary opacity-90 ml-2"
        class="flex items-center gap-3 px-4 py-3 text-secondary hover:text-primary hover:bg-secondary-container transition-colors duration-200 cursor-pointer"

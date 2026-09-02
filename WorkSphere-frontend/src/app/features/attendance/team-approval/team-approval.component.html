@@ -50,7 +50,7 @@
       <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
         <!-- Bulk Actions Toolbar -->
         <div class="p-4 bg-surface-container-low flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant">
-          <label class="flex items-center gap-4 cursor-pointer select-none" (click)="toggleSelectAll()">
+          <label class="flex items-center gap-4 cursor-pointer select-none">
             <input type="checkbox" [checked]="selectAllChecked()" (change)="toggleSelectAll()"
               class="w-5 h-5 rounded border-outline-variant text-primary-container focus:ring-primary-container cursor-pointer" />
             <span class="font-label-md text-label-md text-on-surface-variant">Tout sélectionner</span>
@@ -70,7 +70,7 @@
 
         <!-- Validation List -->
         <div class="divide-y divide-outline-variant">
-          @for (decl of filteredDeclarations(); track decl.id) {
+          @for (decl of paginatedDeclarations(); track decl.id) {
             <div class="p-4 flex flex-wrap lg:flex-nowrap items-center gap-6 hover:bg-surface-container-low transition-colors">
               <input type="checkbox" [checked]="selectedIds().has(decl.id)" (change)="toggleSelect(decl.id)"
                 class="w-5 h-5 rounded border-outline-variant text-primary-container focus:ring-primary-container cursor-pointer" />
@@ -117,11 +117,11 @@
         <div class="p-4 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
           <span class="font-label-sm text-label-sm text-on-surface-variant">{{ filteredDeclarations().length }} déclaration(s) en attente</span>
           <div class="flex gap-2">
-            <button class="p-2 rounded hover:bg-surface-container-high text-on-surface-variant cursor-pointer" disabled>
+            <button (click)="previousPage()" [disabled]="currentPage() === 1" class="p-2 rounded hover:bg-surface-container-high text-on-surface-variant cursor-pointer disabled:opacity-50">
               <span class="material-symbols-outlined">chevron_left</span>
             </button>
-            <button class="px-3 py-2 rounded bg-primary-container text-on-primary-container font-bold font-label-sm text-label-sm cursor-pointer">1</button>
-            <button class="p-2 rounded hover:bg-surface-container-high text-on-surface-variant cursor-pointer" disabled>
+            <button class="px-3 py-2 rounded bg-primary-container text-on-primary-container font-bold font-label-sm text-label-sm cursor-pointer">{{ currentPage() }}</button>
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" class="p-2 rounded hover:bg-surface-container-high text-on-surface-variant cursor-pointer disabled:opacity-50">
               <span class="material-symbols-outlined">chevron_right</span>
             </button>
           </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterCompanyRequest extends FormRequest
 {
@@ -18,7 +19,6 @@ class RegisterCompanyRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
-     *
      */
     public function rules(): array
     {
@@ -28,7 +28,12 @@ class RegisterCompanyRequest extends FormRequest
             'admin_first_name' => ['required', 'string', 'max:255'],
             'admin_last_name' => ['required', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'unique:users,email'],
-            'admin_password' => ['required', 'string', 'min:8', 'confirmed'],
+            'admin_password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(8)->mixedCase()->numbers()->symbols(),
+            ],
         ];
     }
 

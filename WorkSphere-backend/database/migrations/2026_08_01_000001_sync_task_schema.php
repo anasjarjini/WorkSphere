@@ -10,66 +10,72 @@ return new class extends Migration
     {
         // tasks : synchronise avec le schéma attendu par les modèles/contrôleurs
         Schema::table('tasks', function (Blueprint $table) {
-            if (!Schema::hasColumn('tasks', 'company_id')) {
+            if (! Schema::hasColumn('tasks', 'company_id')) {
                 $table->foreignId('company_id')
                     ->constrained('companies')
                     ->cascadeOnDelete();
             }
-            if (!Schema::hasColumn('tasks', 'project_id')) {
+            if (! Schema::hasColumn('tasks', 'project_id')) {
                 $table->foreignId('project_id')
                     ->constrained('projects')
                     ->cascadeOnDelete();
             }
-            if (!Schema::hasColumn('tasks', 'user_id')) {
+            if (! Schema::hasColumn('tasks', 'user_id')) {
                 $table->foreignId('user_id')
                     ->nullable()
                     ->constrained('users')
                     ->nullOnDelete();
             }
-            if (!Schema::hasColumn('tasks', 'creator_id')) {
+            if (! Schema::hasColumn('tasks', 'creator_id')) {
                 $table->foreignId('creator_id')
                     ->nullable()
                     ->constrained('users')
                     ->nullOnDelete();
             }
-            if (!Schema::hasColumn('tasks', 'reference_code')) {
+            if (! Schema::hasColumn('tasks', 'reference_code')) {
                 $table->string('reference_code')->nullable()->unique();
             }
-            if (!Schema::hasColumn('tasks', 'order_position')) {
+            if (! Schema::hasColumn('tasks', 'order_position')) {
                 $table->unsignedInteger('order_position')->default(0);
             }
-            if (!Schema::hasColumn('tasks', 'estimated_hours')) {
+            if (! Schema::hasColumn('tasks', 'estimated_hours')) {
                 $table->integer('estimated_hours')->nullable();
             }
-            if (!Schema::hasColumn('tasks', 'actual_hours')) {
+            if (! Schema::hasColumn('tasks', 'actual_hours')) {
                 $table->integer('actual_hours')->nullable();
             }
-            if (!Schema::hasColumn('tasks', 'completed_at')) {
+            if (! Schema::hasColumn('tasks', 'completed_at')) {
                 $table->timestamp('completed_at')->nullable();
             }
 
             $table->enum('priority', ['LOW', 'MEDIUM', 'HIGH'])->default('MEDIUM')->change();
-            $table->index('status');
-            $table->index('due_date');
         });
+
+        if (! Schema::hasIndex('tasks', 'tasks_status_index')) {
+            Schema::table('tasks', fn (Blueprint $table) => $table->index('status'));
+        }
+
+        if (! Schema::hasIndex('tasks', 'tasks_due_date_index')) {
+            Schema::table('tasks', fn (Blueprint $table) => $table->index('due_date'));
+        }
 
         // task_comments : synchronise avec le schéma attendu par le modèle
         Schema::table('task_comments', function (Blueprint $table) {
-            if (Schema::hasColumn('task_comments', 'content') && !Schema::hasColumn('task_comments', 'comment')) {
+            if (Schema::hasColumn('task_comments', 'content') && ! Schema::hasColumn('task_comments', 'comment')) {
                 $table->renameColumn('content', 'comment');
             }
-            if (!Schema::hasColumn('task_comments', 'company_id')) {
+            if (! Schema::hasColumn('task_comments', 'company_id')) {
                 $table->foreignId('company_id')
                     ->constrained('companies')
                     ->cascadeOnDelete();
             }
-            if (!Schema::hasColumn('task_comments', 'is_edited')) {
+            if (! Schema::hasColumn('task_comments', 'is_edited')) {
                 $table->boolean('is_edited')->default(false);
             }
-            if (!Schema::hasColumn('task_comments', 'edited_at')) {
+            if (! Schema::hasColumn('task_comments', 'edited_at')) {
                 $table->timestamp('edited_at')->nullable();
             }
-            if (!Schema::hasColumn('task_comments', 'parent_id')) {
+            if (! Schema::hasColumn('task_comments', 'parent_id')) {
                 $table->foreignId('parent_id')
                     ->nullable()
                     ->constrained('task_comments')
@@ -79,24 +85,24 @@ return new class extends Migration
 
         // task_attachments : synchronise avec le schéma attendu par le modèle
         Schema::table('task_attachments', function (Blueprint $table) {
-            if (!Schema::hasColumn('task_attachments', 'company_id')) {
+            if (! Schema::hasColumn('task_attachments', 'company_id')) {
                 $table->foreignId('company_id')
                     ->constrained('companies')
                     ->cascadeOnDelete();
             }
-            if (!Schema::hasColumn('task_attachments', 'uploaded_by_id')) {
+            if (! Schema::hasColumn('task_attachments', 'uploaded_by_id')) {
                 $table->foreignId('uploaded_by_id')
                     ->nullable()
                     ->constrained('users')
                     ->nullOnDelete();
             }
-            if (!Schema::hasColumn('task_attachments', 'original_name')) {
+            if (! Schema::hasColumn('task_attachments', 'original_name')) {
                 $table->string('original_name')->nullable();
             }
-            if (!Schema::hasColumn('task_attachments', 'file_size')) {
+            if (! Schema::hasColumn('task_attachments', 'file_size')) {
                 $table->unsignedBigInteger('file_size')->nullable();
             }
-            if (!Schema::hasColumn('task_attachments', 'mime_type')) {
+            if (! Schema::hasColumn('task_attachments', 'mime_type')) {
                 $table->string('mime_type')->nullable();
             }
         });

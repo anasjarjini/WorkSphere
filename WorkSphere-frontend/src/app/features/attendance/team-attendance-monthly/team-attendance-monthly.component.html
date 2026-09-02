@@ -23,32 +23,8 @@
       @for (_ of [1,2,3]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
     </div>
   } @else {
-    <!-- Bento Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Primary Card -->
-      <div class="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden min-h-[140px]">
-        <span class="material-symbols-outlined absolute right-2 top-2 opacity-10 text-[120px]">auto_awesome</span>
-        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/70 mb-2">Taux de présence</p>
-        <p class="font-heading text-headline-lg font-bold">{{ stats().rate }}%</p>
-        <p class="font-body-sm text-body-sm text-on-primary/70 mt-1">sur {{ stats().size }} employé(s) ce mois</p>
-      </div>
-      <!-- Jours d'absence -->
-      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
-        <div class="w-12 h-12 rounded-lg bg-error-container/30 text-error flex items-center justify-center mb-4">
-          <span class="material-symbols-outlined">event_busy</span>
-        </div>
-        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Jours d'absence</p>
-        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().totalAbsent }}</p>
-      </div>
-      <!-- Employés actifs -->
-      <div class="bg-surface border border-outline-variant rounded-xl p-6 min-h-[140px]">
-        <div class="w-12 h-12 rounded-lg bg-primary-container/30 text-primary flex items-center justify-center mb-4">
-          <span class="material-symbols-outlined">group</span>
-        </div>
-        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1">Employés dans l'équipe</p>
-        <p class="font-heading text-headline-sm font-bold text-on-surface">{{ stats().size }}</p>
-      </div>
-    </div>
+
+
 
     <!-- Team Table -->
     <div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">

@@ -4,4 +4,6 @@ echo "demarege de backend larvel......"
 (cd WorkSphere-backend&& php artisan serve)&
 echo "demarage de frontend angular...."
 (cd WorkSphere-frontend && ng serve)&
+(cd WorkSphere-backend &&  php artisan queue:work
+)&
 wait

@@ -7,9 +7,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,7 +22,16 @@ use Laravel\Sanctum\HasApiTokens;
     'emergency_contact_name', 'emergency_contact_phone',
     'address', 'job_title', 'hire_date', 'salary', 'role', 'status',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden([
+    'password',
+    'remember_token',
+    'salary',
+    'bank_account_iban',
+    'marital_status',
+    'emergency_contact_name',
+    'emergency_contact_phone',
+    'address',
+])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -44,7 +53,6 @@ class User extends Authenticatable
      * même s'ils ne sont pas dans la base de données (accesseurs dynamiques).
      */
     protected $appends = ['avatar_url', 'is_online'];
-
 
     /**
      * Get the attributes that should be cast.
@@ -130,7 +138,7 @@ class User extends Authenticatable
         if ($email === '') {
             $baseName = trim((string) $this->name);
             $baseEmail = Str::slug($baseName !== '' ? $baseName : 'utilisateur');
-            $this->email = strtolower($baseEmail) . '-' . Str::random(6) . '@worksphere.local';
+            $this->email = strtolower($baseEmail).'-'.Str::random(6).'@worksphere.local';
         }
 
         if (empty($this->password)) {

@@ -22,12 +22,29 @@
       @for (_ of [1,2,3,4]; track _) { <div class="h-10 bg-surface-container-high rounded"></div> }
     </div>
   } @else {
-    <!-- Status Filter Chips -->
-    <div class="flex items-center justify-between gap-4 flex-wrap">
-      <h3 class="font-heading text-headline-sm flex items-center gap-2">
-        <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">groups</span>
-        Statut Global (Aujourd'hui)
-      </h3>
+    <!-- Search & Status Filter Section -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-3">
+        <h3 class="font-heading text-headline-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">groups</span>
+          Statut Global (Aujourd'hui)
+        </h3>
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative flex-1 max-w-md">
+        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-lg pointer-events-none">search</span>
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+          placeholder="Rechercher un collaborateur (nom, email, département, rôle)..."
+          class="w-full bg-surface border border-outline-variant rounded-xl pl-10 pr-9 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+        @if (searchQuery()) {
+          <button (click)="onSearchChange('')" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">close</span>
+          </button>
+        }
+      </div>
+
+      <!-- Filter Chips -->
       <div class="flex gap-2 flex-wrap">
         <button (click)="setFilter('TOUS')"
           class="px-4 py-1 font-label-sm rounded-full cursor-pointer transition-colors"
@@ -78,7 +95,7 @@
               <th class="px-6 py-4 font-label-md text-on-surface-variant">Rôle</th>
               <th class="px-6 py-4 font-label-md text-on-surface-variant">Dernière Décl.</th>
               <th class="px-6 py-4 font-label-md text-on-surface-variant">Statut</th>
-              <th class="px-6 py-4 font-label-md text-on-surface-variant"></th>
+              <th class="px-6 py-4 font-label-md text-on-surface-variant text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/50">
@@ -107,31 +124,32 @@
                   }
                 </td>
                 <td class="px-6 py-4">
-                  @switch (statusOf(item)) {
-                    @case ('PRESENT') {
-                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-sm">
-                        <span class="w-2 h-2 bg-secondary rounded-full"></span> Présent
-                      </span>
-                    }
-                    @case ('EN_ATTENTE') {
-                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-label-sm">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> En attente
-                      </span>
-                    }
-                    @case ('EN_CONGE') {
-                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-label-sm">
-                        <span class="w-2 h-2 bg-amber-500 rounded-full"></span> En congé
-                      </span>
-                    }
-                    @case ('ABSENT') {
-                      <span class="inline-flex items-center gap-1 px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-label-sm">
-                        <span class="w-2 h-2 bg-outline rounded-full"></span> Absent
-                      </span>
-                    }
+                  @if (item.declaration) {
+                    <app-attendance-status-badge [status]="item.declaration.status" [validationStatus]="item.declaration.validation_status" [isOnLeave]="statusOf(item) === 'EN_CONGE'" size="sm" />
+                  } @else {
+                    <app-attendance-status-badge [status]="null" [validationStatus]="null" [isOnLeave]="statusOf(item) === 'EN_CONGE'" size="sm" />
                   }
                 </td>
                 <td class="px-6 py-4 text-right">
-                  <button class="material-symbols-outlined text-outline hover:text-primary transition-colors cursor-pointer">visibility</button>
+                  <div class="flex items-center justify-end gap-1">
+                    <button (click)="openHistoryModal(item.employee)"
+                      class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer"
+                      title="Voir l'historique de présence">
+                      <span class="material-symbols-outlined text-lg">history</span>
+                    </button>
+                    <button (click)="openEditModal(item)"
+                      class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer"
+                      title="Gérer / Modifier la déclaration">
+                      <span class="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined text-4xl mb-2 text-outline">search_off</span>
+                  <p>Aucun collaborateur trouvé pour cette recherche.</p>
                 </td>
               </tr>
             }
@@ -140,7 +158,7 @@
       </div>
       <!-- Pagination -->
       <div class="p-4 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between">
-        <span class="text-body-sm text-on-surface-variant">Affichage de {{ (currentPage() - 1) * pageSize + 1 }} sur {{ filteredStatus().length }} employés</span>
+        <span class="text-body-sm text-on-surface-variant">Affichage de {{ paginatedStatus().length > 0 ? (currentPage() - 1) * pageSize + 1 : 0 }} sur {{ filteredStatus().length }} employés</span>
         <div class="flex gap-2">
           <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"
             class="w-8 h-8 rounded border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-30 cursor-pointer">
@@ -164,6 +182,197 @@
     </div>
   }
 </div>
+
+<!-- Modal 1: Employee Attendance History -->
+@if (selectedEmployeeForHistory()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div class="bg-surface border border-outline-variant rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[85vh] overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-outline-variant pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+            {{ initials(selectedEmployeeForHistory()!.first_name, selectedEmployeeForHistory()!.last_name) }}
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-lg text-on-surface">
+              Historique des présences
+            </h3>
+            <p class="text-xs text-on-surface-variant">
+              {{ selectedEmployeeForHistory()!.first_name }} {{ selectedEmployeeForHistory()!.last_name }} • {{ selectedEmployeeForHistory()!.email }}
+            </p>
+          </div>
+        </div>
+        <button (click)="closeHistoryModal()" class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- History Table -->
+      <div class="overflow-y-auto flex-1">
+        @if (loadingHistory()) {
+          <div class="flex justify-center py-12">
+            <span class="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span>
+          </div>
+        } @else if (employeeHistory().length === 0) {
+          <div class="text-center py-12 text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl mb-2 text-outline">history_toggle_off</span>
+            <p>Aucune déclaration de présence enregistrée pour cet employé.</p>
+          </div>
+        } @else {
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+                <th class="px-4 py-3 font-medium">Date</th>
+                <th class="px-4 py-3 font-medium">Déclaration</th>
+                <th class="px-4 py-3 font-medium">Validation</th>
+                <th class="px-4 py-3 font-medium">Validé par</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+              @for (decl of employeeHistory(); track decl.id) {
+                <tr class="hover:bg-surface-container-lowest">
+                  <td class="px-4 py-3 font-medium text-on-surface">{{ decl.date | date:'dd MMM yyyy':'':'fr' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [class.bg-emerald-100]="decl.status === 'PRESENT'" [class.text-emerald-800]="decl.status === 'PRESENT'"
+                      [class.bg-rose-100]="decl.status === 'ABSENT'" [class.text-rose-800]="decl.status === 'ABSENT'">
+                      {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [class.bg-emerald-100]="decl.validation_status === 'VALIDEE'" [class.text-emerald-800]="decl.validation_status === 'VALIDEE'"
+                      [class.bg-amber-100]="decl.validation_status === 'EN_ATTENTE'" [class.text-amber-800]="decl.validation_status === 'EN_ATTENTE'"
+                      [class.bg-rose-100]="decl.validation_status === 'REJETEE'" [class.text-rose-800]="decl.validation_status === 'REJETEE'">
+                      {{ decl.validation_status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-on-surface-variant">
+                    {{ decl.validator ? decl.validator.first_name + ' ' + decl.validator.last_name : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end pt-3 border-t border-outline-variant">
+        <button (click)="closeHistoryModal()" class="px-4 py-2 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal 2: Edit / Manage Employee Declaration -->
+@if (selectedEmployeeForEdit()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div class="bg-surface border border-outline-variant rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-5">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-outline-variant pb-3">
+        <h3 class="font-heading font-bold text-lg text-on-surface">
+          Gérer la déclaration
+        </h3>
+        <button (click)="closeEditModal()" class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Employee Summary Card -->
+      <div class="flex items-center gap-3 p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/60">
+        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+          {{ initials(selectedEmployeeForEdit()!.employee.first_name, selectedEmployeeForEdit()!.employee.last_name) }}
+        </div>
+        <div>
+          <div class="font-bold text-sm text-on-surface">
+            {{ selectedEmployeeForEdit()!.employee.first_name }} {{ selectedEmployeeForEdit()!.employee.last_name }}
+          </div>
+          <div class="text-xs text-on-surface-variant">
+            {{ selectedEmployeeForEdit()!.employee.email }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Status Info -->
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between py-1 border-b border-outline-variant/40">
+          <span class="text-on-surface-variant">Statut actuel (aujourd'hui) :</span>
+          <span class="font-bold text-on-surface">{{ statusLabel(selectedEmployeeForEdit()!) }}</span>
+        </div>
+        @if (selectedEmployeeForEdit()!.declaration) {
+          <div class="flex justify-between py-1 border-b border-outline-variant/40">
+            <span class="text-on-surface-variant">État de validation :</span>
+            <span class="font-bold text-on-surface">{{ selectedEmployeeForEdit()!.declaration!.validation_status }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-3 pt-2">
+        @if (selectedEmployeeForEdit()!.declaration && selectedEmployeeForEdit()!.declaration!.validation_status !== 'VALIDEE') {
+          <button (click)="approveDeclaration(selectedEmployeeForEdit()!.declaration!.id)"
+            [disabled]="processingAction()"
+            class="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+            Valider la présence
+          </button>
+
+          <div class="space-y-2">
+            <input type="text" [ngModel]="rejectionReason()" (ngModelChange)="rejectionReason.set($event)" placeholder="Motif du rejet (optionnel)..."
+              class="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2 text-xs text-on-surface outline-none focus:border-primary" />
+            <button (click)="rejectDeclaration(selectedEmployeeForEdit()!.declaration!.id)"
+              [disabled]="processingAction()"
+              class="w-full py-2.5 rounded-xl bg-rose-600 text-white font-semibold text-sm hover:bg-rose-700 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+              <span class="material-symbols-outlined text-lg">cancel</span>
+              Rejeter la déclaration
+            </button>
+          </div>
+        } @else {
+          <div class="flex gap-3 mb-4">
+            <button (click)="editSelectedStatus.set('PRESENT')"
+              class="flex-1 py-3 rounded-xl font-semibold text-sm transition-all border-2 flex flex-col items-center justify-center gap-1 cursor-pointer"
+              [class.bg-secondary-container]="editSelectedStatus() === 'PRESENT'"
+              [class.border-secondary]="editSelectedStatus() === 'PRESENT'"
+              [class.text-on-secondary-container]="editSelectedStatus() === 'PRESENT'"
+              [class.bg-surface]="editSelectedStatus() !== 'PRESENT'"
+              [class.border-outline-variant]="editSelectedStatus() !== 'PRESENT'"
+              [class.text-on-surface-variant]="editSelectedStatus() !== 'PRESENT'">
+              <span class="material-symbols-outlined text-2xl">how_to_reg</span>
+              Présent
+            </button>
+            <button (click)="editSelectedStatus.set('ABSENT')"
+              class="flex-1 py-3 rounded-xl font-semibold text-sm transition-all border-2 flex flex-col items-center justify-center gap-1 cursor-pointer"
+              [class.bg-error-container]="editSelectedStatus() === 'ABSENT'"
+              [class.border-error]="editSelectedStatus() === 'ABSENT'"
+              [class.text-on-error-container]="editSelectedStatus() === 'ABSENT'"
+              [class.bg-surface]="editSelectedStatus() !== 'ABSENT'"
+              [class.border-outline-variant]="editSelectedStatus() !== 'ABSENT'"
+              [class.text-on-surface-variant]="editSelectedStatus() !== 'ABSENT'">
+              <span class="material-symbols-outlined text-2xl">block</span>
+              Absent
+            </button>
+          </div>
+          <button (click)="forceDeclare(editSelectedStatus()!)"
+            [disabled]="!editSelectedStatus() || processingAction()"
+            class="w-full py-2.5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+            Enregistrer le statut
+          </button>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end pt-3 border-t border-outline-variant">
+        <button (click)="closeEditModal()" class="px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant text-sm font-medium hover:bg-surface-container transition-colors cursor-pointer">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 
 <!-- Floating Action Button -->
 <div class="fixed bottom-8 right-8">

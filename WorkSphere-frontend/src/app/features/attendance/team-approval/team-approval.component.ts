@@ -35,6 +35,23 @@ export class TeamAttendanceApprovalComponent implements OnInit {
     this.declarations().filter((d) => d.validation_status === ('EN_ATTENTE' as AttendanceValidationStatus))
   );
 
+  readonly pageSize = 10;
+  readonly currentPage = signal(1);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredDeclarations().length / this.pageSize))
+  );
+
+  readonly paginatedDeclarations = computed(() => {
+    const list = this.filteredDeclarations();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    // Auto-adjust page if current page is now empty after approval/rejection
+    if (start >= list.length && this.currentPage() > 1) {
+      setTimeout(() => this.currentPage.set(this.totalPages()), 0);
+    }
+    return list.slice(start, start + this.pageSize);
+  });
+
   readonly selectedCount = computed(() => this.selectedIds().size);
 
   readonly isManager = computed(() => this.authService.currentUser()?.role === 'MANAGER');
@@ -221,5 +238,17 @@ export class TeamAttendanceApprovalComponent implements OnInit {
         || (declaration.user?.role === 'EMPLOYE' && declaration.manager_validated_by != null);
     }
     return false;
+  }
+
+  previousPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
   }
 }

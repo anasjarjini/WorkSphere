@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TaskAttachment } from '../models/task.model';
 
@@ -25,7 +25,21 @@ export class TaskAttachmentService {
     );
   }
 
-  getDownloadUrl(taskAttachment: TaskAttachment): string {
-    return `${this.apiUrl}/tasks/${taskAttachment.task_id}/attachments/${taskAttachment.id}/download`;
+  downloadAttachment(taskAttachment: TaskAttachment): Observable<void> {
+    const url = `${this.apiUrl}/tasks/${taskAttachment.task_id}/attachments/${taskAttachment.id}/download`;
+
+    return this.http.get(url, { responseType: 'blob' }).pipe(
+      tap((blob) => this.saveBlob(blob, taskAttachment.file_name)),
+      map(() => undefined)
+    );
+  }
+
+  private saveBlob(blob: Blob, fileName: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
   }
 }

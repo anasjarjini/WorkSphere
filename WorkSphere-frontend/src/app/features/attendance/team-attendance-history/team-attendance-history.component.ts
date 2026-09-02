@@ -23,17 +23,36 @@ export class TeamAttendanceHistoryComponent implements OnInit {
 
   readonly currentMonth = signal(new Date().toISOString().slice(0, 7));
   readonly historyEmployeeFilter = signal<number | null>(null);
+  readonly searchQuery = signal('');
   readonly pageSize = 15;
   readonly currentPage = signal(1);
 
+  // Edit Modal State
+  readonly selectedDeclarationForEdit = signal<AttendanceDeclaration | null>(null);
+  readonly editStatus = signal<'PRESENT' | 'ABSENT'>('PRESENT');
+  readonly editValidationStatus = signal<AttendanceValidationStatus>('VALIDEE');
+  readonly editRejectionReason = signal('');
+  readonly processingAction = signal(false);
+
   readonly filteredDeclarations = computed(() => {
     const [year, month] = this.currentMonth().split('-').map(Number);
+    const query = this.searchQuery().toLowerCase().trim();
+
     let list = this.declarations().filter((d) => {
       const dDate = new Date(d.date);
       return dDate.getFullYear() === year && dDate.getMonth() === month - 1;
     });
     const empFilter = this.historyEmployeeFilter();
     if (empFilter) list = list.filter((d) => d.user_id === empFilter);
+
+    if (query) {
+      list = list.filter((d) => {
+        const empName = `${d.user?.first_name} ${d.user?.last_name}`.toLowerCase();
+        const dateStr = d.date.toLowerCase();
+        return empName.includes(query) || dateStr.includes(query);
+      });
+    }
+
     return list;
   });
 
@@ -52,7 +71,7 @@ export class TeamAttendanceHistoryComponent implements OnInit {
   }
 
   private loadTeam(): void {
-    this.employeeService.getManagerTeam().subscribe({
+    this.employeeService.getManagerTeam({ per_page: 100 }).subscribe({
       next: (res) => this.teamMembers.set(res.data),
     });
   }
@@ -65,10 +84,15 @@ export class TeamAttendanceHistoryComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
-    this.attendanceService.getDeclarations({ date_from: dateFrom, date_to: dateTo }).subscribe({
+    this.attendanceService.getDeclarations({ date_from: dateFrom, date_to: dateTo, scope: 'team' }).subscribe({
       next: (decls) => { this.declarations.set(decls); this.loading.set(false); },
       error: () => { this.loading.set(false); this.error.set('Erreur lors du chargement.'); },
     });
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
   }
 
   previousMonth(): void {
@@ -99,4 +123,37 @@ export class TeamAttendanceHistoryComponent implements OnInit {
   initials(firstName: string, lastName: string): string {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   }
+
+  openEditModal(declaration: AttendanceDeclaration): void {
+    this.selectedDeclarationForEdit.set(declaration);
+    this.editStatus.set(declaration.status);
+    this.editValidationStatus.set(declaration.validation_status);
+    this.editRejectionReason.set(declaration.rejection_reason || '');
+  }
+
+  closeEditModal(): void {
+    this.selectedDeclarationForEdit.set(null);
+  }
+
+  saveDeclarationChanges(): void {
+    const decl = this.selectedDeclarationForEdit();
+    if (!decl) return;
+    this.processingAction.set(true);
+
+    this.attendanceService.update(decl.id, {
+      status: this.editStatus(),
+      validation_status: this.editValidationStatus(),
+      rejection_reason: this.editValidationStatus() === 'REJETEE' ? this.editRejectionReason() : undefined,
+    }).subscribe({
+      next: () => {
+        this.processingAction.set(false);
+        this.closeEditModal();
+        this.loadMonth();
+      },
+      error: () => {
+        this.processingAction.set(false);
+      }
+    });
+  }
 }
+

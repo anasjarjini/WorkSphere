@@ -6,6 +6,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -17,7 +18,7 @@ class AuthController extends Controller
      *  1. User introuvable par email  ──┐
      *  2. Password incorrect          ──┴── 401 identique → empêche l'user enumeration attack
      *  3. status !== 'ACTIVE'        ──── 403 compte non activé
-     *  4. Tout OK                     ──── 200 + token Sanctum
+     *  4. Tout OK                     ──── 200 + session Sanctum HttpOnly
      *
      * Le rate limiting (throttle:5,1) est appliqué directement sur la route dans api.php,
      * ce qui bloque l'IP après 5 tentatives par minute avant même d'atteindre ce controller.
@@ -40,7 +41,7 @@ class AuthController extends Controller
         if ($user->status !== 'ACTIVE') {
             return response()->json([
                 'message' => "Votre compte n'est pas encore activé. Vérifiez votre email pour le lien d'activation.",
-                'error'   => 'account_inactive',
+                'error' => 'account_inactive',
             ], 403);
         }
 
@@ -48,28 +49,25 @@ class AuthController extends Controller
         // Charger les relations utiles pour le frontend (employee, company)
         $user->load('company');
 
-        // Générer le token Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
 
         return response()->json([
             'message' => 'Connexion réussie.',
-            'user'    => new UserResource($user),
-            'token'   => $token,
+            'user' => new UserResource($user),
         ], 200);
     }
 
     /**
-     * Déconnexion — révoque UNIQUEMENT le token courant.
-     *
-     * On utilise currentAccessToken()->delete() et non tokens()->delete() pour ne pas
-     * déconnecter l'utilisateur de ses autres appareils (multi-device support).
+     * Déconnexion — invalide uniquement la session courante du navigateur.
      *
      * Route protégée par auth:sanctum → $request->user() est toujours défini ici.
      */
     public function logout(Request $request)
     {
-        // Supprime uniquement le token Sanctum qui a servi à cette requête
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'message' => 'Déconnecté avec succès.',

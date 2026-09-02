@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CompanyService } from './company.service';
@@ -45,10 +45,7 @@ export class ExportService {
     try {
       await this.ensureCompany();
       if (!this.companyService.company()?.logo) return null;
-      const token = sessionStorage.getItem('auth_token');
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const blob = await fetch(`${environment.apiUrl}/company/logo-file`, { headers }).then((r) => {
+      const blob = await fetch(`${environment.apiUrl}/company/logo-file`, { credentials: 'include' }).then((r) => {
         if (!r.ok) throw new Error('Logo introuvable');
         return r.blob();
       });
@@ -154,31 +151,112 @@ export class ExportService {
   /**
    * Export Excel (.xlsx) : bloc en-tête société + titre + tableau.
    */
-  xlsx(opts: ExportTableOptions & { filename: string; sheetName?: string }): void {
-    const headerRow = [opts.title + (opts.period ? ` — ${opts.period}` : '')];
-    const aoa: (string | number)[][] = [
+  async xlsx(opts: ExportTableOptions & { filename: string; sheetName?: string }): Promise<void> {
+    const rows: string[][] = [
       [this.companyName()],
-      headerRow,
+      [opts.title + (opts.period ? ` — ${opts.period}` : '')],
       [],
       opts.columns,
       ...opts.rows.map((r) => [...r]),
     ];
-
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
     const widths = opts.columns.map((col, i) => {
       let max = col.length;
       for (const row of opts.rows) {
         const cell = row[i];
         if (cell) max = Math.max(max, cell.length);
       }
-      return { wch: Math.min(Math.max(max + 2, 10), 50) };
+      return Math.min(Math.max(max + 2, 10), 50);
     });
-    ws['!cols'] = widths;
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: opts.columns.length - 1 } }];
+    const columnCount = Math.max(opts.columns.length, 1);
+    const sheetName = (opts.sheetName ?? 'Export').replace(/[\\/*?:[\]]/g, ' ').slice(0, 31) || 'Export';
+    const zip = new JSZip();
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, opts.sheetName ?? 'Export');
-    XLSX.writeFile(wb, opts.filename);
+    zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`);
+    zip.folder('_rels')?.file('.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`);
+    zip.folder('xl')?.file('workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="${this.escapeXml(sheetName)}" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`);
+    zip.folder('xl')?.folder('_rels')?.file('workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`);
+    zip.folder('xl')?.file('styles.xml', this.xlsxStyles());
+
+    const columnsXml = widths.map((width, index) =>
+      `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`
+    ).join('');
+    const rowsXml = rows.map((row, rowIndex) => {
+      const cells = row.map((value, columnIndex) => {
+        const style = rowIndex === 0 ? 1 : rowIndex === 1 ? 2 : rowIndex === 3 ? 3 : 0;
+        const reference = `${this.xlsxColumn(columnIndex)}${rowIndex + 1}`;
+        return `<c r="${reference}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${this.escapeXml(value ?? '')}</t></is></c>`;
+      }).join('');
+      return `<row r="${rowIndex + 1}">${cells}</row>`;
+    }).join('');
+    const lastColumn = this.xlsxColumn(columnCount - 1);
+    zip.folder('xl')?.folder('worksheets')?.file('sheet1.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews><sheetView workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+  <cols>${columnsXml}</cols>
+  <sheetData>${rowsXml}</sheetData>
+  <mergeCells count="2"><mergeCell ref="A1:${lastColumn}1"/><mergeCell ref="A2:${lastColumn}2"/></mergeCells>
+</worksheet>`);
+
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    this.download(blob, opts.filename);
+  }
+
+  private xlsxColumn(index: number): string {
+    let result = '';
+    for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26)) {
+      result = String.fromCharCode(65 + ((value - 1) % 26)) + result;
+    }
+    return result;
+  }
+
+  private escapeXml(value: string): string {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  private xlsxStyles(): string {
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="3">
+    <font><sz val="11"/><name val="Calibri"/></font>
+    <font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+  </fonts>
+  <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1E40AF"/><bgColor indexed="64"/></patternFill></fill></fills>
+  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="4">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
   }
 
   private download(blob: Blob, filename: string): void {

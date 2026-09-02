@@ -59,7 +59,7 @@
             <input type="range" min="0" max="100" step="1"
               [value]="formData.progress_percentage"
               (input)="updateProgress(+$any($event.target).value)"
-              class="flex-1 h-2 rounded-full appearance-none cursor-pointer bg-border accent-[#630ed4]" />
+              class="flex-1 h-2 rounded-full appearance-none cursor-pointer bg-border accent-primary" />
             <span class="text-sm font-bold text-primary min-w-[3ch] text-right tabular-nums">{{ formData.progress_percentage }}%</span>
           </div>
         </div>

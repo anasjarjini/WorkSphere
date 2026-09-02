@@ -20,22 +20,22 @@ import { ChartConfiguration } from 'chart.js';
 const CSS_VAR = (name: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-const STITCH_PRIMARY = '#630ed4';
-const STITCH_PRIMARY_LIGHT = '#f0e6ff';
-const STITCH_SURFACE_LOW = '#f9f1ff';
-const STITCH_OUTLINE_VARIANT = '#ccc3d8';
-const STITCH_ON_SURFACE_VARIANT = '#4a4455';
-const STITCH_SECONDARY_CONTAINER = '#86f2e4';
+const STITCH_PRIMARY = '#0f172a';
+const STITCH_PRIMARY_LIGHT = '#e0f2fe';
+const STITCH_SURFACE_LOW = '#f8fafc';
+const STITCH_OUTLINE_VARIANT = '#cbd5e1';
+const STITCH_ON_SURFACE_VARIANT = '#475569';
+const STITCH_SECONDARY_CONTAINER = '#0ea5e9';
 
 const CSS_COLORS = (): string[] => [
   CSS_VAR('--color-stitch-primary') || STITCH_PRIMARY,
-  CSS_VAR('--color-stitch-primary-container') || '#7c3aed',
+  CSS_VAR('--color-stitch-primary-container') || '#0ea5e9',
   STITCH_SECONDARY_CONTAINER,
   CSS_VAR('--color-stitch-primary-light') || STITCH_PRIMARY_LIGHT,
-  '#e8def8',
-  '#ffb4ab',
-  '#d0bcff',
-  '#bae2e0',
+  '#0284c7',
+  '#38bdf8',
+  '#7dd3fc',
+  '#bae6fd',
 ];
 
 const CHART_TOOLTIP_BG = (): string => CSS_VAR('--color-tooltip') || '#1E293B';

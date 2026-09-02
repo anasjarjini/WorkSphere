@@ -1,4 +1,4 @@
-import "./chunk-46DXP6YY.js";
+import "./chunk-7PLCLRNK.js";
 
 // node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.mjs
 function autoTableText(text, x, y, styles, doc) {
@@ -1830,8 +1830,8 @@ function nextPage(doc) {
   }
   return false;
 }
-function applyPlugin(jsPDF) {
-  jsPDF.API.autoTable = function() {
+function applyPlugin(jsPDF2) {
+  jsPDF2.API.autoTable = function() {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {
       args[_i] = arguments[_i];
@@ -1842,18 +1842,18 @@ function applyPlugin(jsPDF) {
     drawTable(this, table);
     return this;
   };
-  jsPDF.API.lastAutoTable = false;
-  jsPDF.API.autoTableText = function(text, x, y, styles) {
+  jsPDF2.API.lastAutoTable = false;
+  jsPDF2.API.autoTableText = function(text, x, y, styles) {
     autoTableText(text, x, y, styles, this);
   };
-  jsPDF.API.autoTableSetDefaults = function(defaults) {
+  jsPDF2.API.autoTableSetDefaults = function(defaults) {
     DocHandler.setDefaults(defaults, this);
     return this;
   };
-  jsPDF.autoTableSetDefaults = function(defaults, doc) {
+  jsPDF2.autoTableSetDefaults = function(defaults, doc) {
     DocHandler.setDefaults(defaults, doc);
   };
-  jsPDF.API.autoTableHtmlToJson = function(tableElem, includeHiddenElements) {
+  jsPDF2.API.autoTableHtmlToJson = function(tableElem, includeHiddenElements) {
     var _a2;
     if (includeHiddenElements === void 0) {
       includeHiddenElements = false;

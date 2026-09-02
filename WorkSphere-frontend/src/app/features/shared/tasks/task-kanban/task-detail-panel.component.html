@@ -240,12 +240,12 @@
                     <span class="material-symbols-outlined text-sm">description</span>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <a [href]="getAttachmentUrl(att)" target="_blank" class="text-sm font-medium text-primary hover:underline truncate block">{{ att.file_name }}</a>
+                    <button type="button" (click)="downloadAttachment(att)" class="text-left text-sm font-medium text-primary hover:underline truncate block">{{ att.file_name }}</button>
                     <p class="text-[11px] text-text-secondary">{{ formatFileSize(att.file_size) }}</p>
                   </div>
-                  <a [href]="getAttachmentUrl(att)" target="_blank" class="text-text-secondary hover:text-primary p-1 rounded transition-colors">
+                  <button type="button" (click)="downloadAttachment(att)" class="text-text-secondary hover:text-primary p-1 rounded transition-colors">
                     <span class="material-symbols-outlined text-sm">download</span>
-                  </a>
+                  </button>
                 </div>
               }
             </div>

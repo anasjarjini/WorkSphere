@@ -99,39 +99,7 @@
     </button>
   </div>
 
-  <!-- Statistics & Context (Bento Style) -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-surface border border-outline-variant rounded-xl p-6">
-      <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-4">Visibilité Equipe</h4>
-      <div class="flex items-center justify-center py-4">
-        <div class="relative w-24 h-24">
-          <svg class="w-full h-full" viewBox="0 0 36 36">
-            <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
-            <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="85, 100" stroke-linecap="round" stroke-width="3"></circle>
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="font-display-lg-mobile text-primary leading-none">85%</span>
-            <span class="text-[10px] uppercase font-bold text-on-surface-variant">Lus</span>
-          </div>
-        </div>
-      </div>
-      <p class="font-body-sm text-body-sm text-center text-on-surface-variant mt-2">Votre équipe est très réactive aux annonces cette semaine.</p>
-    </div>
-    <div class="md:col-span-2 bg-surface border border-outline-variant rounded-xl p-6 flex items-center gap-6">
-      <div class="flex-1">
-        <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Dernière annonce Corporate</h4>
-        @if (lastCompanyAnnouncement(); as last) {
-          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">{{ last.title }}</h3>
-          <p class="font-body-sm text-body-sm text-on-surface-variant mb-3 line-clamp-2">{{ last.content }}</p>
-          <button class="text-primary font-bold font-label-md text-label-md flex items-center gap-1 hover:gap-2 transition-all cursor-pointer">
-            Lire les détails <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </button>
-        } @else {
-          <p class="font-body-sm text-body-sm text-on-surface-variant">Aucune annonce d'entreprise pour le moment.</p>
-        }
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- Modal Form -->

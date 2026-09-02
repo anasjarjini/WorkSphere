@@ -1,15 +1,22 @@
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
+import { Company } from '../../../core/models/company.model';
 import { CompanyService } from '../../../core/services/company.service';
 import { CompanyBrandComponent } from './company-brand.component';
 
 describe('CompanyBrandComponent', () => {
   let fixture: ComponentFixture<CompanyBrandComponent>;
-  let companyService: jasmine.SpyObj<CompanyService>;
+  let company: WritableSignal<Company | null>;
 
   beforeEach(async () => {
-    companyService = jasmine.createSpyObj<CompanyService>('CompanyService', ['getCompany']);
+    company = signal<Company | null>(null);
+    const companyService = {
+      company,
+      getCompany: vi.fn(() => of({ company: company() }))
+    };
 
     await TestBed.configureTestingModule({
       imports: [CompanyBrandComponent, RouterTestingModule],
@@ -18,34 +25,30 @@ describe('CompanyBrandComponent', () => {
   });
 
   it('should display the company logo when available', () => {
-    companyService.getCompany.and.returnValue(of({
-      company: {
-        id: 1,
-        name: 'Acme Corp',
-        slug: 'acme',
-        logo_url: 'https://example.com/logo.png',
-        is_active: true
-      }
-    } as any));
+    company.set({
+      id: 1,
+      name: 'Acme Corp',
+      slug: 'acme',
+      logo_url: 'https://example.com/logo.png',
+      is_active: true
+    });
 
     fixture = TestBed.createComponent(CompanyBrandComponent);
     fixture.detectChanges();
 
     const img = fixture.nativeElement.querySelector('img') as HTMLImageElement | null;
     expect(img).toBeTruthy();
-    expect(img?.getAttribute('src')).toBe('https://example.com/logo.png');
+    expect(img?.getAttribute('src')).toBe('http://localhost:8000/logo.png');
   });
 
   it('should resolve relative logo URLs against the backend origin', () => {
-    companyService.getCompany.and.returnValue(of({
-      company: {
-        id: 1,
-        name: 'Acme Corp',
-        slug: 'acme',
-        logo_url: '/storage/logos/acme.png',
-        is_active: true
-      }
-    } as any));
+    company.set({
+      id: 1,
+      name: 'Acme Corp',
+      slug: 'acme',
+      logo_url: '/storage/logos/acme.png',
+      is_active: true
+    });
 
     fixture = TestBed.createComponent(CompanyBrandComponent);
     fixture.detectChanges();
@@ -56,15 +59,13 @@ describe('CompanyBrandComponent', () => {
   });
 
   it('should render fallback initial when no logo is present', () => {
-    companyService.getCompany.and.returnValue(of({
-      company: {
-        id: 1,
-        name: 'Acme Corp',
-        slug: 'acme',
-        logo_url: null,
-        is_active: true
-      }
-    } as any));
+    company.set({
+      id: 1,
+      name: 'Acme Corp',
+      slug: 'acme',
+      logo_url: undefined,
+      is_active: true
+    });
 
     fixture = TestBed.createComponent(CompanyBrandComponent);
     fixture.detectChanges();

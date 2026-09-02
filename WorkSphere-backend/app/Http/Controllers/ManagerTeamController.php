@@ -24,7 +24,6 @@ class ManagerTeamController extends Controller
 
         $query = User::query()
             ->where('company_id', $manager->company_id)
-            ->where('id', '!=', $manager->id)
             ->where('role', '!=', 'HR_ADMIN');
 
         $hasAssignedTeam = User::where('company_id', $manager->company_id)

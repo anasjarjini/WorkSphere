@@ -23,7 +23,7 @@ const STATUS_CLASSES: Record<TaskStatus, string> = {
 @Component({
   selector: 'app-my-tasks',
   standalone: true,
-  imports: [RouterModule, DatePipe, DecimalPipe],
+  imports: [RouterModule, DatePipe],
   templateUrl: './my-tasks.component.html'
 })
 export class MyTasksComponent {

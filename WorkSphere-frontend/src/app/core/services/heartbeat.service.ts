@@ -38,7 +38,7 @@ export class HeartbeatService implements OnDestroy {
   }
 
   private ping(): void {
-    if (!this.auth.hasToken()) return;
+    if (!this.auth.isAuthenticated()) return;
     // Lightweight call; ignore response and errors
     this.http.post(`${environment.apiUrl}/heartbeat`, {}, { observe: 'response' }).subscribe({ next: () => {}, error: () => {} });
   }

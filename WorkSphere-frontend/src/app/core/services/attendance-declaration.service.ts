@@ -14,13 +14,14 @@ export class AttendanceDeclarationService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
-  getDeclarations(params?: {
+    getDeclarations(params?: {
     date?: string;
     date_from?: string;
     date_to?: string;
     validation_status?: string;
     user_id?: number;
     queue?: string;
+    scope?: string;
   }): Observable<AttendanceDeclaration[]> {
     let httpParams = new HttpParams();
     if (params?.date) httpParams = httpParams.set('date', params.date);
@@ -29,6 +30,7 @@ export class AttendanceDeclarationService {
     if (params?.validation_status) httpParams = httpParams.set('validation_status', params.validation_status);
     if (params?.user_id) httpParams = httpParams.set('user_id', params.user_id);
     if (params?.queue) httpParams = httpParams.set('queue', params.queue);
+    if (params?.scope) httpParams = httpParams.set('scope', params.scope);
     return this.http.get<AttendanceDeclaration[]>(`${this.apiUrl}/attendance-declarations`, { params: httpParams });
   }
 
@@ -44,7 +46,12 @@ export class AttendanceDeclarationService {
     return this.http.patch<AttendanceDeclaration>(`${this.apiUrl}/attendance-declarations/${id}/reject`, { reason });
   }
 
+  update(id: number, data: { status?: 'PRESENT' | 'ABSENT'; validation_status?: 'VALIDEE' | 'REJETEE' | 'EN_ATTENTE'; rejection_reason?: string }): Observable<AttendanceDeclaration> {
+    return this.http.patch<AttendanceDeclaration>(`${this.apiUrl}/attendance-declarations/${id}`, data);
+  }
+
   bulkApprove(declaration_ids: number[]): Observable<BulkApproveResult> {
     return this.http.post<BulkApproveResult>(`${this.apiUrl}/attendance-declarations/bulk-approve`, { declaration_ids });
   }
 }
+

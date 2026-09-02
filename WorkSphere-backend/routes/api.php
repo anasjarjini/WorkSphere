@@ -26,9 +26,9 @@ use App\Http\Controllers\TaskDependencyController;
 use App\Http\Controllers\AttendanceDeclarationController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register-company', [CompanyRegistrationController::class, 'store']);
-Route::post('/activate', [AccountActivationController::class, 'store']);
-Route::post('/activate/resend', [AccountActivationController::class, 'resend']);
+Route::post('/register-company', [CompanyRegistrationController::class, 'store'])->middleware('throttle:3,1');
+Route::post('/activate', [AccountActivationController::class, 'store'])->middleware('throttle:10,1');
+Route::post('/activate/resend', [AccountActivationController::class, 'resend'])->middleware('throttle:3,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1');
@@ -138,9 +138,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Attendance Declarations
     Route::get('/attendance-declarations', [AttendanceDeclarationController::class, 'index']);
     Route::post('/attendance-declarations', [AttendanceDeclarationController::class, 'store']);
+    Route::patch('/attendance-declarations/{attendanceDeclaration}', [AttendanceDeclarationController::class, 'update']);
     Route::patch('/attendance-declarations/{attendanceDeclaration}/approve', [AttendanceDeclarationController::class, 'approve']);
     Route::patch('/attendance-declarations/{attendanceDeclaration}/reject', [AttendanceDeclarationController::class, 'reject']);
     Route::post('/attendance-declarations/bulk-approve', [AttendanceDeclarationController::class, 'bulkApprove']);
+
 
     // Absences / Congés
     Route::get('/absences', [AbsenceController::class, 'index']);

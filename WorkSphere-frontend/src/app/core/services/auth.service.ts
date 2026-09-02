@@ -2,13 +2,13 @@
  * AuthService - Gère l'authentification de l'utilisateur (login, logout,
  * activation de compte, reset password) et maintient l'état de session
  * via des Signals. Central point de contact pour toute la gestion des
- * tokens Sanctum et des informations utilisateur courant.
+ * sessions Sanctum et des informations utilisateur courant.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, finalize, tap, map, shareReplay, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {  User } from '../models/user.model';
 import { AuthResponse } from '../models/uthResponse.model';
@@ -20,46 +20,32 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly apiUrl = environment.apiUrl;
-  private readonly tokenKey = 'auth_token';
+  private readonly csrfUrl = `${environment.apiUrl.replace(/\/api\/?$/, '')}/sanctum/csrf-cookie`;
   private readonly chatService = inject(ChatService);
+  private authCheckRequest?: Observable<boolean>;
 
   /** Signal contenant l'utilisateur actuellement connecté, ou null */
   readonly currentUser = signal<User | null>(null);
   /** Signal true quand l'état d'auth a fini de se restaurer au démarrage */
   readonly authReady = signal(false);
-  /** Computed : vrai uniquement si un token existe ET qu'un user est chargé */
-  readonly isAuthenticated = computed(() => {
-    return this.hasToken() && this.currentUser() !== null;
-  });
+  /** Computed : vrai quand la session serveur a chargé un utilisateur. */
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
-  /**
-   * Vérifie si un token existe dans le sessionStorage.
-   * @returns true si un token est stocké
-   */
-  hasToken(): boolean {
-    return !!sessionStorage.getItem(this.tokenKey);
-  }
-
-  /**
-   * Récupère le token Sanctum depuis le sessionStorage.
-   * @returns le token ou null
-   */
-  getToken(): string | null {
-    return sessionStorage.getItem(this.tokenKey);
+  private withCsrf<T>(request: () => Observable<T>): Observable<T> {
+    return this.http.get<void>(this.csrfUrl).pipe(switchMap(() => request()));
   }
 
   /**
    * Connecte l'utilisateur avec email/mot de passe.
-   * Stocke le token Sanctum et met à jour currentUser.
+   * Ouvre une session Sanctum HttpOnly et met à jour currentUser.
    * @param email - Email de l'utilisateur
    * @param password - Mot de passe
-   * @returns Observable avec la réponse (user + token)
+   * @returns Observable avec l'utilisateur connecté
    */
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
+    return this.withCsrf(() => this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password })).pipe(
       tap((response) => {
         this.chatService.resetSession();
-        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -71,17 +57,16 @@ export class AuthService {
    * @param token - Token d'activation reçu par email
    * @param password - Nouveau mot de passe choisi par l'utilisateur
    * @param password_confirmation - Confirmation du mot de passe
-   * @returns Observable avec la réponse (user + token)
+   * @returns Observable avec l'utilisateur connecté
    */
   activateAccount(token: string, password: string, password_confirmation: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/activate`, {
+    return this.withCsrf(() => this.http.post<AuthResponse>(`${this.apiUrl}/activate`, {
       token,
       password,
       password_confirmation
-    }).pipe(
+    })).pipe(
       tap((response) => {
         this.chatService.resetSession();
-        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -94,19 +79,18 @@ export class AuthService {
    * @returns Observable avec le message de confirmation
    */
   resendActivation(email: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/activate/resend`, { email });
+    return this.withCsrf(() => this.http.post<{ message: string }>(`${this.apiUrl}/activate/resend`, { email }));
   }
 
   /**
    * Crée une entreprise et son Administrateur RH en une seule requête.
    * @param payload - Données du formulaire d'inscription (company + admin)
-   * @returns Observable avec la réponse (company + user + token)
+   * @returns Observable avec la réponse (company + user)
    */
   registerCompany(payload: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register-company`, payload).pipe(
+    return this.withCsrf(() => this.http.post<AuthResponse>(`${this.apiUrl}/register-company`, payload)).pipe(
       tap((response) => {
         this.chatService.resetSession();
-        sessionStorage.setItem(this.tokenKey, response.token);
         this.currentUser.set(response.user);
         this.authReady.set(true);
       })
@@ -120,7 +104,7 @@ export class AuthService {
    * @returns Observable avec le message de confirmation
    */
   forgotPassword(email: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+    return this.withCsrf(() => this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email }));
   }
 
   /**
@@ -130,7 +114,7 @@ export class AuthService {
    * @returns Observable avec le message de confirmation
    */
   resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, payload);
+    return this.withCsrf(() => this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, payload));
   }
 
   /**
@@ -139,16 +123,14 @@ export class AuthService {
    * @returns Observable (généralement null après traitement)
    */
   logout(): Observable<any> {
-    if (!this.hasToken()) {
+    if (!this.currentUser()) {
       this.clearSession();
       this.router.navigate(['/login']);
       return of(null);
     }
 
-    return this.http.post(`${this.apiUrl}/logout`, {}).pipe(
-      catchError((error) => {
-        return of(null);
-      }),
+    return this.withCsrf(() => this.http.post(`${this.apiUrl}/logout`, {})).pipe(
+      catchError(() => of(null)),
       tap(() => {
         this.clearSession();
         this.router.navigate(['/login']);
@@ -158,19 +140,16 @@ export class AuthService {
 
   /**
    * Restaure la session au démarrage de l'application.
-   * Vérifie la validité du token auprès de l'API GET /me.
+   * Vérifie la validité de la session HttpOnly auprès de l'API GET /me.
    * @returns Observable true si la session est valide, false sinon
    */
   checkAuth(): Observable<boolean> {
-    this.authReady.set(false);
-    const token = this.getToken();
-    if (!token) {
-      this.currentUser.set(null);
-      this.authReady.set(true);
-      return of(false);
+    if (this.authCheckRequest) {
+      return this.authCheckRequest;
     }
 
-    return this.http.get<{ user: User }>(`${this.apiUrl}/me`).pipe(
+    this.authReady.set(false);
+    this.authCheckRequest = this.http.get<{ user: User }>(`${this.apiUrl}/me`).pipe(
       map((response) => {
         this.currentUser.set(response.user);
         this.authReady.set(true);
@@ -180,8 +159,12 @@ export class AuthService {
         this.clearSession();
         this.authReady.set(true);
         return of(false);
-      })
+      }),
+      finalize(() => this.authCheckRequest = undefined),
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
+
+    return this.authCheckRequest;
   }
 
   /**
@@ -218,12 +201,10 @@ export class AuthService {
   }
 
   /**
-   * Vide le token et les signaux d'authentification. Appelée après logout
-   * ou quand le token est invalide/expiré.
+   * Vide les signaux locaux. Le cookie de session HttpOnly est invalidé par le backend.
    */
   clearSession(): void {
     this.chatService.resetSession();
-    sessionStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.authReady.set(true);
   }

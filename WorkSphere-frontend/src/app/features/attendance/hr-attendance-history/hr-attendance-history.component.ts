@@ -27,8 +27,16 @@ export class HrAttendanceHistoryComponent implements OnInit {
   readonly historyEmployeeFilter = signal<number | null>(null);
   readonly historyDeptFilter = signal<number | null>(null);
   readonly historyStatusFilter = signal<'TOUS' | AttendanceValidationStatus>('TOUS');
+  readonly searchQuery = signal('');
   readonly pageSize = 15;
   readonly currentPage = signal(1);
+
+  // Edit Modal State
+  readonly selectedDeclarationForEdit = signal<AttendanceDeclaration | null>(null);
+  readonly editStatus = signal<'PRESENT' | 'ABSENT'>('PRESENT');
+  readonly editValidationStatus = signal<AttendanceValidationStatus>('VALIDEE');
+  readonly editRejectionReason = signal('');
+  readonly processingAction = signal(false);
 
   readonly departments = computed(() => {
     const map = new Map<number, string>();
@@ -40,6 +48,8 @@ export class HrAttendanceHistoryComponent implements OnInit {
 
   readonly filteredDeclarations = computed(() => {
     const [year, month] = this.currentMonth().split('-').map(Number);
+    const query = this.searchQuery().toLowerCase().trim();
+
     let list = this.declarations().filter((d) => {
       const dDate = new Date(d.date);
       return dDate.getFullYear() === year && dDate.getMonth() === month - 1;
@@ -53,6 +63,16 @@ export class HrAttendanceHistoryComponent implements OnInit {
     }
     const statusFilter = this.historyStatusFilter();
     if (statusFilter !== 'TOUS') list = list.filter((d) => d.validation_status === statusFilter);
+
+    if (query) {
+      list = list.filter((d) => {
+        const empName = this.employeeName(d.user_id).toLowerCase();
+        const deptName = this.teamOf(d.user_id).toLowerCase();
+        const dateStr = d.date.toLowerCase();
+        return empName.includes(query) || deptName.includes(query) || dateStr.includes(query);
+      });
+    }
+
     return list;
   });
 
@@ -109,6 +129,11 @@ export class HrAttendanceHistoryComponent implements OnInit {
       next: (decls) => { this.declarations.set(decls); this.loading.set(false); },
       error: () => { this.loading.set(false); this.error.set('Erreur lors du chargement.'); },
     });
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
   }
 
   previousMonth(): void {
@@ -174,12 +199,46 @@ export class HrAttendanceHistoryComponent implements OnInit {
     }
   }
 
+  openEditModal(declaration: AttendanceDeclaration): void {
+    this.selectedDeclarationForEdit.set(declaration);
+    this.editStatus.set(declaration.status);
+    this.editValidationStatus.set(declaration.validation_status);
+    this.editRejectionReason.set(declaration.rejection_reason || '');
+  }
+
+  closeEditModal(): void {
+    this.selectedDeclarationForEdit.set(null);
+  }
+
+  saveDeclarationChanges(): void {
+    const decl = this.selectedDeclarationForEdit();
+    if (!decl) return;
+    this.processingAction.set(true);
+
+    this.attendanceService.update(decl.id, {
+      status: this.editStatus(),
+      validation_status: this.editValidationStatus(),
+      rejection_reason: this.editValidationStatus() === 'REJETEE' ? this.editRejectionReason() : undefined,
+    }).subscribe({
+      next: () => {
+        this.processingAction.set(false);
+        this.closeEditModal();
+        this.loadMonth();
+      },
+      error: () => {
+        this.processingAction.set(false);
+      }
+    });
+  }
+
   private monthLabel(): string {
     return new Date(this.currentMonth() + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   }
 
   private exportRows(): string[][] {
-    return this.filteredDeclarations().map((d) => [
+    return this.filteredDeclarations()
+      .filter((d) => d.validation_status === 'VALIDEE')
+      .map((d) => [
       new Date(d.date).toLocaleDateString('fr-FR'),
       this.employeeName(d.user_id),
       this.teamOf(d.user_id),
@@ -210,3 +269,4 @@ export class HrAttendanceHistoryComponent implements OnInit {
     });
   }
 }
+

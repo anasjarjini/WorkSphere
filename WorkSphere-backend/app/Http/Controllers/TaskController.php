@@ -13,6 +13,7 @@ use App\Notifications\TaskStatusChangedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
@@ -47,7 +48,10 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'priority' => 'nullable|in:LOW,MEDIUM,HIGH',
             'due_date' => 'nullable|date',
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where('company_id', $request->user()->company_id),
+            ],
         ]);
 
         $task = $project->tasks()->create([
@@ -75,7 +79,10 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'priority' => 'nullable|in:LOW,MEDIUM,HIGH',
             'due_date' => 'nullable|date',
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where('company_id', $request->user()->company_id),
+            ],
             'status' => 'nullable|in:TODO,IN_PROGRESS,REVIEW,DONE',
         ]);
 
@@ -136,7 +143,10 @@ class TaskController extends Controller
 
 
         $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where('company_id', $request->user()->company_id),
+            ],
         ]);
 
         $oldUserId = $task->user_id;

@@ -8,7 +8,7 @@ import { Employee } from '../../../core/models/employee.model';
 @Component({
   selector: 'app-team-attendance-monthly',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [],
   templateUrl: './team-attendance-monthly.component.html',
 })
 export class TeamAttendanceMonthlyComponent implements OnInit {
@@ -57,7 +57,7 @@ export class TeamAttendanceMonthlyComponent implements OnInit {
   }
 
   private loadTeam(): void {
-    this.employeeService.getManagerTeam().subscribe({
+    this.employeeService.getManagerTeam({ per_page: 100 }).subscribe({
       next: (res) => this.teamMembers.set(res.data),
     });
   }

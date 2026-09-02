@@ -6,3 +6,6 @@ node_modules/
 *.log.env
 .opencode
 
+WorkSphere-frontend/.agent
+WorkSphere-frontend/.angular/
+WorkSphere-backend/.phpunit.result.cache

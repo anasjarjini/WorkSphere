@@ -1,6 +1,6 @@
 @let isLoading = loading();
 @let members = teamMembers();
-@let projs = projects();
+
 @let progressList = projectProgress();
 @let totalTeam = teamCount();
 @let activeProj = activeProjects();
@@ -156,7 +156,7 @@
         </div>
         <div class="grid grid-cols-2 gap-4 mt-8">
           <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background: #7c3aed"></span>
+            <span class="w-3 h-3 rounded-full" style="background: #0ea5e9"></span>
             <span class="text-sm text-text-secondary">À faire ({{ taskPcts.todo }}%)</span>
           </div>
           <div class="flex items-center gap-2">

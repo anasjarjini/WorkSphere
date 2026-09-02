@@ -6,14 +6,14 @@ use App\Models\Task;
 use App\Models\TaskDependency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class TaskDependencyController extends Controller
 {
     public function index(Task $task, Request $request): JsonResponse
     {
-        if ($task->company_id !== $request->user()->company_id) {
-            return response()->json(['message' => 'Non autorisé.'], 403);
-        }
+        Gate::authorize('view', $task);
 
         $dependencies = $task->dependencies()
             ->with('dependsOnTask')
@@ -24,12 +24,15 @@ class TaskDependencyController extends Controller
 
     public function store(Task $task, Request $request): JsonResponse
     {
-        if ($task->company_id !== $request->user()->company_id) {
-            return response()->json(['message' => 'Non autorisé.'], 403);
-        }
+        Gate::authorize('update', $task);
 
         $validated = $request->validate([
-            'depends_on_task_id' => 'required|exists:tasks,id',
+            'depends_on_task_id' => [
+                'required',
+                Rule::exists('tasks', 'id')
+                    ->where('company_id', $request->user()->company_id)
+                    ->where('project_id', $task->project_id),
+            ],
         ]);
 
         TaskDependency::validateSameProject($task->id, $validated['depends_on_task_id']);
@@ -52,9 +55,11 @@ class TaskDependencyController extends Controller
 
     public function destroy(Task $task, TaskDependency $dependency, Request $request): JsonResponse
     {
-        if ($task->company_id !== $request->user()->company_id) {
-            return response()->json(['message' => 'Non autorisé.'], 403);
+        if ($dependency->task_id !== $task->id) {
+            abort(404);
         }
+
+        Gate::authorize('update', $task);
 
         $dependency->delete();
 

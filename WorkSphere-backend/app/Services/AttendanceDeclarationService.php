@@ -26,10 +26,6 @@ class AttendanceDeclarationService
             ->whereDate('date', $date)
             ->first();
 
-        if ($existing && $existing->validation_status === AttendanceValidationStatus::VALIDEE) {
-            throw new \DomainException('Cette déclaration est déjà validée et ne peut plus être modifiée.');
-        }
-
         $data = [
             'company_id' => $user->company_id,
             'user_id' => $user->id,
@@ -39,6 +35,9 @@ class AttendanceDeclarationService
         ];
 
         if ($existing) {
+            if ($existing->validation_status === AttendanceValidationStatus::VALIDEE) {
+                throw new \DomainException('Cette déclaration a déjà été validée et ne peut plus être modifiée.');
+            }
             $existing->update($data);
             $this->notifyManager($existing);
             return $existing->fresh();
@@ -89,9 +88,12 @@ class AttendanceDeclarationService
     {
         Gate::forUser($approver)->authorize('approve', $declaration);
 
-        if ($declaration->validation_status === AttendanceValidationStatus::VALIDEE) {
-            throw new \DomainException('Cette déclaration est déjà validée.');
+        if ($declaration->validation_status !== AttendanceValidationStatus::EN_ATTENTE) {
+            throw new \DomainException('Cette déclaration a déjà été traitée.');
         }
+
+        $oldStatus = $declaration->status->value;
+        $oldValidationStatus = $declaration->validation_status->value;
 
         $declaration->update([
             'validation_status' => AttendanceValidationStatus::VALIDEE,
@@ -99,6 +101,8 @@ class AttendanceDeclarationService
             'validated_at' => now(),
             'rejection_reason' => null,
         ]);
+
+        $this->logAudit($declaration, $approver, $oldStatus, $declaration->status->value, $oldValidationStatus, AttendanceValidationStatus::VALIDEE->value, 'Approbation manuelle');
 
         $declaration->user->notify(new AttendanceValidatedNotification($declaration));
 
@@ -109,9 +113,12 @@ class AttendanceDeclarationService
     {
         Gate::forUser($approver)->authorize('approve', $declaration);
 
-        if ($declaration->validation_status === AttendanceValidationStatus::VALIDEE) {
-            throw new \DomainException('Cette déclaration est déjà validée et ne peut pas être rejetée.');
+        if ($declaration->validation_status !== AttendanceValidationStatus::EN_ATTENTE) {
+            throw new \DomainException('Cette déclaration a déjà été traitée et ne peut pas être rejetée.');
         }
+
+        $oldStatus = $declaration->status->value;
+        $oldValidationStatus = $declaration->validation_status->value;
 
         $declaration->update([
             'validation_status' => AttendanceValidationStatus::REJETEE,
@@ -120,10 +127,58 @@ class AttendanceDeclarationService
             'rejection_reason' => $reason,
         ]);
 
+        $this->logAudit($declaration, $approver, $oldStatus, $declaration->status->value, $oldValidationStatus, AttendanceValidationStatus::REJETEE->value, 'Rejet: ' . $reason);
+
         $declaration->user->notify(new AttendanceRejectedNotification($declaration));
 
         return $declaration->fresh();
     }
+
+    public function adminUpdate(AttendanceDeclaration $declaration, array $data, User $actor): AttendanceDeclaration
+    {
+        Gate::forUser($actor)->authorize('update', $declaration);
+
+        $oldStatus = $declaration->status->value;
+        $oldValidationStatus = $declaration->validation_status->value;
+
+        $updateData = [];
+        if (isset($data['status'])) {
+            $updateData['status'] = AttendanceStatus::from($data['status']);
+        }
+        if (isset($data['validation_status'])) {
+            $updateData['validation_status'] = AttendanceValidationStatus::from($data['validation_status']);
+            $updateData['validated_by'] = $actor->id;
+            $updateData['validated_at'] = now();
+        }
+        if (array_key_exists('rejection_reason', $data)) {
+            $updateData['rejection_reason'] = $data['rejection_reason'];
+        }
+
+        $declaration->update($updateData);
+
+        $newStatus = isset($data['status']) ? $data['status'] : $oldStatus;
+        $newValidationStatus = isset($data['validation_status']) ? $data['validation_status'] : $oldValidationStatus;
+
+        if ($oldStatus !== $newStatus || $oldValidationStatus !== $newValidationStatus) {
+            $this->logAudit($declaration, $actor, $oldStatus, $newStatus, $oldValidationStatus, $newValidationStatus, 'Modification administrateur');
+        }
+
+        return $declaration->fresh(['user', 'validator']);
+    }
+
+    private function logAudit(AttendanceDeclaration $declaration, User $actor, string $oldStatus, string $newStatus, string $oldValidationStatus, string $newValidationStatus, ?string $reason = null): void
+    {
+        \App\Models\AttendanceAudit::create([
+            'attendance_declaration_id' => $declaration->id,
+            'user_id' => $actor->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'old_validation_status' => $oldValidationStatus,
+            'new_validation_status' => $newValidationStatus,
+            'reason' => $reason,
+        ]);
+    }
+
 
     public function bulkApprove(array $declarationIds, User $approver): array
     {
@@ -133,7 +188,7 @@ class AttendanceDeclarationService
         foreach ($declarationIds as $id) {
             $declaration = AttendanceDeclaration::find($id);
 
-            if (!$declaration || $declaration->validation_status === AttendanceValidationStatus::VALIDEE) {
+            if (!$declaration) {
                 $skipped[] = $id;
                 continue;
             }

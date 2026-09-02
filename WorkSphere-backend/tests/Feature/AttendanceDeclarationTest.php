@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\User;
 use App\Services\AttendanceDeclarationService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -17,9 +18,13 @@ use Tests\TestCase;
 class AttendanceDeclarationTest extends TestCase
 {
     private Company $company;
+
     private User $manager;
+
     private User $employee;
+
     private User $hrAdmin;
+
     private AttendanceDeclarationService $service;
 
     protected function setUp(): void
@@ -65,6 +70,18 @@ class AttendanceDeclarationTest extends TestCase
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['user_id', 'date']);
+        });
+
+        Schema::create('attendance_audits', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('attendance_declaration_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('old_status')->nullable();
+            $table->string('new_status')->nullable();
+            $table->string('old_validation_status')->nullable();
+            $table->string('new_validation_status')->nullable();
+            $table->text('reason')->nullable();
+            $table->timestamps();
         });
 
         Schema::create('absences', function (Blueprint $table) {
@@ -137,7 +154,7 @@ class AttendanceDeclarationTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
-        $this->service = new AttendanceDeclarationService();
+        $this->service = new AttendanceDeclarationService;
     }
 
     public function test_employee_can_declare_present(): void
@@ -192,7 +209,7 @@ class AttendanceDeclarationTest extends TestCase
     {
         $declaration = $this->service->declare($this->manager, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         $this->service->approve($declaration, $this->manager);
     }
 
@@ -211,7 +228,7 @@ class AttendanceDeclarationTest extends TestCase
 
         $declaration = $this->service->declare($otherManager, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         $this->service->approve($declaration, $this->manager);
     }
 
@@ -225,24 +242,26 @@ class AttendanceDeclarationTest extends TestCase
         $this->assertSame($this->hrAdmin->id, $approved->validated_by);
     }
 
-    public function test_hr_admin_cannot_approve_employee_declaration(): void
+    public function test_hr_admin_can_approve_employee_declaration(): void
     {
         $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
-        $this->service->approve($declaration, $this->hrAdmin);
+        $approved = $this->service->approve($declaration, $this->hrAdmin);
+
+        $this->assertSame('VALIDEE', $approved->validation_status->value);
+        $this->assertSame($this->hrAdmin->id, $approved->validated_by);
     }
 
-    public function test_hr_admin_cannot_create_declaration(): void
+    public function test_hr_admin_can_create_declaration_for_an_employee(): void
     {
-        $this->assertFalse(Gate::forUser($this->hrAdmin)->allows('create', AttendanceDeclaration::class));
+        $this->assertTrue(Gate::forUser($this->hrAdmin)->allows('create', AttendanceDeclaration::class));
     }
 
     public function test_employee_cannot_approve_declaration(): void
     {
         $declaration = $this->service->declare($this->employee, Carbon::today(), AttendanceStatus::PRESENT);
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         $this->service->approve($declaration, $this->employee);
     }
 
@@ -335,5 +354,4 @@ class AttendanceDeclarationTest extends TestCase
         $this->assertContains($decl1->id, $result['approved']);
         $this->assertContains($decl2->id, $result['skipped']);
     }
-
 }

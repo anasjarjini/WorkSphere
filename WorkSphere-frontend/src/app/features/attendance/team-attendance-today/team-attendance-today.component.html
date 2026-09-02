@@ -1,16 +1,21 @@
 <div class="flex flex-col gap-6">
-  <!-- Sub Header -->
+  <!-- Sub Header & Search -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <p class="font-label-md text-label-md text-on-surface-variant">{{ todayStr | date:'fullDate':'':'fr' }}</p>
-    <div class="flex gap-3">
-      <button class="px-4 py-2.5 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors inline-flex items-center gap-2 cursor-pointer">
-        <span class="material-symbols-outlined text-[18px]">filter_list</span>
-        Filtrer
-      </button>
-      <button class="px-4 py-2.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity inline-flex items-center gap-2 cursor-pointer">
-        <span class="material-symbols-outlined text-[18px]">download</span>
-        Exporter Rapport
-      </button>
+    <div class="flex flex-col gap-1">
+      <p class="font-label-md text-label-md text-on-surface-variant">{{ todayStr | date:'fullDate':'':'fr' }}</p>
+    </div>
+
+    <!-- Search input -->
+    <div class="relative flex-1 max-w-md w-full">
+      <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-lg pointer-events-none">search</span>
+      <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+        placeholder="Rechercher un membre de l'équipe..."
+        class="w-full bg-surface border border-outline-variant rounded-xl pl-10 pr-9 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+      @if (searchQuery()) {
+        <button (click)="onSearchChange('')" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      }
     </div>
   </div>
 
@@ -59,8 +64,7 @@
             <tr class="border-b border-outline-variant">
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Employé</th>
               <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Statut</th>
-              <th class="px-6 py-4 text-left font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Lieu</th>
-              <th class="px-6 py-4 text-right font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Action</th>
+              <th class="px-6 py-4 text-right font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant">
@@ -89,26 +93,27 @@
                     <app-attendance-status-badge [status]="null" [validationStatus]="null" [isOnLeave]="item.isOnLeave" size="sm" />
                   }
                 </td>
-                <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">
-                  @if (item.declaration) {
-                    <span class="inline-flex items-center gap-1.5">
-                      <span class="material-symbols-outlined text-[16px]">apartment</span>
-                      Bureau
-                    </span>
-                  } @else {
-                    <span class="text-on-surface-variant/50">—</span>
-                  }
-                </td>
+
                 <td class="px-6 py-4 text-right">
-                  @if (item.declaration?.validation_status === 'EN_ATTENTE') {
-                    <a routerLink="/manager/attendance/validation"
-                      class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm hover:opacity-90 transition-opacity cursor-pointer">
-                      <span class="material-symbols-outlined text-[16px]">check</span>
-                      Valider
-                    </a>
-                  } @else {
-                    <span class="font-label-sm text-label-sm text-on-surface-variant/50">—</span>
-                  }
+                  <div class="flex items-center justify-end gap-1">
+                    <button (click)="openHistoryModal(item.employee)"
+                      class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer"
+                      title="Voir l'historique de présence">
+                      <span class="material-symbols-outlined text-lg">history</span>
+                    </button>
+                    <button (click)="openEditModal(item)"
+                      class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer"
+                      title="Gérer / Modifier la déclaration">
+                      <span class="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="px-6 py-12 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined text-4xl mb-2 text-outline">search_off</span>
+                  <p>Aucun membre trouvé pour cette recherche.</p>
                 </td>
               </tr>
             }
@@ -116,44 +121,182 @@
         </table>
       </div>
     </div>
-
-    <!-- Bottom Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <!-- Map / Legend Card -->
-      <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden lg:col-span-2">
-        <div class="h-52 relative bg-surface-container-low">
-          <svg class="absolute inset-0 w-full h-full opacity-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 6v16l6 3 6-3 6 3 4-2V6l-4 2-6-3-6 3-4-2z"/>
-            <path d="M7 8v16"/><path d="M13 5v16"/><path d="M19 7v16"/>
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="font-label-md text-label-md text-on-surface-variant bg-surface px-4 py-2 rounded-lg shadow-sm">Carte des équipes (Bureau central)</span>
-          </div>
-        </div>
-        <div class="p-4 border-t border-outline-variant flex flex-wrap items-center gap-3">
-          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
-            <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span> Présent
-          </span>
-          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
-            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span> En attente
-          </span>
-          <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg">
-            <span class="w-2.5 h-2.5 rounded-full bg-error"></span> Absent
-          </span>
-        </div>
-      </div>
-      <!-- Performance Card -->
-      <div class="bg-primary-container text-on-primary-container rounded-xl p-6 relative overflow-hidden flex flex-col justify-between">
-        <span class="material-symbols-outlined absolute right-4 top-4 text-4xl opacity-30">bolt</span>
-        <div>
-          <h3 class="font-heading text-lg font-bold mb-2">Performance de l'équipe</h3>
-          <p class="font-body-md text-body-md opacity-90">{{ counts().rate }}% de présence aujourd'hui</p>
-        </div>
-        <a routerLink="/manager/dashboard" class="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-primary rounded-full font-label-md text-label-md font-semibold hover:opacity-90 transition-opacity cursor-pointer w-fit">
-          Voir Analytics
-          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-        </a>
-      </div>
-    </div>
   }
 </div>
+
+<!-- Modal 1: Employee Attendance History -->
+@if (selectedEmployeeForHistory()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div class="bg-surface border border-outline-variant rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[85vh] overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-outline-variant pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+            {{ initials(selectedEmployeeForHistory()!.first_name, selectedEmployeeForHistory()!.last_name) }}
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-lg text-on-surface">
+              Historique des présences
+            </h3>
+            <p class="text-xs text-on-surface-variant">
+              {{ selectedEmployeeForHistory()!.first_name }} {{ selectedEmployeeForHistory()!.last_name }} • {{ selectedEmployeeForHistory()!.email }}
+            </p>
+          </div>
+        </div>
+        <button (click)="closeHistoryModal()" class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- History Table -->
+      <div class="overflow-y-auto flex-1">
+        @if (loadingHistory()) {
+          <div class="flex justify-center py-12">
+            <span class="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span>
+          </div>
+        } @else if (employeeHistory().length === 0) {
+          <div class="text-center py-12 text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl mb-2 text-outline">history_toggle_off</span>
+            <p>Aucune déclaration enregistrée.</p>
+          </div>
+        } @else {
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+                <th class="px-4 py-3 font-medium">Date</th>
+                <th class="px-4 py-3 font-medium">Déclaration</th>
+                <th class="px-4 py-3 font-medium">Validation</th>
+                <th class="px-4 py-3 font-medium">Validé par</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+              @for (decl of employeeHistory(); track decl.id) {
+                <tr class="hover:bg-surface-container-lowest">
+                  <td class="px-4 py-3 font-medium text-on-surface">{{ decl.date | date:'dd MMM yyyy':'':'fr' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [class.bg-emerald-100]="decl.status === 'PRESENT'" [class.text-emerald-800]="decl.status === 'PRESENT'"
+                      [class.bg-rose-100]="decl.status === 'ABSENT'" [class.text-rose-800]="decl.status === 'ABSENT'">
+                      {{ decl.status === 'PRESENT' ? 'Présent' : 'Absent' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [class.bg-emerald-100]="decl.validation_status === 'VALIDEE'" [class.text-emerald-800]="decl.validation_status === 'VALIDEE'"
+                      [class.bg-amber-100]="decl.validation_status === 'EN_ATTENTE'" [class.text-amber-800]="decl.validation_status === 'EN_ATTENTE'"
+                      [class.bg-rose-100]="decl.validation_status === 'REJETEE'" [class.text-rose-800]="decl.validation_status === 'REJETEE'">
+                      {{ decl.validation_status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-on-surface-variant">
+                    {{ decl.validator ? decl.validator.first_name + ' ' + decl.validator.last_name : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end pt-3 border-t border-outline-variant">
+        <button (click)="closeHistoryModal()" class="px-4 py-2 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal 2: Edit / Manage Employee Declaration -->
+@if (selectedEmployeeForEdit()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div class="bg-surface border border-outline-variant rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-5">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-outline-variant pb-3">
+        <h3 class="font-heading font-bold text-lg text-on-surface">
+          Gérer la déclaration
+        </h3>
+        <button (click)="closeEditModal()" class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Employee Summary Card -->
+      <div class="flex items-center gap-3 p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/60">
+        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+          {{ initials(selectedEmployeeForEdit()!.employee.first_name, selectedEmployeeForEdit()!.employee.last_name) }}
+        </div>
+        <div>
+          <div class="font-bold text-sm text-on-surface">
+            {{ selectedEmployeeForEdit()!.employee.first_name }} {{ selectedEmployeeForEdit()!.employee.last_name }}
+          </div>
+          <div class="text-xs text-on-surface-variant">
+            {{ selectedEmployeeForEdit()!.employee.email }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-3 pt-2">
+        @if (selectedEmployeeForEdit()!.declaration && selectedEmployeeForEdit()!.declaration!.validation_status !== 'VALIDEE') {
+          <button (click)="approveDeclaration(selectedEmployeeForEdit()!.declaration!.id)"
+            [disabled]="processingAction()"
+            class="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+            Valider la présence
+          </button>
+
+          <div class="space-y-2">
+            <input type="text" [ngModel]="rejectionReason()" (ngModelChange)="rejectionReason.set($event)" placeholder="Motif du rejet (optionnel)..."
+              class="w-full bg-surface border border-outline-variant rounded-xl px-3.5 py-2 text-xs text-on-surface outline-none focus:border-primary" />
+            <button (click)="rejectDeclaration(selectedEmployeeForEdit()!.declaration!.id)"
+              [disabled]="processingAction()"
+              class="w-full py-2.5 rounded-xl bg-rose-600 text-white font-semibold text-sm hover:bg-rose-700 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+              <span class="material-symbols-outlined text-lg">cancel</span>
+              Rejeter la déclaration
+            </button>
+          </div>
+        } @else {
+          <div class="flex gap-3 mb-4">
+            <button (click)="editSelectedStatus.set('PRESENT')"
+              class="flex-1 py-3 rounded-xl font-semibold text-sm transition-all border-2 flex flex-col items-center justify-center gap-1 cursor-pointer"
+              [class.bg-secondary-container]="editSelectedStatus() === 'PRESENT'"
+              [class.border-secondary]="editSelectedStatus() === 'PRESENT'"
+              [class.text-on-secondary-container]="editSelectedStatus() === 'PRESENT'"
+              [class.bg-surface]="editSelectedStatus() !== 'PRESENT'"
+              [class.border-outline-variant]="editSelectedStatus() !== 'PRESENT'"
+              [class.text-on-surface-variant]="editSelectedStatus() !== 'PRESENT'">
+              <span class="material-symbols-outlined text-2xl">how_to_reg</span>
+              Présent
+            </button>
+            <button (click)="editSelectedStatus.set('ABSENT')"
+              class="flex-1 py-3 rounded-xl font-semibold text-sm transition-all border-2 flex flex-col items-center justify-center gap-1 cursor-pointer"
+              [class.bg-error-container]="editSelectedStatus() === 'ABSENT'"
+              [class.border-error]="editSelectedStatus() === 'ABSENT'"
+              [class.text-on-error-container]="editSelectedStatus() === 'ABSENT'"
+              [class.bg-surface]="editSelectedStatus() !== 'ABSENT'"
+              [class.border-outline-variant]="editSelectedStatus() !== 'ABSENT'"
+              [class.text-on-surface-variant]="editSelectedStatus() !== 'ABSENT'">
+              <span class="material-symbols-outlined text-2xl">block</span>
+              Absent
+            </button>
+          </div>
+          <button (click)="forceDeclare(editSelectedStatus()!)"
+            [disabled]="!editSelectedStatus() || processingAction()"
+            class="w-full py-2.5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:opacity-90 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+            Enregistrer le statut
+          </button>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end pt-3 border-t border-outline-variant">
+        <button (click)="closeEditModal()" class="px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant text-sm font-medium hover:bg-surface-container transition-colors cursor-pointer">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

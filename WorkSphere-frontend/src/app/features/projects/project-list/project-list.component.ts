@@ -33,6 +33,7 @@ export class ProjectListComponent {
   readonly projects = signal<Project[]>([]);
   readonly loading = signal(true);
   readonly selectedStatus = signal<ProjectStatus | 'ALL'>('ALL');
+  readonly searchQuery = signal('');
 
   readonly isManagerOrAdmin = computed(() => {
     const role = this.user()?.role;
@@ -40,10 +41,23 @@ export class ProjectListComponent {
   });
 
   readonly filteredProjects = computed(() => {
-    const list = this.projects();
+    let list = this.projects();
     const status = this.selectedStatus();
-    if (status === 'ALL') return list;
-    return list.filter(p => p.status === status);
+    const query = this.searchQuery().toLowerCase().trim();
+
+    if (status !== 'ALL') {
+      list = list.filter(p => p.status === status);
+    }
+
+    if (query) {
+      list = list.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.reference_code.toLowerCase().includes(query) ||
+        (p.description && p.description.toLowerCase().includes(query))
+      );
+    }
+
+    return list;
   });
 
   readonly statuses: (ProjectStatus | 'ALL')[] = ['ALL', 'PLANIFICATION', 'EN_COURS', 'EN_PAUSE', 'TERMINE'];

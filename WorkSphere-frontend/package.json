@@ -11,7 +11,6 @@
   "private": true,
   "packageManager": "npm@11.12.1",
   "dependencies": {
-    "@angular/animations": "^22.0.0",
     "@angular/cdk": "^22.0.5",
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
@@ -22,10 +21,10 @@
     "chart.js": "^4.5.1",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
+    "jszip": "^3.10.1",
     "ng2-charts": "^10.0.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "xlsx": "^0.18.5"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^22.0.2",
@@ -39,5 +38,9 @@
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
     "vitest": "^4.0.8"
+  },
+  "overrides": {
+    "@babel/core": "^7.29.7",
+    "esbuild": "^0.28.1"
   }
 }

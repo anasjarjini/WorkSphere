@@ -28,7 +28,10 @@ class UserResource extends JsonResource
                 'slug' => $this->company->slug,
             ] : null),
             'hire_date' => $this->hire_date?->format('Y-m-d'),
-            'salary' => $this->salary,
+            'salary' => $this->when(
+                $request->user()?->role === 'HR_ADMIN' || $request->user()?->id === $this->id,
+                $this->salary
+            ),
             'is_active' => $this->status === 'ACTIVE',
             'avatar_url' => $this->avatar_url,
             'last_active_at' => $this->last_active_at,

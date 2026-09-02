@@ -46,6 +46,11 @@ class AbsenceStatusTransitionService
             'rejected_at' => null,
         ]);
 
+        \App\Models\AttendanceDeclaration::where('user_id', $absence->user_id)
+            ->where('date', '>=', $absence->start_date)
+            ->where('date', '<=', $absence->end_date)
+            ->delete();
+
         $this->leaveBalanceService->deductBalance($absence);
 
         $absence->user->notify(new LeaveRequestApprovedNotification($absence));
