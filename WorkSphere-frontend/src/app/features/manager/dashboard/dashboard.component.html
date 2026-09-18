@@ -1,239 +1,621 @@
-@let isLoading = loading();
-@let members = teamMembers();
+@let data = stats();
+@let teamPresence = presence();
+@let pending = approvals();
+@let taskStats = tasks();
+@let projectStats = projects();
 
-@let progressList = projectProgress();
-@let totalTeam = teamCount();
-@let activeProj = activeProjects();
-@let pending = pendingTasks();
-@let overdue = overdueTasks();
-@let taskPcts = taskPct();
-
-<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-
-  <!-- Header & Welcome -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-heading font-bold text-text-heading">Bonjour, {{ userName() }}</h1>
-      <p class="text-base text-text-secondary">Voici l'état actuel de votre équipe et de vos projets pour aujourd'hui.</p>
+<div class="dashboard-page" [attr.aria-busy]="loading()">
+  <header class="dashboard-hero">
+    <div class="hero-copy">
+      <div class="hero-meta">
+        <span class="workspace-chip"><i></i>Espace Manager</span>
+        <span class="date-eyebrow">
+          <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+          {{ today }}
+        </span>
+      </div>
+      <h1>
+        Bonjour, <span>{{ userName() }}</span>
+      </h1>
+      <p>Gardez une vue claire sur votre équipe, les validations et les échéances prioritaires.</p>
     </div>
-    <a routerLink="/manager/projects/new" class="bg-primary text-text-inverse px-6 py-3 rounded-lg text-sm font-semibold flex items-center gap-3 hover:opacity-90 transition-all cursor-pointer">
-      <span class="material-symbols-outlined">add</span>
-      Nouveau Projet
-    </a>
-  </div>
 
-  @if (isLoading) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      @for (_ of [1,2,3,4]; track _) {
-        <div class="bg-surface p-6 rounded-xl border border-border animate-pulse">
-          <div class="flex justify-between items-start mb-4">
-            <div class="h-10 w-10 bg-border rounded-lg"></div>
-            <div class="h-4 w-12 bg-border rounded"></div>
-          </div>
-          <div class="h-3 w-24 bg-border rounded mb-2"></div>
-          <div class="h-7 w-10 bg-border rounded"></div>
-        </div>
+    <div class="hero-actions">
+      @if (data) {
+        <small class="updated-at"> Actualisé à {{ data.last_updated_at | date: 'HH:mm' }} </small>
       }
+      <button
+        class="refresh-button"
+        type="button"
+        [disabled]="refreshing()"
+        (click)="loadDashboard()"
+        aria-label="Actualiser le tableau de bord"
+      >
+        <span
+          class="material-symbols-outlined"
+          [class.is-spinning]="refreshing()"
+          aria-hidden="true"
+          >refresh</span
+        >
+        <span>{{ refreshing() ? 'Actualisation…' : 'Actualiser' }}</span>
+      </button>
+      <a class="primary-action" routerLink="/manager/projects/new">
+        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        Nouveau projet
+      </a>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <div class="lg:col-span-8 bg-surface p-8 rounded-xl border border-border animate-pulse">
-        <div class="h-5 w-40 bg-border rounded mb-8"></div>
-        <div class="space-y-8">
-          @for (_ of [1,2,3]; track _) {
-            <div>
-              <div class="flex justify-between mb-3">
-                <div class="h-4 w-48 bg-border rounded"></div>
-                <div class="h-4 w-8 bg-border rounded"></div>
-              </div>
-              <div class="h-2 bg-border rounded"></div>
-            </div>
+  </header>
+
+  @if (loading()) {
+    <section class="skeleton-kpis" aria-label="Chargement des indicateurs">
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="skeleton-card skeleton"></div>
+      }
+    </section>
+    <section class="skeleton-panels">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </section>
+    <section class="skeleton-panels reverse">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </section>
+  } @else if (error() && !data) {
+    <section class="load-error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <div>
+        <h2>Données temporairement indisponibles</h2>
+        <p>{{ error() }}</p>
+      </div>
+      <button type="button" (click)="loadDashboard()">Réessayer</button>
+    </section>
+  } @else if (data && projectStats) {
+    @if (error()) {
+      <div class="inline-error" role="status">
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+        {{ error() }} Les dernières données disponibles restent affichées.
+      </div>
+    }
+
+    <section class="kpi-grid" aria-label="Indicateurs clés">
+      <a class="kpi-card tone-teal" routerLink="/manager/team">
+        <div class="kpi-top">
+          <span class="kpi-label">Mon équipe</span>
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">groups</span>
+        </div>
+        <strong>{{ data.team_size }}</strong>
+        <div class="kpi-bottom">
+          <span class="positive">
+            <i class="material-symbols-outlined" aria-hidden="true">verified</i>
+            {{ data.active_members }} actif{{ data.active_members > 1 ? 's' : '' }}
+          </span>
+          <span>collaborateurs directs</span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
+
+      <a class="kpi-card tone-blue" routerLink="/manager/attendance/today">
+        <div class="kpi-top">
+          <span class="kpi-label">Présence aujourd'hui</span>
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">how_to_reg</span>
+        </div>
+        <strong>{{ teamPresence.rate }}<small>%</small></strong>
+        <div class="kpi-bottom">
+          <span class="positive"
+            >{{ teamPresence.present }} présent{{ teamPresence.present > 1 ? 's' : '' }}</span
+          >
+          <span>sur {{ teamPresence.total }} actifs</span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
+
+      <a class="kpi-card tone-violet" [routerLink]="primaryValidationRoute()">
+        <div class="kpi-top">
+          <span class="kpi-label">Validations</span>
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">fact_check</span>
+        </div>
+        <strong>{{ pending.total }}</strong>
+        <div class="kpi-bottom">
+          @if (pending.total > 0) {
+            <span class="attention">À traiter</span>
+            <span>congés et présences</span>
+          } @else {
+            <span class="positive">Tout est à jour</span>
           }
         </div>
-      </div>
-      <div class="lg:col-span-4 bg-surface p-8 rounded-xl border border-border animate-pulse">
-        <div class="h-5 w-32 bg-border rounded mb-8"></div>
-        <div class="h-48 w-48 bg-border rounded-full mx-auto"></div>
-      </div>
-    </div>
-  } @else {
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-surface p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
-        <div class="flex justify-between items-start mb-4">
-          <div class="p-3 bg-primary-50 rounded-lg text-primary">
-            <span class="material-symbols-outlined">group</span>
-          </div>
-          <span class="text-success text-xs font-bold flex items-center gap-1">
-            <span class="material-symbols-outlined text-base">trending_up</span>
-            +{{ members.length > 5 ? 2 : 1 }}
-          </span>
-        </div>
-        <p class="text-text-secondary text-sm font-medium mb-1">Membres d'Équipe</p>
-        <h3 class="text-2xl font-heading font-bold text-text-heading">{{ totalTeam }}</h3>
-      </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
 
-      <div class="bg-surface p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
-        <div class="flex justify-between items-start mb-4">
-          <div class="p-3 bg-secondary-container rounded-lg text-on-secondary-container">
-            <span class="material-symbols-outlined">folder_shared</span>
-          </div>
-          <span class="text-text-secondary text-xs font-medium">En cours</span>
+      <a class="kpi-card tone-coral" routerLink="/manager/projects">
+        <div class="kpi-top">
+          <span class="kpi-label">Tâches en retard</span>
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true"
+            >running_with_errors</span
+          >
         </div>
-        <p class="text-text-secondary text-sm font-medium mb-1">Projets Actifs</p>
-        <h3 class="text-2xl font-heading font-bold text-text-heading">{{ activeProj }}</h3>
-      </div>
+        <strong>{{ taskStats.overdue }}</strong>
+        <div class="kpi-bottom">
+          @if (taskStats.overdue > 0) {
+            <span class="attention">Action requise</span>
+            <span>sur {{ taskStats.total }} tâches</span>
+          } @else {
+            <span class="positive">Aucune échéance dépassée</span>
+          }
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
+    </section>
 
-      <div class="bg-surface p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
-        <div class="flex justify-between items-start mb-4">
-          <div class="p-3 bg-surface-container-highest rounded-lg text-text-heading">
-            <span class="material-symbols-outlined">assignment_late</span>
-          </div>
-          <span class="text-error text-xs font-bold">Important</span>
+    <nav class="quick-actions" aria-label="Actions rapides">
+      <div class="quick-heading">
+        <span class="spark material-symbols-outlined" aria-hidden="true">bolt</span>
+        <div>
+          <strong>Actions rapides</strong>
+          <small>Vos raccourcis du quotidien</small>
         </div>
-        <p class="text-text-secondary text-sm font-medium mb-1">Tâches en Attente</p>
-        <h3 class="text-2xl font-heading font-bold text-text-heading">{{ pending }}</h3>
       </div>
-
-      <div class="bg-surface p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
-        <div class="flex justify-between items-start mb-4">
-          <div class="p-3 bg-error-light rounded-lg text-error">
-            <span class="material-symbols-outlined">priority_high</span>
-          </div>
-          <span class="text-error text-xs font-bold flex items-center gap-1">
-            <span class="material-symbols-outlined text-base">report</span>
-            Critique
-          </span>
-        </div>
-        <p class="text-text-secondary text-sm font-medium mb-1">Tâches en Retard</p>
-        <h3 class="text-2xl font-heading font-bold text-text-heading">{{ overdue }}</h3>
+      <div class="quick-links">
+        <a routerLink="/manager/team">
+          <span class="material-symbols-outlined" aria-hidden="true">group</span>
+          Mon équipe
+        </a>
+        <a routerLink="/manager/attendance/validation">
+          <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+          Valider les présences
+          @if (pending.attendance_declarations > 0) {
+            <b>{{ pending.attendance_declarations }}</b>
+          }
+        </a>
+        <a routerLink="/manager/team/leaves/validation">
+          <span class="material-symbols-outlined" aria-hidden="true">event_available</span>
+          Valider les congés
+          @if (pending.leave_requests > 0) {
+            <b>{{ pending.leave_requests }}</b>
+          }
+        </a>
+        <a routerLink="/manager/projects/new">
+          <span class="material-symbols-outlined" aria-hidden="true">create_new_folder</span>
+          Créer un projet
+        </a>
       </div>
-    </div>
+    </nav>
 
-    <!-- Bento Content Grid -->
-    <div class="grid grid-cols-12 gap-6">
-      <!-- Project Progress -->
-      <div class="col-span-12 lg:col-span-8 bg-surface p-8 rounded-xl border border-border">
-        <div class="flex items-center justify-between mb-8">
-          <h2 class="text-xl font-heading font-semibold text-text-heading">Progrès des Projets</h2>
-          <a routerLink="/manager/projects" class="text-primary text-sm font-bold hover:underline cursor-pointer">Voir tout</a>
+    <section class="operations-grid">
+      <article class="panel attention-panel">
+        <header class="panel-heading">
+          <div>
+            <span class="section-icon coral material-symbols-outlined" aria-hidden="true"
+              >notifications_active</span
+            >
+            <div>
+              <h2>À traiter maintenant</h2>
+              <p>Les points qui demandent votre attention</p>
+            </div>
+          </div>
+          <span class="heading-count" [class.is-clear]="actionCount() === 0">{{
+            actionCount()
+          }}</span>
+        </header>
+
+        @if (actionCount() === 0) {
+          <div class="success-state">
+            <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+            <div>
+              <strong>Tout est sous contrôle</strong>
+              <p>Aucune validation ou échéance critique ne nécessite votre intervention.</p>
+            </div>
+          </div>
+        } @else {
+          <div class="attention-list">
+            @if (pending.leave_requests > 0) {
+              <a class="attention-row" routerLink="/manager/team/leaves/validation">
+                <span class="row-icon violet material-symbols-outlined" aria-hidden="true"
+                  >beach_access</span
+                >
+                <span class="row-copy">
+                  <strong>Demandes de congé</strong>
+                  <small>Décidez pour maintenir la visibilité de l'équipe</small>
+                </span>
+                <b>{{ pending.leave_requests }}</b>
+                <span class="row-arrow material-symbols-outlined" aria-hidden="true"
+                  >chevron_right</span
+                >
+              </a>
+            }
+            @if (pending.attendance_declarations > 0) {
+              <a class="attention-row" routerLink="/manager/attendance/validation">
+                <span class="row-icon blue material-symbols-outlined" aria-hidden="true"
+                  >pending_actions</span
+                >
+                <span class="row-copy">
+                  <strong>Présences à valider</strong>
+                  <small>Contrôlez les déclarations en attente</small>
+                </span>
+                <b>{{ pending.attendance_declarations }}</b>
+                <span class="row-arrow material-symbols-outlined" aria-hidden="true"
+                  >chevron_right</span
+                >
+              </a>
+            }
+            @if (taskStats.overdue > 0) {
+              <a class="attention-row" routerLink="/manager/projects">
+                <span class="row-icon coral material-symbols-outlined" aria-hidden="true"
+                  >assignment_late</span
+                >
+                <span class="row-copy">
+                  <strong>Tâches en retard</strong>
+                  <small>Réévaluez les priorités et les responsables</small>
+                </span>
+                <b>{{ taskStats.overdue }}</b>
+                <span class="row-arrow material-symbols-outlined" aria-hidden="true"
+                  >chevron_right</span
+                >
+              </a>
+            }
+            @if (projectStats.at_risk > 0) {
+              <a class="attention-row" routerLink="/manager/projects">
+                <span class="row-icon amber material-symbols-outlined" aria-hidden="true"
+                  >warning</span
+                >
+                <span class="row-copy">
+                  <strong>Projets à risque</strong>
+                  <small>Leur échéance est dépassée et ils restent ouverts</small>
+                </span>
+                <b>{{ projectStats.at_risk }}</b>
+                <span class="row-arrow material-symbols-outlined" aria-hidden="true"
+                  >chevron_right</span
+                >
+              </a>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="panel presence-panel">
+        <header class="panel-heading compact">
+          <div>
+            <span class="section-icon teal material-symbols-outlined" aria-hidden="true"
+              >today</span
+            >
+            <div>
+              <h2>Présence de l'équipe</h2>
+              <p>Situation déclarée aujourd'hui</p>
+            </div>
+          </div>
+          <a routerLink="/manager/attendance/today">
+            Détail
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+        </header>
+        <div class="presence-content">
+          <div class="ring presence-ring" [style.background]="presenceRingBackground()">
+            <div class="ring-center">
+              <strong>{{ teamPresence.rate }}%</strong>
+              <small>présence</small>
+            </div>
+          </div>
+          <div class="presence-legend">
+            <div>
+              <i class="dot success"></i><span>Présents</span><b>{{ teamPresence.present }}</b>
+            </div>
+            <div>
+              <i class="dot danger"></i><span>Absents</span><b>{{ teamPresence.absent }}</b>
+            </div>
+            <div>
+              <i class="dot violet"></i><span>En congé</span><b>{{ teamPresence.on_leave }}</b>
+            </div>
+            <div>
+              <i class="dot neutral"></i><span>Non déclarés</span
+              ><b>{{ teamPresence.not_declared }}</b>
+            </div>
+          </div>
         </div>
-        @if (progressList.length > 0) {
-          <div class="space-y-8">
-            @for (proj of progressList; track proj.name) {
-              <div>
-                <div class="flex justify-between items-end mb-3">
-                  <div>
-                    <h4 class="text-sm font-bold text-text-heading">{{ proj.name }}</h4>
-                    <p class="text-sm text-text-secondary">{{ proj.team }} @if (proj.deadline) { • {{ proj.deadline }} }</p>
+        @if (teamPresence.not_declared > 0) {
+          <a class="presence-alert" routerLink="/manager/attendance/today">
+            <span class="material-symbols-outlined" aria-hidden="true">info</span>
+            <span
+              ><strong>{{ teamPresence.not_declared }}</strong> déclaration{{
+                teamPresence.not_declared > 1 ? 's' : ''
+              }}
+              encore manquante{{ teamPresence.not_declared > 1 ? 's' : '' }}</span
+            >
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+        }
+      </article>
+    </section>
+
+    <section class="performance-grid">
+      <article class="panel projects-panel">
+        <header class="panel-heading">
+          <div>
+            <span class="section-icon blue material-symbols-outlined" aria-hidden="true"
+              >folder_managed</span
+            >
+            <div>
+              <h2>Portefeuille projets</h2>
+              <p>
+                {{ projectStats.active }} en cours sur {{ projectStats.total }} projet{{
+                  projectStats.total > 1 ? 's' : ''
+                }}
+              </p>
+            </div>
+          </div>
+          <a routerLink="/manager/projects">
+            Voir tous
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+        </header>
+
+        @if (projectStats.items.length > 0) {
+          <div class="project-list">
+            @for (project of projectStats.items; track project.id) {
+              <a class="project-row" [routerLink]="['/manager/projects', project.id]">
+                <div class="project-title-row">
+                  <div class="project-name">
+                    <strong>{{ project.name }}</strong>
+                    <small>{{ project.reference_code || 'Sans référence' }}</small>
                   </div>
-                  <span class="text-sm font-bold text-primary">{{ proj.progress }}%</span>
+                  <div class="project-badges">
+                    @if (project.is_at_risk) {
+                      <span class="status-chip danger">
+                        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                        À risque
+                      </span>
+                    }
+                    <span [class]="'status-chip ' + projectStatusTone(project.status)">
+                      {{ projectStatusLabel(project.status) }}
+                    </span>
+                  </div>
                 </div>
-                <div class="h-2 bg-border rounded-full overflow-hidden">
-                  <div class="h-full bg-primary rounded-full transition-all duration-1000" [style.width.%]="proj.progress"></div>
+                <div class="progress-copy">
+                  <span>Avancement</span>
+                  <strong>{{ project.progress_percentage }}%</strong>
                 </div>
+                <div class="progress-track" aria-hidden="true">
+                  <span
+                    [class.is-risk]="project.is_at_risk"
+                    [style.width.%]="project.progress_percentage"
+                  ></span>
+                </div>
+                <div class="project-meta">
+                  <span>
+                    <i class="material-symbols-outlined" aria-hidden="true">task_alt</i>
+                    {{ project.tasks_done }}/{{ project.tasks_total }} tâches
+                  </span>
+                  @if (project.tasks_overdue > 0) {
+                    <span class="danger-text">
+                      <i class="material-symbols-outlined" aria-hidden="true">timer_off</i>
+                      {{ project.tasks_overdue }} en retard
+                    </span>
+                  }
+                  @if (project.end_date) {
+                    <span>
+                      <i class="material-symbols-outlined" aria-hidden="true">event</i>
+                      {{ project.end_date | date: 'dd MMM y' }}
+                    </span>
+                  }
+                  <span [class]="'priority ' + priorityTone(project.priority)">
+                    {{ priorityLabel(project.priority) }}
+                  </span>
+                </div>
+              </a>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <span class="material-symbols-outlined" aria-hidden="true">folder_open</span>
+            <strong>Aucun projet à suivre</strong>
+            <p>Créez votre premier projet et attribuez les tâches à votre équipe.</p>
+            <a routerLink="/manager/projects/new">Créer un projet</a>
+          </div>
+        }
+      </article>
+
+      <article class="panel tasks-panel">
+        <header class="panel-heading compact">
+          <div>
+            <span class="section-icon violet material-symbols-outlined" aria-hidden="true"
+              >donut_large</span
+            >
+            <div>
+              <h2>Répartition des tâches</h2>
+              <p>Progression globale du travail suivi</p>
+            </div>
+          </div>
+        </header>
+        <div class="tasks-content">
+          <div class="ring task-ring" [style.background]="taskRingBackground()">
+            <div class="ring-center">
+              <strong>{{ taskStats.total }}</strong>
+              <small>tâches</small>
+            </div>
+          </div>
+          <strong class="completion-copy">{{ taskStats.completion_rate }}% accompli</strong>
+          <div class="task-legend">
+            <div>
+              <i class="dot success"></i>
+              <span>Terminées</span>
+              <b>{{ taskStats.done }}</b>
+              <small>{{ taskPercentage(taskStats.done) }}%</small>
+            </div>
+            <div>
+              <i class="dot blue"></i>
+              <span>En cours</span>
+              <b>{{ taskStats.in_progress }}</b>
+              <small>{{ taskPercentage(taskStats.in_progress) }}%</small>
+            </div>
+            <div>
+              <i class="dot amber"></i>
+              <span>En revue</span>
+              <b>{{ taskStats.review }}</b>
+              <small>{{ taskPercentage(taskStats.review) }}%</small>
+            </div>
+            <div>
+              <i class="dot violet"></i>
+              <span>À faire</span>
+              <b>{{ taskStats.todo }}</b>
+              <small>{{ taskPercentage(taskStats.todo) }}%</small>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="planning-grid">
+      <article class="panel priority-panel">
+        <header class="panel-heading">
+          <div>
+            <span class="section-icon amber material-symbols-outlined" aria-hidden="true"
+              >flag</span
+            >
+            <div>
+              <h2>Tâches prioritaires</h2>
+              <p>Les prochaines actions à sécuriser</p>
+            </div>
+          </div>
+          <a routerLink="/manager/projects">
+            Projets
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+        </header>
+        @if (data.priority_tasks.length > 0) {
+          <div class="priority-list">
+            @for (task of data.priority_tasks; track task.id) {
+              <a
+                class="task-row"
+                [class.is-overdue]="task.is_overdue"
+                [routerLink]="
+                  task.project
+                    ? ['/manager/projects', task.project.id, 'board']
+                    : ['/manager/projects']
+                "
+              >
+                <span [class]="'priority-marker ' + priorityTone(task.priority)"></span>
+                <span class="task-copy">
+                  <strong>{{ task.title }}</strong>
+                  <small
+                    >{{ task.project?.name || 'Projet non renseigné' }} ·
+                    {{ taskStatusLabel(task.status) }}</small
+                  >
+                </span>
+                <span class="assignee">
+                  <i>{{ getInitials(task.assignee?.first_name, task.assignee?.last_name) }}</i>
+                  <span>{{
+                    task.assignee
+                      ? task.assignee.first_name + ' ' + task.assignee.last_name
+                      : 'Non assignée'
+                  }}</span>
+                </span>
+                <span class="due-date" [class.danger-text]="task.is_overdue">
+                  <i class="material-symbols-outlined" aria-hidden="true">event</i>
+                  {{ task.due_date ? (task.due_date | date: 'dd MMM') : 'Sans échéance' }}
+                </span>
+                <span class="material-symbols-outlined task-arrow" aria-hidden="true"
+                  >chevron_right</span
+                >
+              </a>
+            }
+          </div>
+        } @else {
+          <div class="empty-state compact-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+            <strong>Aucune tâche ouverte</strong>
+            <p>Le travail suivi est à jour.</p>
+          </div>
+        }
+      </article>
+
+      <article class="panel absences-panel">
+        <header class="panel-heading compact">
+          <div>
+            <span class="section-icon violet material-symbols-outlined" aria-hidden="true"
+              >flight_takeoff</span
+            >
+            <div>
+              <h2>Absences à venir</h2>
+              <p>Les 30 prochains jours</p>
+            </div>
+          </div>
+          <a routerLink="/manager/team/leaves/history">
+            Détail
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+        </header>
+        @if (data.upcoming_absences.length > 0) {
+          <div class="absence-list">
+            @for (absence of data.upcoming_absences; track absence.id) {
+              <div class="absence-row">
+                <span [class]="'absence-date ' + absenceTone(absence)">
+                  <strong>{{ absence.start_date | date: 'dd' }}</strong>
+                  <small>{{ absence.start_date | date: 'MMM' }}</small>
+                </span>
+                <span class="absence-copy">
+                  <strong>
+                    {{ absence.user?.first_name || 'Collaborateur' }}
+                    {{ absence.user?.last_name || '' }}
+                  </strong>
+                  <small>{{ absenceLabel(absence.type) }}</small>
+                </span>
+                <span class="absence-duration">
+                  {{ absence.duration_days }} j
+                  <small>jusqu'au {{ absence.end_date | date: 'dd MMM' }}</small>
+                </span>
               </div>
             }
           </div>
         } @else {
-          <div class="flex flex-col items-center py-12 text-center">
-            <span class="material-symbols-outlined text-5xl text-text-muted mb-3">folder_open</span>
-            <p class="text-text-secondary">Aucun projet pour le moment</p>
+          <div class="empty-state compact-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">event_available</span>
+            <strong>Aucune absence planifiée</strong>
+            <p>Votre équipe est disponible sur les 30 prochains jours.</p>
           </div>
         }
-      </div>
+      </article>
+    </section>
 
-      <!-- Task Status Distribution -->
-      <div class="col-span-12 lg:col-span-4 bg-surface p-8 rounded-xl border border-border flex flex-col">
-        <h2 class="text-xl font-heading font-semibold text-text-heading mb-8">État des Tâches</h2>
-        <div class="flex-1 flex flex-col items-center justify-center">
-          <div class="w-48 h-48 rounded-full relative"
-               [style.background]="donutGradient()">
-          </div>
-          <div class="flex flex-col items-center -mt-36 mb-16">
-            <span class="text-2xl font-heading font-bold text-text-heading">{{ totalTaskCount() }}</span>
-            <span class="text-xs text-text-secondary">Total</span>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4 mt-8">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background: #0ea5e9"></span>
-            <span class="text-sm text-text-secondary">À faire ({{ taskPcts.todo }}%)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background: #0d9488"></span>
-            <span class="text-sm text-text-secondary">En cours ({{ taskPcts.inProgress }}%)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background: #f59e0b"></span>
-            <span class="text-sm text-text-secondary">Révision ({{ taskPcts.review }}%)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background: #ef4444"></span>
-            <span class="text-sm text-text-secondary">Terminé ({{ taskPcts.done }}%)</span>
+    <section class="panel team-panel">
+      <header class="panel-heading">
+        <div>
+          <span class="section-icon teal material-symbols-outlined" aria-hidden="true"
+            >diversity_3</span
+          >
+          <div>
+            <h2>Votre équipe aujourd'hui</h2>
+            <p>Disponibilité des collaborateurs directs</p>
           </div>
         </div>
-      </div>
+        <a routerLink="/manager/team">
+          Voir l'équipe
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        </a>
+      </header>
 
-      <!-- Recent Team Activity -->
-      <div class="col-span-12 bg-surface rounded-xl border border-border overflow-hidden">
-        <div class="p-8 border-b border-border">
-          <h2 class="text-xl font-heading font-semibold text-text-heading">Activité de l'équipe récente</h2>
+      @if (data.team_members.length > 0) {
+        <div class="member-grid">
+          @for (member of data.team_members; track member.id) {
+            <a class="member-card" routerLink="/manager/team">
+              <span class="member-avatar">{{
+                getInitials(member.first_name, member.last_name)
+              }}</span>
+              <span class="member-copy">
+                <strong>{{ member.first_name }} {{ member.last_name }}</strong>
+                <small>{{ member.job_title || member.department?.name || 'Collaborateur' }}</small>
+              </span>
+              <span [class]="'attendance-chip ' + attendanceTone(member.attendance_status)">
+                <i></i>
+                {{ attendanceLabel(member.attendance_status) }}
+              </span>
+            </a>
+          }
         </div>
-        @if (members.length > 0) {
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-surface-container-low border-b border-border">
-                <tr>
-                  <th class="px-8 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Membre</th>
-                  <th class="px-8 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Poste</th>
-                  <th class="px-8 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Département</th>
-                  <th class="px-8 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Statut</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border">
-                @for (emp of members; track emp.id) {
-                  <tr class="hover:bg-surface-container-low transition-colors">
-                    <td class="px-8 py-4">
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-primary-50 text-primary font-semibold text-xs flex items-center justify-center shrink-0">
-                          {{ getInitials(emp.first_name, emp.last_name) }}
-                        </div>
-                        <span class="text-base font-medium text-text-heading">{{ emp.first_name }} {{ emp.last_name }}</span>
-                      </div>
-                    </td>
-                    <td class="px-8 py-4 text-base text-text-secondary">{{ emp.job_title || '—' }}</td>
-                    <td class="px-8 py-4">
-                      @if (emp.department) {
-                        <span class="px-3 py-1 bg-primary-50 text-primary rounded-full text-xs font-bold">{{ emp.department.name }}</span>
-                      } @else {
-                        <span class="text-text-muted">—</span>
-                      }
-                    </td>
-                    <td class="px-8 py-4">
-                      @if (emp.status === 'ACTIVE') {
-                        <span class="flex items-center gap-1.5 text-sm font-medium text-success">
-                          <span class="w-2 h-2 rounded-full bg-success"></span>
-                          Actif
-                        </span>
-                      } @else {
-                        <span class="flex items-center gap-1.5 text-sm font-medium text-warning">
-                          <span class="w-2 h-2 rounded-full bg-warning"></span>
-                          Inactif
-                        </span>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <div class="flex flex-col items-center py-12 text-center">
-            <span class="material-symbols-outlined text-5xl text-text-muted mb-3">group_off</span>
-            <p class="text-text-secondary">Aucun membre dans votre équipe</p>
-          </div>
-        }
-      </div>
-    </div>
+      } @else {
+        <div class="empty-state compact-empty">
+          <span class="material-symbols-outlined" aria-hidden="true">group_off</span>
+          <strong>Aucun collaborateur direct</strong>
+          <p>Les membres qui vous sont rattachés apparaîtront ici.</p>
+        </div>
+      }
+    </section>
   }
 </div>

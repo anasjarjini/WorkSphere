@@ -1,10 +1,641 @@
-<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
-    <div>
-      <h1 class="font-heading text-2xl font-bold text-primary">Mon Espace</h1>
-      <p class="font-sans text-[0.9375rem] text-text-secondary mt-1">Bienvenue, <span class="font-semibold text-text">{{ userName() }}</span>.</p>
+@let data = stats();
+@let todayAttendance = attendance();
+@let taskStats = tasks();
+
+<section class="employee-dashboard" aria-labelledby="employee-dashboard-title">
+  <header class="welcome-card">
+    <div class="welcome-copy">
+      <div class="welcome-meta">
+        <span class="workspace-chip"><i></i>Espace Collaborateur</span>
+        <span class="employee-reference">ID: {{ employeeReference() }}</span>
+      </div>
+      <h1 id="employee-dashboard-title">Bonjour, {{ userName() }}</h1>
+      <p>Vos priorités, votre présence et les informations utiles réunies au même endroit.</p>
     </div>
-  </div>
 
+    <div class="welcome-actions">
+      <div class="sync-meta">
+        <span class="date-chip">
+          <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+          {{ today }}
+        </span>
+        @if (data) {
+          <span class="updated-at">
+            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+            Actualisé à {{ data.last_updated_at | date: 'HH:mm' }}
+          </span>
+        }
+      </div>
+      <div class="action-row">
+        <button
+          class="refresh-button"
+          type="button"
+          [disabled]="refreshing()"
+          (click)="loadDashboard()"
+          aria-label="Actualiser mon tableau de bord"
+        >
+          <span
+            class="material-symbols-outlined"
+            [class.is-spinning]="refreshing()"
+            aria-hidden="true"
+            >refresh</span
+          >
+          <span>{{ refreshing() ? 'Actualisation…' : 'Actualiser' }}</span>
+        </button>
+        <a class="primary-action" routerLink="/employee/attendance/today">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            {{ attendanceIcon(todayAttendance.status) }}
+          </span>
+          {{ attendanceActionLabel() }}
+        </a>
+      </div>
+    </div>
+  </header>
 
-</div>
+  @if (loading()) {
+    <section class="skeleton-kpis" aria-label="Chargement des indicateurs">
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="skeleton skeleton-card"></div>
+      }
+    </section>
+    <section class="skeleton-columns">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </section>
+  } @else if (error() && !data) {
+    <section class="load-error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <div>
+        <h2>Votre espace est temporairement indisponible</h2>
+        <p>{{ error() }}</p>
+      </div>
+      <button type="button" (click)="loadDashboard()">Réessayer</button>
+    </section>
+  } @else if (data) {
+    @if (error()) {
+      <div class="inline-error" role="status">
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+        {{ error() }} Les dernières données disponibles restent affichées.
+      </div>
+    }
+
+    <section class="kpi-grid" aria-label="Mes indicateurs clés">
+      <a class="kpi-card tone-blue" routerLink="/employee/attendance/today">
+        <div class="kpi-heading">
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">
+            {{ attendanceIcon(todayAttendance.status) }}
+          </span>
+          <span>
+            <b>Aujourd'hui</b>
+            <small>Statut du jour</small>
+          </span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        <div class="kpi-value attendance-value">
+          <strong [class]="'attendance-badge ' + attendanceTone(todayAttendance.status)">
+            <i></i>{{ attendanceLabel(todayAttendance.status) }}
+          </strong>
+        </div>
+        <p [class]="'kpi-caption ' + attendanceTone(todayAttendance.status)">
+          <span class="material-symbols-outlined" aria-hidden="true">pending</span>
+          {{ validationLabel(todayAttendance.validation_status) }}
+        </p>
+      </a>
+
+      <a class="kpi-card tone-violet" routerLink="/employee/tasks">
+        <div class="kpi-heading">
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">task_alt</span>
+          <span>
+            <b>Tâches ouvertes</b>
+            <small>Assignées à moi</small>
+          </span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        <div class="kpi-value">
+          <strong>{{ taskStats.open }}</strong>
+          <span>ouverte{{ taskStats.open > 1 ? 's' : '' }}</span>
+        </div>
+        <p class="kpi-caption">
+          @if (taskStats.overdue > 0) {
+            <b class="danger-text">{{ taskStats.overdue }} en retard</b>
+          } @else if (taskStats.due_today > 0) {
+            <b class="warning-text">{{ taskStats.due_today }} pour aujourd'hui</b>
+          } @else {
+            <span>Aucun retard</span>
+          }
+          · {{ taskStats.completion_rate }}% terminées
+        </p>
+      </a>
+
+      <a class="kpi-card tone-green" routerLink="/employee/leaves/balance">
+        <div class="kpi-heading">
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">beach_access</span>
+          <span>
+            <b>Congés disponibles</b>
+            <small>Solde annuel</small>
+          </span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        <div class="kpi-value">
+          <strong>{{ data.leave_summary.paid_balance.remaining_days }}j</strong>
+          <span class="success-text">disponibles</span>
+        </div>
+        <p class="kpi-caption">
+          @if (data.leave_summary.paid_balance.configured) {
+            {{ data.leave_summary.paid_balance.used_days }} jour{{
+              data.leave_summary.paid_balance.used_days > 1 ? 's' : ''
+            }}
+            utilisé{{ data.leave_summary.paid_balance.used_days > 1 ? 's' : '' }}
+          } @else {
+            <b class="warning-text">Solde à configurer par les RH</b>
+          }
+        </p>
+      </a>
+
+      <a class="kpi-card tone-slate" routerLink="/employee/requests">
+        <div class="kpi-heading">
+          <span class="kpi-icon material-symbols-outlined" aria-hidden="true">support_agent</span>
+          <span>
+            <b>Mes demandes</b>
+            <small>Tickets RH / Logistique</small>
+          </span>
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        <div class="kpi-value">
+          <strong>{{ data.request_summary.active }}</strong>
+          <span>en cours</span>
+        </div>
+        <p class="kpi-caption">
+          @if (data.request_summary.pending > 0) {
+            <b class="warning-text">{{ data.request_summary.pending }} en attente</b>
+          } @else {
+            <span>Aucune décision en attente</span>
+          }
+          · {{ data.request_summary.total }} au total
+        </p>
+      </a>
+    </section>
+
+    <nav class="quick-actions" aria-label="Actions rapides">
+      <div class="quick-heading">
+        <span class="material-symbols-outlined" aria-hidden="true">bolt</span>
+        <div>
+          <strong>Actions rapides</strong>
+          <small>Gagnez du temps au quotidien</small>
+        </div>
+      </div>
+      <div class="quick-links">
+        <a routerLink="/employee/tasks">
+          <span class="material-symbols-outlined" aria-hidden="true">checklist</span>
+          Mes tâches
+        </a>
+        <a routerLink="/employee/attendance/today">
+          <span class="material-symbols-outlined" aria-hidden="true">how_to_reg</span>
+          Ma présence
+        </a>
+        <a routerLink="/employee/leaves/request">
+          <span class="material-symbols-outlined green" aria-hidden="true">event_available</span>
+          Demander un congé
+          @if (data.leave_summary.pending_requests > 0) {
+            <b>{{ data.leave_summary.pending_requests }}</b>
+          }
+        </a>
+        <a routerLink="/employee/requests/new">
+          <span class="material-symbols-outlined" aria-hidden="true">add_comment</span>
+          Nouvelle demande
+        </a>
+        <a routerLink="/employee/chat">
+          <span class="material-symbols-outlined" aria-hidden="true">forum</span>
+          Messagerie
+        </a>
+      </div>
+    </nav>
+
+    <section class="dashboard-columns">
+      <div class="column-stack primary-column">
+        <article class="panel tasks-panel">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon blue material-symbols-outlined" aria-hidden="true"
+                >adjust</span
+              >
+              <span>
+                <h2>Mes priorités</h2>
+                <p>Les tâches à traiter en premier</p>
+              </span>
+            </div>
+            <a routerLink="/employee/tasks">
+              Toutes les tâches
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </header>
+
+          @if (taskActionError()) {
+            <div class="task-error" role="alert">
+              <span class="material-symbols-outlined" aria-hidden="true">error</span>
+              {{ taskActionError() }}
+            </div>
+          }
+
+          @if (data.priority_tasks.length > 0) {
+            <div class="task-list">
+              @for (task of data.priority_tasks; track task.id) {
+                <article class="task-row" [class.is-overdue]="task.is_overdue">
+                  <a class="task-main" [routerLink]="['/employee/tasks', task.id]">
+                    <span class="task-title-line">
+                      <span [class]="'status-chip ' + taskStatusTone(task.status)">
+                        {{ taskStatusLabel(task.status) }}
+                      </span>
+                      <strong>{{ task.title }}</strong>
+                    </span>
+                    <small>
+                      <span class="material-symbols-outlined" aria-hidden="true">layers</span>
+                      {{ task.project?.name || 'Projet non renseigné' }}
+                      @if (task.reference_code) {
+                        · {{ task.reference_code }}
+                      }
+                    </small>
+                    <small [class.danger-text]="task.is_overdue">
+                      <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                      @if (task.is_overdue) {
+                        En retard · {{ task.due_date | date: 'dd MMM' }}
+                      } @else if (task.is_due_today) {
+                        Aujourd'hui
+                      } @else {
+                        {{ task.due_date ? (task.due_date | date: 'dd MMM') : 'Sans échéance' }}
+                      }
+                    </small>
+                  </a>
+                  @if (task.status === 'TODO' || task.status === 'IN_PROGRESS') {
+                    <button
+                      class="task-action"
+                      type="button"
+                      [disabled]="updatingTaskId() !== null"
+                      (click)="advanceTask(task)"
+                    >
+                      <span
+                        class="material-symbols-outlined"
+                        [class.is-spinning]="updatingTaskId() === task.id"
+                        aria-hidden="true"
+                        >{{
+                          updatingTaskId() === task.id
+                            ? 'progress_activity'
+                            : taskActionIcon(task.status)
+                        }}</span
+                      >
+                      <span>{{ taskActionLabel(task.status) }}</span>
+                    </button>
+                  } @else {
+                    <a
+                      class="task-detail-link"
+                      [routerLink]="['/employee/tasks', task.id]"
+                      aria-label="Voir la tâche"
+                    >
+                      <span class="material-symbols-outlined" aria-hidden="true"
+                        >chevron_right</span
+                      >
+                    </a>
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <span class="material-symbols-outlined" aria-hidden="true">celebration</span>
+              <strong>Votre liste est à jour</strong>
+              <p>Aucune tâche ouverte ne demande votre attention.</p>
+            </div>
+          }
+        </article>
+
+        <article class="panel requests-panel">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon slate material-symbols-outlined" aria-hidden="true"
+                >confirmation_number</span
+              >
+              <span>
+                <h2>Suivi de mes demandes</h2>
+                <p>
+                  {{ data.request_summary.active }} demande{{
+                    data.request_summary.active > 1 ? 's' : ''
+                  }}
+                  active{{ data.request_summary.active > 1 ? 's' : '' }}
+                </p>
+              </span>
+            </div>
+            <a routerLink="/employee/requests">
+              Voir tout
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </header>
+
+          @if (data.request_summary.items.length > 0) {
+            <div class="request-list">
+              @for (request of data.request_summary.items; track request.id) {
+                <a class="request-row" [routerLink]="['/employee/requests', request.id]">
+                  <span [class]="'request-icon ' + requestStatusTone(request.status)">
+                    <span class="material-symbols-outlined" aria-hidden="true">support_agent</span>
+                  </span>
+                  <span class="request-copy">
+                    <strong>{{ request.title }}</strong>
+                    <small>
+                      {{ request.reference_code || 'Sans référence' }} ·
+                      {{ requestDestination(request) }}
+                    </small>
+                  </span>
+                  <span [class]="'status-chip ' + requestStatusTone(request.status)">
+                    {{ requestStatusLabel(request.status) }}
+                  </span>
+                  <span class="material-symbols-outlined row-arrow" aria-hidden="true"
+                    >chevron_right</span
+                  >
+                </a>
+              }
+            </div>
+          } @else {
+            <div class="empty-state request-empty">
+              <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
+              <strong>Aucune demande créée</strong>
+              <p>Contactez un autre service depuis votre espace.</p>
+              <a routerLink="/employee/requests/new">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                Créer une demande
+              </a>
+            </div>
+          }
+        </article>
+
+        <article class="panel announcements-panel">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon blue material-symbols-outlined" aria-hidden="true"
+                >campaign</span
+              >
+              <span>
+                <h2>Dernières annonces</h2>
+                <p>Les informations de votre entreprise et de votre équipe</p>
+              </span>
+            </div>
+            <a routerLink="/employee/announcements">
+              Toutes les annonces
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </header>
+
+          @if (data.announcements.length > 0) {
+            <div class="announcement-list">
+              @for (announcement of data.announcements; track announcement.id) {
+                <a class="announcement-row" routerLink="/employee/announcements">
+                  <span class="announcement-copy">
+                    <span class="announcement-meta">
+                      <b [class]="announcementTone(announcement)">
+                        {{ announcement.target_scope === 'TEAM' ? 'Mon équipe' : 'Entreprise' }}
+                      </b>
+                      <small>{{ announcement.published_at | date: 'dd MMM · HH:mm' }}</small>
+                    </span>
+                    <strong>{{ announcement.title }}</strong>
+                    <p>{{ announcement.excerpt }}</p>
+                    <small class="announcement-author">
+                      <span class="material-symbols-outlined" aria-hidden="true">person</span>
+                      {{
+                        announcement.creator
+                          ? announcement.creator.first_name + ' ' + announcement.creator.last_name
+                          : 'WorkSphere'
+                      }}
+                    </small>
+                  </span>
+                  <span class="material-symbols-outlined row-arrow" aria-hidden="true"
+                    >arrow_forward</span
+                  >
+                </a>
+              }
+            </div>
+          } @else {
+            <div class="empty-state compact-empty">
+              <span class="material-symbols-outlined" aria-hidden="true">notifications_none</span>
+              <strong>Aucune annonce récente</strong>
+              <p>Les nouvelles informations apparaîtront ici.</p>
+            </div>
+          }
+        </article>
+      </div>
+
+      <aside class="column-stack side-column">
+        <article class="panel attendance-panel">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon blue material-symbols-outlined" aria-hidden="true"
+                >calendar_month</span
+              >
+              <span>
+                <h2>Ma présence</h2>
+                <p>Suivi du mois en cours</p>
+              </span>
+            </div>
+            <a routerLink="/employee/attendance/summary">
+              Détail
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </header>
+
+          <div class="attendance-content">
+            <div [class]="'today-attendance ' + attendanceTone(todayAttendance.status)">
+              <span class="material-symbols-outlined" aria-hidden="true">
+                {{ attendanceIcon(todayAttendance.status) }}
+              </span>
+              <div>
+                <small>Situation du jour</small>
+                <strong>{{ attendanceLabel(todayAttendance.status) }}</strong>
+                <p><i></i>{{ validationLabel(todayAttendance.validation_status) }}</p>
+              </div>
+              <a routerLink="/employee/attendance/today">
+                {{ attendanceActionLabel() }}
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+              </a>
+            </div>
+
+            @if (todayAttendance.rejection_reason) {
+              <div class="rejection-note">
+                <span class="material-symbols-outlined" aria-hidden="true">error</span>
+                <span><strong>Motif :</strong> {{ todayAttendance.rejection_reason }}</span>
+              </div>
+            }
+
+            <div class="attendance-rate">
+              <div>
+                <strong>{{ data.attendance_month.presence_rate }}%</strong>
+                <span>de présence sur les jours ouvrés déclarés</span>
+              </div>
+              <div class="attendance-ring" [style.background]="attendanceRingBackground()">
+                <span class="material-symbols-outlined" aria-hidden="true">done_all</span>
+              </div>
+            </div>
+
+            <div class="attendance-progress" aria-label="Répartition des jours déclarés">
+              <span class="present" [style.width.%]="attendancePresentRate()"></span>
+              <span class="absent" [style.width.%]="attendanceAbsentRate()"></span>
+            </div>
+            <div class="progress-caption">
+              <span>Total {{ data.attendance_month.declared_days }} jours déclarés</span>
+              <span>Mois en cours</span>
+            </div>
+
+            <div class="attendance-stats">
+              <div>
+                <small><i class="present"></i>Présent</small>
+                <strong>{{ data.attendance_month.present }} j</strong>
+              </div>
+              <div>
+                <small><i class="absent"></i>Absent</small>
+                <strong>{{ data.attendance_month.absent }} j</strong>
+              </div>
+              <div>
+                <small><i class="pending"></i>En attente</small>
+                <strong>{{ data.attendance_month.pending }}</strong>
+              </div>
+              <div>
+                <small><i class="declared"></i>Jours déclarés</small>
+                <strong>{{ data.attendance_month.declared_days }}</strong>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel leave-panel">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon green material-symbols-outlined" aria-hidden="true"
+                >luggage</span
+              >
+              <span>
+                <h2>Mes congés</h2>
+                <p>
+                  Solde
+                  {{ data.leave_summary.paid_balance.configured ? 'disponible' : 'non configuré' }}
+                </p>
+              </span>
+            </div>
+            <a routerLink="/employee/leaves/balance">
+              Solde
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </header>
+
+          <div class="leave-content">
+            <div class="leave-summary">
+              <div>
+                <strong>{{ data.leave_summary.paid_balance.remaining_days }}</strong>
+                <span>jours disponibles</span>
+              </div>
+              <b>Solde restant {{ leaveAvailabilityRate() }}%</b>
+            </div>
+            <div class="balance-track" aria-hidden="true">
+              <span [style.width.%]="leaveAvailabilityRate()"></span>
+            </div>
+            <div class="balance-meta">
+              <span>{{ data.leave_summary.paid_balance.used_days }} utilisés</span>
+              <span>
+                {{
+                  data.leave_summary.paid_balance.allocated_days +
+                    data.leave_summary.paid_balance.carried_over_days
+                }}
+                attribués
+              </span>
+            </div>
+
+            <div class="leave-events">
+              @if (data.leave_summary.next_absence; as nextAbsence) {
+                <a class="event-row" routerLink="/employee/leaves/history">
+                  <span class="material-symbols-outlined" aria-hidden="true">flight_takeoff</span>
+                  <span>
+                    <small>{{
+                      nextAbsence.is_current ? 'Congé en cours' : 'Prochain congé'
+                    }}</small>
+                    <strong>{{ absenceLabel(nextAbsence.type) }}</strong>
+                    <p>
+                      {{ nextAbsence.start_date | date: 'dd MMM' }} —
+                      {{ nextAbsence.end_date | date: 'dd MMM y' }}
+                    </p>
+                  </span>
+                  <b>{{ nextAbsence.duration_days }} j</b>
+                </a>
+              } @else if (data.next_holiday; as holiday) {
+                <div class="event-row">
+                  <span class="material-symbols-outlined" aria-hidden="true">celebration</span>
+                  <span>
+                    <small>Prochain jour férié</small>
+                    <strong>{{ holiday.name }}</strong>
+                    <p>{{ holiday.date | date: 'EEEE dd MMMM' }}</p>
+                  </span>
+                </div>
+              } @else {
+                <div class="mini-empty">
+                  <span class="material-symbols-outlined" aria-hidden="true">event_available</span>
+                  Aucun événement planifié prochainement.
+                </div>
+              }
+            </div>
+            <a class="panel-action secondary" routerLink="/employee/leaves/request">
+              <span class="material-symbols-outlined" aria-hidden="true">add</span>
+              Faire une demande de congé
+            </a>
+          </div>
+        </article>
+
+        <article class="panel work-context">
+          <header class="panel-heading">
+            <div>
+              <span class="section-icon slate material-symbols-outlined" aria-hidden="true"
+                >badge</span
+              >
+              <span>
+                <h2>Mon cadre de travail</h2>
+                <p>Vos principaux contacts</p>
+              </span>
+            </div>
+          </header>
+
+          <div class="context-content">
+            <div class="context-row">
+              <span class="context-icon material-symbols-outlined" aria-hidden="true"
+                >corporate_fare</span
+              >
+              <span>
+                <small>Structure</small>
+                <strong>{{ data.profile.department?.name || 'Non renseignée' }}</strong>
+              </span>
+              <b>Département</b>
+            </div>
+
+            <div class="context-row">
+              <span class="manager-avatar">
+                {{ getInitials(data.profile.manager?.first_name, data.profile.manager?.last_name) }}
+              </span>
+              <span>
+                <small>Manager</small>
+                <strong>
+                  {{
+                    data.profile.manager
+                      ? data.profile.manager.first_name + ' ' + data.profile.manager.last_name
+                      : 'Non assigné'
+                  }}
+                </strong>
+              </span>
+              @if (data.profile.manager; as manager) {
+                <a [href]="'mailto:' + manager.email" aria-label="Contacter mon manager">
+                  <span class="material-symbols-outlined" aria-hidden="true">alternate_email</span>
+                </a>
+              }
+            </div>
+
+            <a class="panel-action" routerLink="/employee/chat">
+              <span class="material-symbols-outlined" aria-hidden="true">chat</span>
+              Ouvrir la messagerie
+            </a>
+          </div>
+        </article>
+      </aside>
+    </section>
+  }
+</section>

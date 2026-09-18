@@ -12,6 +12,12 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+Development dependency prebundling is disabled in `angular.json` to avoid Vite
+`504 (Outdated Optimize Dep)` errors caused by stale optimized dependency chunks.
+This can increase development rebuild times. After changing this setting, stop
+and restart `ng serve`, then hard-refresh the browser (`Ctrl+Shift+R`) so open
+tabs load the current chunks.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

@@ -1,0 +1,284 @@
+@use '../../../../styles/portal-dashboard' as portal;
+
+@include portal.portal-dashboard;
+
+.operations-grid,
+.analytics-grid,
+.insights-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(310px, 0.85fr);
+  gap: 16px;
+}
+
+.analytics-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+}
+
+.insights-grid {
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.4fr);
+}
+
+.presence-overview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  padding: 24px 18px 19px;
+}
+
+.presence-legend {
+  display: grid;
+  min-width: 150px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.presence-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px;
+  border-radius: 9px;
+  background: var(--dash-soft);
+}
+
+.presence-legend p {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+}
+
+.presence-legend strong {
+  font-size: 11px;
+}
+
+.presence-legend small {
+  color: var(--dash-muted);
+  font-size: 8px;
+}
+
+.chart-container,
+.department-chart {
+  position: relative;
+  width: 100%;
+  min-height: 270px;
+  padding: 18px;
+}
+
+.department-chart {
+  min-height: 310px;
+}
+
+.absence-list {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 14px 13px;
+}
+
+.absence-row {
+  display: grid;
+  min-height: 62px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.absence-row:last-child {
+  border-bottom: 0;
+}
+
+.employee-avatar {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--dash-primary);
+  background: var(--dash-primary-soft);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.employee-avatar.violet,
+.employee-avatar[class~='violet'] {
+  color: var(--dash-violet);
+  background: var(--dash-violet-soft);
+}
+
+.employee-avatar[class~='coral'] {
+  color: var(--dash-coral);
+  background: var(--dash-coral-soft);
+}
+
+.employee-avatar[class~='amber'] {
+  color: var(--dash-amber);
+  background: var(--dash-amber-soft);
+}
+
+.absence-date {
+  display: flex;
+  width: 39px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border-radius: 9px;
+  color: var(--dash-primary);
+  background: var(--dash-primary-soft);
+}
+
+.absence-date strong {
+  font-size: 13px;
+}
+
+.absence-date small {
+  color: inherit;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.hires-table-wrap {
+  overflow-x: auto;
+}
+
+.hires-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hires-table th,
+.hires-table td {
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--dash-border);
+  color: var(--dash-muted);
+  font-size: 9px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.hires-table th {
+  background: var(--dash-soft);
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hires-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.hires-table tbody tr:hover {
+  background: var(--dash-soft);
+}
+
+.employee-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+.employee-cell > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.employee-cell strong {
+  color: var(--dash-text);
+  font-size: 10px;
+}
+
+.employee-cell small {
+  margin-top: 2px;
+  color: var(--dash-muted);
+  font-size: 8px;
+}
+
+.department-chip {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--dash-primary);
+  background: var(--dash-primary-soft);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.status-chip {
+  color: var(--dash-mint);
+  background: var(--dash-mint-soft);
+}
+
+.status-chip.pending {
+  color: var(--dash-amber);
+  background: var(--dash-amber-soft);
+}
+
+.status-chip.inactive {
+  color: var(--dash-coral);
+  background: var(--dash-coral-soft);
+}
+
+.status-chip i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.hire-cards {
+  display: none;
+}
+
+.hire-cards article {
+  padding: 12px;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.hire-cards article > div:last-child {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  color: var(--dash-muted);
+  font-size: 8px;
+}
+
+@media (max-width: 1020px) {
+  .operations-grid,
+  .analytics-grid,
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .department-chart {
+    min-height: 270px;
+  }
+}
+
+@media (max-width: 600px) {
+  .presence-overview {
+    flex-direction: column;
+  }
+
+  .presence-legend {
+    width: 100%;
+  }
+
+  .chart-container,
+  .department-chart {
+    min-height: 230px;
+    padding: 12px;
+  }
+
+  .hires-table-wrap {
+    display: none;
+  }
+
+  .hire-cards {
+    display: block;
+  }
+}

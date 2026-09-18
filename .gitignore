@@ -5,7 +5,10 @@ dist/
 node_modules/
 *.log.env
 .opencode
+.codex/config.toml
 
 WorkSphere-frontend/.agent
 WorkSphere-frontend/.angular/
 WorkSphere-backend/.phpunit.result.cache
+docs/*
+rapport de project version 1.0.zip

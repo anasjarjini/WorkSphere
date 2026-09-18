@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\AccountActivationController;
 use App\Http\Controllers\AbsenceController;
+use App\Http\Controllers\AccountActivationController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AttendanceDeclarationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyRegistrationController;
 use App\Http\Controllers\CompanySettingsController;
@@ -10,10 +11,12 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DirectoryController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImportController;
+use App\Http\Controllers\HeartbeatController;
+use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\ManagerTeamController;
 use App\Http\Controllers\MessageAttachmentController;
-use App\Http\Controllers\HeartbeatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
@@ -23,7 +26,6 @@ use App\Http\Controllers\TaskAttachmentController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskDependencyController;
-use App\Http\Controllers\AttendanceDeclarationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register-company', [CompanyRegistrationController::class, 'store'])->middleware('throttle:3,1');
@@ -78,7 +80,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // MANAGER routes
     Route::middleware('check_role:MANAGER')->group(function () {
+        Route::get('/manager/dashboard/stats', [ManagerDashboardController::class, 'stats']);
         Route::get('/manager/team', [ManagerTeamController::class, 'index']);
+    });
+
+    // EMPLOYEE routes
+    Route::middleware('check_role:EMPLOYE')->group(function () {
+        Route::get('/employee/dashboard/stats', [EmployeeDashboardController::class, 'stats']);
     });
 
     // Announcements
@@ -142,7 +150,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/attendance-declarations/{attendanceDeclaration}/approve', [AttendanceDeclarationController::class, 'approve']);
     Route::patch('/attendance-declarations/{attendanceDeclaration}/reject', [AttendanceDeclarationController::class, 'reject']);
     Route::post('/attendance-declarations/bulk-approve', [AttendanceDeclarationController::class, 'bulkApprove']);
-
 
     // Absences / Congés
     Route::get('/absences', [AbsenceController::class, 'index']);

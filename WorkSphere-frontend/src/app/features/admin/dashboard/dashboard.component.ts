@@ -1,48 +1,48 @@
-/**
- * Dashboard de l'espace Administrateur RH.
- * Affiche les KPI (total employés, actifs, managers, départements),
- * les graphiques de répartition (barres par département, donut par rôle),
- * et la liste des dernières embauches.
- */
-
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { ChartConfiguration } from 'chart.js';
 import { AuthService } from '../../../core/services/auth.service';
 import { DashboardService } from '../../../core/services/dashboard.service';
-import { EmployeeService } from '../../../core/services/employee.service';
-import { DashboardStats } from '../../../core/models/dashboard.model';
-import { Employee } from '../../../core/models/employee.model';
-import { BaseChartDirective } from 'ng2-charts';
-import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { ChartConfiguration } from 'chart.js';
+import { ThemeService } from '../../../core/services/theme.service';
+import {
+  DashboardPendingActions,
+  DashboardPresenceToday,
+  DashboardStats,
+  DashboardStatusCounts,
+  DashboardUpcomingAbsence,
+} from '../../../core/models/dashboard.model';
 
-const CSS_VAR = (name: string) =>
-  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const EMPTY_STATUS_COUNTS: DashboardStatusCounts = {
+  active: 0,
+  pending_activation: 0,
+  inactive: 0,
+  suspended: 0,
+};
 
-const STITCH_PRIMARY = '#0f172a';
-const STITCH_PRIMARY_LIGHT = '#e0f2fe';
-const STITCH_SURFACE_LOW = '#f8fafc';
-const STITCH_OUTLINE_VARIANT = '#cbd5e1';
-const STITCH_ON_SURFACE_VARIANT = '#475569';
-const STITCH_SECONDARY_CONTAINER = '#0ea5e9';
+const EMPTY_PENDING_ACTIONS: DashboardPendingActions = {
+  leave_requests: 0,
+  attendance_declarations: 0,
+  incomplete_profiles: 0,
+  total: 0,
+};
 
-const CSS_COLORS = (): string[] => [
-  CSS_VAR('--color-stitch-primary') || STITCH_PRIMARY,
-  CSS_VAR('--color-stitch-primary-container') || '#0ea5e9',
-  STITCH_SECONDARY_CONTAINER,
-  CSS_VAR('--color-stitch-primary-light') || STITCH_PRIMARY_LIGHT,
-  '#0284c7',
-  '#38bdf8',
-  '#7dd3fc',
-  '#bae6fd',
-];
-
-const CHART_TOOLTIP_BG = (): string => CSS_VAR('--color-tooltip') || '#1E293B';
-const CHART_GRID_COLOR = (): string => CSS_VAR('--color-border') || '#E2E8F0';
-const CHART_TICK_MUTED = (): string => CSS_VAR('--color-text-muted') || '#64748B';
-const CHART_TICK_SECONDARY = (): string => CSS_VAR('--color-text-secondary') || '#475569';
-const CHART_BORDER_LIGHT = (): string => CSS_VAR('--color-border-light') || '#E2E8F0';
+const EMPTY_PRESENCE: DashboardPresenceToday = {
+  present: 0,
+  absent: 0,
+  on_leave: 0,
+  not_declared: 0,
+  total: 0,
+  rate: 0,
+};
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -50,26 +50,137 @@ const CHART_BORDER_LIGHT = (): string => CSS_VAR('--color-border-light') || '#E2
   imports: [RouterModule, BaseChartDirective, DatePipe],
   providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './dashboard.component.html',
-  styles: [],
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
-  private readonly employeeService = inject(EmployeeService);
+  private readonly themeService = inject(ThemeService);
 
-  readonly user = this.authService.currentUser;
-  readonly userName = computed(() => this.authService.displayName(this.user()));
+  readonly userName = computed(() => this.authService.displayName(this.authService.currentUser()));
+  readonly loading = signal(true);
+  readonly refreshing = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly stats = signal<DashboardStats | null>(null);
 
-  today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  loading = signal(true);
-  error = signal<string | null>(null);
-  stats = signal<DashboardStats | null>(null);
-  recentEmployees = signal<Employee[]>([]);
+  readonly statusCounts = computed(() => this.stats()?.status_counts ?? EMPTY_STATUS_COUNTS);
+  readonly pendingActions = computed(() => this.stats()?.pending_actions ?? EMPTY_PENDING_ACTIONS);
+  readonly presence = computed(() => this.stats()?.presence_today ?? EMPTY_PRESENCE);
+  readonly recentEmployees = computed(() => this.stats()?.recent_hires ?? []);
+  readonly upcomingAbsences = computed(() => this.stats()?.upcoming_absences ?? []);
+  readonly activationRate = computed(() => {
+    const total = this.stats()?.total_employees ?? 0;
+    return total > 0 ? Math.round((this.statusCounts().active / total) * 100) : 0;
+  });
+  readonly validationsCount = computed(
+    () => this.pendingActions().leave_requests + this.pendingActions().attendance_declarations,
+  );
+  readonly primaryValidationRoute = computed(() =>
+    this.pendingActions().attendance_declarations > this.pendingActions().leave_requests
+      ? '/admin/attendance/validation'
+      : '/admin/hr/leaves/validation',
+  );
+  readonly presenceRingBackground = computed(() => {
+    const value = Math.max(0, Math.min(100, this.presence().rate));
+    return `conic-gradient(#6d5ce8 0 ${value}%, var(--color-surface-container-high) ${value}% 100%)`;
+  });
 
-  /** Bar chart data for department distribution */
-  barChartData = signal<ChartConfiguration<'bar'>['data'] | null>(null);
-  /** Bar chart options */
-  get barChartOptions(): ChartConfiguration<'bar'>['options'] {
+  readonly today = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
+  readonly headcountChartData = computed<ChartConfiguration<'line'>['data'] | null>(() => {
+    const trend = this.stats()?.headcount_trend ?? [];
+    if (trend.length === 0) return null;
+    const dark = this.themeService.resolvedTheme() === 'dark';
+
+    return {
+      labels: trend.map((point) => point.label),
+      datasets: [
+        {
+          label: 'Effectif',
+          data: trend.map((point) => point.count),
+          borderColor: dark ? '#a5b4fc' : '#6254d9',
+          backgroundColor: dark ? 'rgba(129, 140, 248, .16)' : 'rgba(98, 84, 217, .12)',
+          pointBackgroundColor: dark ? '#c7d2fe' : '#6254d9',
+          pointBorderColor: dark ? '#1c2541' : '#ffffff',
+          pointBorderWidth: 3,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.38,
+        },
+      ],
+    };
+  });
+
+  readonly headcountChartOptions = computed<ChartConfiguration<'line'>['options']>(() => {
+    const dark = this.themeService.resolvedTheme() === 'dark';
+    const text = dark ? '#cbd5e1' : '#64748b';
+    const grid = dark ? 'rgba(148, 163, 184, .12)' : 'rgba(148, 163, 184, .16)';
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: dark ? '#f8fafc' : '#172033',
+          titleColor: dark ? '#172033' : '#ffffff',
+          bodyColor: dark ? '#475569' : '#e2e8f0',
+          padding: 12,
+          cornerRadius: 10,
+          displayColors: false,
+          callbacks: { label: (context) => ` ${context.parsed.y} collaborateurs` },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: text, font: { family: 'DM Sans', size: 11 } },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: grid },
+          border: { display: false },
+          ticks: { color: text, precision: 0, font: { family: 'DM Sans', size: 11 } },
+        },
+      },
+    };
+  });
+
+  readonly departmentChartData = computed<ChartConfiguration<'bar'>['data'] | null>(() => {
+    const distribution = this.stats()?.department_distribution ?? [];
+    if (distribution.length === 0) return null;
+    const dark = this.themeService.resolvedTheme() === 'dark';
+    const colors = dark
+      ? ['#818cf8', '#38bdf8', '#34d399', '#fbbf24', '#c084fc', '#fb7185']
+      : ['#6254d9', '#3596cf', '#36a17f', '#e4a53a', '#9b69d7', '#dc7180'];
+
+    return {
+      labels: distribution.map((item) => item.department),
+      datasets: [
+        {
+          label: 'Collaborateurs',
+          data: distribution.map((item) => item.count),
+          backgroundColor: distribution.map((_, index) => colors[index % colors.length]),
+          borderRadius: 7,
+          borderSkipped: false,
+          barThickness: 12,
+        },
+      ],
+    };
+  });
+
+  readonly departmentChartOptions = computed<ChartConfiguration<'bar'>['options']>(() => {
+    const dark = this.themeService.resolvedTheme() === 'dark';
+    const text = dark ? '#cbd5e1' : '#64748b';
+    const grid = dark ? 'rgba(148, 163, 184, .12)' : 'rgba(148, 163, 184, .16)';
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -77,184 +188,88 @@ export class AdminDashboardComponent implements OnInit {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: CHART_TOOLTIP_BG(),
-          titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
-          bodyFont: { family: 'DM Sans', size: 12 },
-          padding: 10,
-          cornerRadius: 4,
-          callbacks: {
-            label: (context) => {
-              const parsed = context.parsed;
-              if (parsed === null || parsed.x === null) return '';
-              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
-              const value = parsed.x;
-              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-              return ` ${value} employé(s) (${pct}%)`;
-            },
-          },
+          backgroundColor: dark ? '#f8fafc' : '#172033',
+          titleColor: dark ? '#172033' : '#ffffff',
+          bodyColor: dark ? '#475569' : '#e2e8f0',
+          padding: 12,
+          cornerRadius: 10,
+          displayColors: false,
+          callbacks: { label: (context) => ` ${context.parsed.x} collaborateurs` },
         },
       },
       scales: {
         x: {
           beginAtZero: true,
-          grid: { color: CHART_GRID_COLOR() },
-          ticks: {
-            font: { family: 'DM Sans', size: 11 },
-            color: CHART_TICK_MUTED(),
-            stepSize: 1,
-          },
+          grid: { color: grid },
+          border: { display: false },
+          ticks: { color: text, precision: 0, font: { family: 'DM Sans', size: 10 } },
         },
         y: {
           grid: { display: false },
-          ticks: {
-            font: { family: 'DM Sans', size: 12 },
-            color: CHART_TICK_SECONDARY(),
-          },
+          border: { display: false },
+          ticks: { color: text, font: { family: 'DM Sans', size: 11 } },
         },
       },
     };
-  }
-
-  /** Donut chart data for role distribution */
-  donutChartData = signal<ChartConfiguration<'doughnut'>['data'] | null>(null);
-  /** Donut chart options */
-  get donutChartOptions(): ChartConfiguration<'doughnut'>['options'] {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '60%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: { family: 'DM Sans', size: 12 },
-            padding: 16,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            color: CHART_TICK_SECONDARY(),
-          },
-        },
-        tooltip: {
-          backgroundColor: CHART_TOOLTIP_BG(),
-          titleFont: { family: 'DM Sans', size: 13, weight: 'bold' },
-          bodyFont: { family: 'DM Sans', size: 12 },
-          padding: 10,
-          cornerRadius: 4,
-          callbacks: {
-            label: (context) => {
-              const parsed = context.parsed;
-              if (parsed === null) return '';
-              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
-              const value = parsed;
-              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-              return ` ${context.label} : ${value} (${pct}%)`;
-            },
-          },
-        },
-      },
-    };
-  }
-
-  /** Total des managers + employés (hors admin) pour le donut */
-  totalRolesCount = computed(() => {
-    const s = this.stats();
-    if (!s) return 0;
-    return s.managers_count + s.regular_employees_count;
   });
 
   ngOnInit(): void {
-    this.loadStats();
-    this.loadRecentEmployees();
+    this.loadDashboard();
   }
 
-  /**
-   * Extrait les initiales à partir du prénom et du nom.
-   * @param first Prénom
-   * @param last Nom de famille
-   * @returns Initiales en majuscules
-   */
-  getInitials(first: string, last: string): string {
-    return `${(first?.[0] || '').toUpperCase()}${(last?.[0] || '').toUpperCase()}`;
-  }
-
-  /**
-   * Charge les statistiques du dashboard depuis l'API et prépare les données des graphiques.
-   */
-  loadStats(): void {
-    this.loading.set(true);
+  loadDashboard(): void {
+    if (this.stats()) {
+      this.refreshing.set(true);
+    } else {
+      this.loading.set(true);
+    }
     this.error.set(null);
 
     this.dashboardService.getStats().subscribe({
       next: (stats) => {
         this.stats.set(stats);
-
-        // Prepare bar chart data
-        const chartColors = CSS_COLORS();
-        if (stats.department_distribution.length > 0) {
-          this.barChartData.set({
-            labels: stats.department_distribution.map((d) => d.department),
-            datasets: [
-              {
-                data: stats.department_distribution.map((d) => d.count),
-                backgroundColor: stats.department_distribution.map(
-                  (_, i) => chartColors[i % chartColors.length]
-                ),
-                borderColor: stats.department_distribution.map(
-                  (_, i) => chartColors[i % chartColors.length]
-                ),
-                borderWidth: 1,
-                borderRadius: 4,
-                barThickness: 18,
-              },
-            ],
-          });
-        }
-
-        // Prepare donut chart data for role distribution
-        const totalNonAdmin =
-          stats.managers_count + stats.regular_employees_count;
-        const stitchPrimary = CSS_VAR('--color-stitch-primary') || STITCH_PRIMARY;
-        const stitchSecondary = STITCH_SECONDARY_CONTAINER;
-        if (totalNonAdmin > 0) {
-          this.donutChartData.set({
-            labels: ['Managers', 'Employés'],
-            datasets: [
-              {
-                data: [stats.managers_count, stats.regular_employees_count],
-                backgroundColor: [stitchPrimary, stitchSecondary],
-                borderColor: [CSS_VAR('--color-surface') || '#FFFFFF', CSS_VAR('--color-surface') || '#FFFFFF'],
-                borderWidth: 3,
-                hoverOffset: 8,
-              },
-            ],
-          });
-        }
-
         this.loading.set(false);
+        this.refreshing.set(false);
       },
       error: () => {
-        this.error.set('Impossible de charger les statistiques. Veuillez réessayer.');
+        this.error.set('Impossible de charger les données du tableau de bord.');
         this.loading.set(false);
+        this.refreshing.set(false);
       },
     });
   }
 
-  /**
-   * Charge les 5 dernières embauches triées par date d'embauche décroissante.
-   */
-  loadRecentEmployees(): void {
-    this.employeeService.getEmployees({ per_page: 50 }).subscribe({
-      next: (response) => {
-        const sorted = [...response.data]
-          .filter((e) => e.hire_date)
-          .sort((a, b) => new Date(b.hire_date).getTime() - new Date(a.hire_date).getTime())
-          .slice(0, 5);
-        this.recentEmployees.set(sorted);
-      },
-      error: () => {
-        // Silently fail — the table will show empty state
-        this.recentEmployees.set([]);
-      },
-    });
+  getInitials(firstName?: string, lastName?: string): string {
+    return `${firstName?.charAt(0) ?? ''}${lastName?.charAt(0) ?? ''}`.toUpperCase() || '—';
+  }
+
+  absenceLabel(type: string): string {
+    const labels: Record<string, string> = {
+      CONGE_PAYE: 'Congé payé',
+      MALADIE: 'Maladie',
+      SANS_SOLDE: 'Sans solde',
+      AUTRE: 'Autre absence',
+    };
+    return labels[type] ?? type;
+  }
+
+  absenceTone(absence: DashboardUpcomingAbsence): string {
+    const tones: Record<string, string> = {
+      CONGE_PAYE: 'violet',
+      MALADIE: 'coral',
+      SANS_SOLDE: 'amber',
+      AUTRE: 'blue',
+    };
+    return tones[absence.type] ?? 'blue';
+  }
+
+  employeeStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      ACTIVE: 'Actif',
+      PENDING_ACTIVATION: 'En attente',
+      INACTIVE: 'Inactif',
+      SUSPENDED: 'Suspendu',
+    };
+    return labels[status] ?? status;
   }
 }

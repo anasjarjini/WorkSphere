@@ -88,13 +88,14 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(searchSub);
     this.route.queryParamMap.pipe(take(1)).subscribe((params) => {
-      const q = params.get('search');
-      if (q) {
-        this.searchTerm.set(q);
-        this.loadEmployees();
-      }
+      this.searchTerm.set(params.get('search') ?? '');
+      this.roleFilter.set(params.get('role') ?? '');
+      this.departmentFilter.set(params.get('department') ?? '');
+      this.statusFilter.set(params.get('status') ?? '');
+      const page = Number(params.get('page'));
+      this.currentPage.set(Number.isInteger(page) && page > 0 ? page : 1);
+      this.loadEmployees();
     });
-    this.loadEmployees();
   }
 
   ngOnDestroy(): void {

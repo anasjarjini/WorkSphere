@@ -64,7 +64,8 @@
               "buildTarget": "WorkSphere-frontend:build:production"
             },
             "development": {
-              "buildTarget": "WorkSphere-frontend:build:development"
+              "buildTarget": "WorkSphere-frontend:build:development",
+              "prebundle": false
             }
           },
           "defaultConfiguration": "development"

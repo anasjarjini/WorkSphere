@@ -30,7 +30,7 @@ export interface Employee {
   role: EmployeeRole;
   status: EmployeeStatus;
   job_title: string;
-  department: Department;
+  department: Department | null;
   hire_date: string;
   salary: string | null;
   is_active: boolean;

@@ -1,268 +1,585 @@
 @let s = stats();
-@let isLoading = loading();
-@let errMsg = error();
-@let recent = recentEmployees();
-@let recentHires = s?.recent_hires_count ?? 0;
-@let deptCount = s?.departments_count ?? 0;
-@let totalRoles = totalRolesCount();
+@let presenceToday = presence();
+@let pending = pendingActions();
+@let statuses = statusCounts();
 
-<div class="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
-    <div>
-      <h1 class="font-heading text-2xl font-bold text-primary">Tableau de bord</h1>
-      <p class="text-text-secondary mt-1">Bienvenue, <span class="font-semibold text-text">{{ userName() }}</span>. Voici l'aperçu global de votre entreprise.</p>
-    </div>
-    <span class="inline-flex items-center gap-1.5 text-xs text-text-muted">
-      <span class="material-symbols-outlined text-sm">calendar_month</span>
-      {{ today }}
-    </span>
-  </div>
-
-  @if (isLoading) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      @for (item of [1, 2, 3, 4]; track item) {
-        <div class="bg-surface rounded-2xl p-6 animate-pulse border border-border">
-          <div class="flex items-center justify-between mb-4">
-            <div class="h-3 w-20 bg-border rounded"></div>
-            <div class="w-10 h-10 rounded-full bg-border"></div>
-          </div>
-          <div class="h-9 w-14 bg-border rounded mt-2"></div>
-          <div class="h-3 w-28 bg-border rounded mt-3"></div>
-        </div>
-      }
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      @for (item of [1, 2]; track item) {
-        <div class="bg-surface rounded-2xl p-6 animate-pulse border border-border">
-          <div class="h-5 w-48 bg-border rounded mb-6"></div>
-          <div class="h-[260px] bg-border rounded"></div>
-        </div>
-      }
-    </div>
-    <div class="bg-surface rounded-2xl p-6 animate-pulse border border-border">
-      <div class="h-5 w-52 bg-border rounded mb-5"></div>
-      <div class="space-y-3">
-        @for (item of [1, 2, 3, 4]; track item) {
-          <div class="h-10 bg-border rounded"></div>
-        }
+<div class="dashboard-page" [attr.aria-busy]="loading()">
+  <header class="dashboard-hero">
+    <div class="hero-copy">
+      <div class="hero-meta">
+        <span class="workspace-chip"><i></i>Espace RH</span>
+        <span class="date-eyebrow"
+          ><span class="material-symbols-outlined" aria-hidden="true">calendar_today</span
+          >{{ today }}</span
+        >
       </div>
+      <h1>Bonjour {{ userName() }}, <span>voici l’essentiel.</span></h1>
+      <p>Les priorités RH et les indicateurs utiles pour piloter votre organisation aujourd’hui.</p>
     </div>
-  }
-
-  @if (!isLoading && errMsg) {
-    <div class="bg-error-light border border-error rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
-      <span class="material-symbols-outlined text-5xl text-error">error_outline</span>
-      <div>
-        <h3 class="font-heading text-lg font-semibold text-error-dark">Erreur de chargement</h3>
-        <p class="text-sm text-text-secondary mt-1">{{ errMsg }}</p>
-      </div>
-      <button (click)="loadStats()" class="bg-primary text-text-inverse text-sm font-semibold px-6 py-2.5 rounded-full shadow-sm hover:bg-primary-hover transition-all cursor-pointer">
-        Réessayer
+    <div class="hero-actions">
+      @if (s?.last_updated_at) {
+        <span class="updated-at">Actualisé à {{ s?.last_updated_at | date: 'HH:mm' }}</span>
+      }
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="loadDashboard()"
+        [disabled]="refreshing()"
+        aria-label="Actualiser les données"
+      >
+        <span
+          class="material-symbols-outlined"
+          [class.is-spinning]="refreshing()"
+          aria-hidden="true"
+          >refresh</span
+        >
+        <span>Actualiser</span>
       </button>
+      <a routerLink="/admin/employees/import" class="primary-action"
+        ><span class="material-symbols-outlined" aria-hidden="true">upload_file</span>Importer des
+        employés</a
+      >
     </div>
-  }
+  </header>
 
-  @if (!isLoading && !errMsg) {
-    <!-- Stats cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300 group">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Total employés</span>
-          <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-text-inverse">
-            <span class="material-symbols-outlined text-xl">group</span>
-          </div>
+  @if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <span class="sr-only">Chargement du tableau de bord</span>
+      <div class="skeleton-kpis">
+        @for (item of [1, 2, 3, 4]; track item) {
+          <div class="skeleton-card"><span></span><b></b><i></i></div>
+        }
+      </div>
+      <div class="skeleton-panels">
+        <div></div>
+        <div></div>
+      </div>
+      <div class="skeleton-panels bottom">
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  } @else if (error() && !s) {
+    <section class="error-state" role="alert">
+      <span class="error-icon material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <div>
+        <h2>Les données ne sont pas disponibles</h2>
+        <p>{{ error() }}</p>
+      </div>
+      <button type="button" (click)="loadDashboard()">
+        <span class="material-symbols-outlined" aria-hidden="true">refresh</span>Réessayer
+      </button>
+    </section>
+  } @else if (s) {
+    @if (error()) {
+      <div class="inline-error" role="alert">
+        <span class="material-symbols-outlined" aria-hidden="true">warning</span>{{ error() }}
+        <button type="button" (click)="loadDashboard()">Réessayer</button>
+      </div>
+    }
+
+    <section class="kpi-grid" aria-label="Indicateurs principaux">
+      <a routerLink="/admin/employees" class="kpi-card tone-violet">
+        <div class="kpi-top">
+          <span class="kpi-label">Effectif total</span
+          ><span class="kpi-icon material-symbols-outlined" aria-hidden="true">groups</span>
         </div>
-        <div class="text-3xl font-heading font-bold text-text-heading">{{ s?.total_employees ?? '—' }}</div>
-        <div class="flex items-center gap-1.5 mt-2">
-          @if (recentHires > 0) {
-            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-success">
-              <span class="material-symbols-outlined text-sm">trending_up</span> +{{ recentHires }}
-            </span>
-            <span class="text-xs text-text-secondary">ce mois</span>
+        <strong>{{ s.total_employees }}</strong>
+        <div class="kpi-bottom">
+          @if (s.recent_hires_count > 0) {
+            <span class="positive"
+              ><i class="material-symbols-outlined">trending_up</i>+{{ s.recent_hires_count }}</span
+            ><span>sur les 30 derniers jours</span>
           } @else {
-            <span class="text-xs text-text-secondary">Aucune embauche récente</span>
+            <span>Aucune arrivée sur les 30 derniers jours</span>
           }
         </div>
-      </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_outward</span>
+      </a>
 
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300 group">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Comptes actifs</span>
-          <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-text-inverse">
-            <span class="material-symbols-outlined text-xl">verified_user</span>
-          </div>
+      <a routerLink="/admin/attendance/today" class="kpi-card tone-mint">
+        <div class="kpi-top">
+          <span class="kpi-label">Présence aujourd’hui</span
+          ><span class="kpi-icon material-symbols-outlined" aria-hidden="true">how_to_reg</span>
         </div>
-        <div class="text-3xl font-heading font-bold text-text-heading">{{ s?.active_count ?? '—' }}</div>
-        <div class="flex items-center gap-1.5 mt-2">
-          @if ((s?.pending_count ?? 0) > 0) {
-            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-warning">
-              <span class="material-symbols-outlined text-sm">hourglass_empty</span> {{ s?.pending_count }}
-            </span>
-            <span class="text-xs text-text-secondary">en attente</span>
+        <strong>{{ presenceToday.rate }}<small>%</small></strong>
+        <div class="kpi-bottom">
+          <span class="positive">{{ presenceToday.present }}</span
+          ><span
+            >présent{{ presenceToday.present > 1 ? 's' : '' }} sur {{ presenceToday.total }}</span
+          >
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_outward</span>
+      </a>
+
+      <a [routerLink]="primaryValidationRoute()" class="kpi-card tone-coral">
+        <div class="kpi-top">
+          <span class="kpi-label">Validations RH</span
+          ><span class="kpi-icon material-symbols-outlined" aria-hidden="true"
+            >pending_actions</span
+          >
+        </div>
+        <strong>{{ validationsCount() }}</strong>
+        <div class="kpi-bottom">
+          @if (validationsCount() > 0) {
+            <span class="attention">À traiter</span><span>congés et présences</span>
           } @else {
-            <span class="inline-flex items-center gap-0.5 text-xs text-text-secondary">
-              <span class="material-symbols-outlined text-sm">check_circle</span> Aucun en attente
-            </span>
+            <span class="positive"><i class="material-symbols-outlined">check</i>À jour</span
+            ><span>aucune validation</span>
           }
         </div>
-      </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_outward</span>
+      </a>
 
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300 group">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Managers</span>
-          <div class="w-10 h-10 rounded-xl bg-accent-light text-accent-dark flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-accent group-hover:text-text-inverse">
-            <span class="material-symbols-outlined text-xl">badge</span>
+      <a
+        routerLink="/admin/employees"
+        [queryParams]="{ status: 'PENDING_ACTIVATION' }"
+        class="kpi-card tone-blue"
+      >
+        <div class="kpi-top">
+          <span class="kpi-label">Comptes activés</span
+          ><span class="kpi-icon material-symbols-outlined" aria-hidden="true">verified_user</span>
+        </div>
+        <strong>{{ activationRate() }}<small>%</small></strong>
+        <div class="kpi-bottom">
+          @if (statuses.pending_activation > 0) {
+            <span class="attention">{{ statuses.pending_activation }}</span
+            ><span>invitation{{ statuses.pending_activation > 1 ? 's' : '' }} en attente</span>
+          } @else {
+            <span class="positive"><i class="material-symbols-outlined">check</i>À jour</span
+            ><span>tous les comptes sont traités</span>
+          }
+        </div>
+        <span class="card-arrow material-symbols-outlined" aria-hidden="true">arrow_outward</span>
+      </a>
+    </section>
+
+    <section class="quick-actions" aria-labelledby="quick-actions-title">
+      <div class="quick-heading">
+        <span class="spark material-symbols-outlined" aria-hidden="true">bolt</span>
+        <div>
+          <h2 id="quick-actions-title">Actions rapides</h2>
+          <p>Accédez directement à vos tâches fréquentes.</p>
+        </div>
+      </div>
+      <div class="quick-links">
+        <a routerLink="/admin/employees"
+          ><span class="material-symbols-outlined" aria-hidden="true">group</span>Gérer l’équipe</a
+        >
+        <a routerLink="/admin/projects/new"
+          ><span class="material-symbols-outlined" aria-hidden="true">add_task</span>Nouveau
+          projet</a
+        >
+        <a routerLink="/admin/announcements"
+          ><span class="material-symbols-outlined" aria-hidden="true">campaign</span>Publier une
+          annonce</a
+        >
+        <a routerLink="/admin/hr/leaves/holidays"
+          ><span class="material-symbols-outlined" aria-hidden="true">event</span>Jours fériés</a
+        >
+      </div>
+    </section>
+
+    <div class="operations-grid">
+      <section class="panel attention-panel" aria-labelledby="attention-title">
+        <div class="panel-heading">
+          <div>
+            <span class="section-icon coral material-symbols-outlined" aria-hidden="true"
+              >notifications_active</span
+            >
+            <div>
+              <h2 id="attention-title">À traiter aujourd’hui</h2>
+              <p>Les sujets qui demandent votre attention.</p>
+            </div>
+          </div>
+          @if (pending.total + statuses.pending_activation > 0) {
+            <span class="count-badge">{{ pending.total + statuses.pending_activation }}</span>
+          } @else {
+            <span class="success-badge"><i></i>Tout est à jour</span>
+          }
+        </div>
+        <div class="attention-list">
+          <a routerLink="/admin/hr/leaves/validation" class="attention-row">
+            <span class="row-icon violet material-symbols-outlined" aria-hidden="true"
+              >calendar_clock</span
+            >
+            <span class="row-copy"
+              ><strong>Demandes de congé</strong
+              ><small>{{
+                pending.leave_requests > 0
+                  ? 'Des demandes attendent une décision RH'
+                  : 'Aucune demande en attente'
+              }}</small></span
+            >
+            <span class="row-value" [class.zero]="pending.leave_requests === 0">{{
+              pending.leave_requests
+            }}</span
+            ><span class="material-symbols-outlined row-arrow" aria-hidden="true"
+              >chevron_right</span
+            >
+          </a>
+          <a routerLink="/admin/attendance/validation" class="attention-row">
+            <span class="row-icon mint material-symbols-outlined" aria-hidden="true"
+              >fact_check</span
+            >
+            <span class="row-copy"
+              ><strong>Déclarations de présence</strong
+              ><small>{{
+                pending.attendance_declarations > 0
+                  ? 'Des feuilles nécessitent une validation'
+                  : 'Toutes les feuilles sont traitées'
+              }}</small></span
+            >
+            <span class="row-value" [class.zero]="pending.attendance_declarations === 0">{{
+              pending.attendance_declarations
+            }}</span
+            ><span class="material-symbols-outlined row-arrow" aria-hidden="true"
+              >chevron_right</span
+            >
+          </a>
+          <a routerLink="/admin/employees" class="attention-row">
+            <span class="row-icon amber material-symbols-outlined" aria-hidden="true"
+              >person_alert</span
+            >
+            <span class="row-copy"
+              ><strong>Profils incomplets</strong
+              ><small
+                >{{ s.employees_without_department }} sans département ·
+                {{ s.employees_without_manager }} sans manager</small
+              ></span
+            >
+            <span class="row-value" [class.zero]="pending.incomplete_profiles === 0">{{
+              pending.incomplete_profiles
+            }}</span
+            ><span class="material-symbols-outlined row-arrow" aria-hidden="true"
+              >chevron_right</span
+            >
+          </a>
+          <a
+            routerLink="/admin/employees"
+            [queryParams]="{ status: 'PENDING_ACTIVATION' }"
+            class="attention-row"
+          >
+            <span class="row-icon blue material-symbols-outlined" aria-hidden="true"
+              >mark_email_unread</span
+            >
+            <span class="row-copy"
+              ><strong>Invitations en attente</strong
+              ><small>{{
+                statuses.pending_activation > 0
+                  ? 'Des comptes ne sont pas encore activés'
+                  : 'Toutes les invitations sont acceptées'
+              }}</small></span
+            >
+            <span class="row-value" [class.zero]="statuses.pending_activation === 0">{{
+              statuses.pending_activation
+            }}</span
+            ><span class="material-symbols-outlined row-arrow" aria-hidden="true"
+              >chevron_right</span
+            >
+          </a>
+        </div>
+      </section>
+
+      <section class="panel presence-panel" aria-labelledby="presence-title">
+        <div class="panel-heading compact">
+          <div>
+            <span class="section-icon violet material-symbols-outlined" aria-hidden="true"
+              >today</span
+            >
+            <div>
+              <h2 id="presence-title">Présence du jour</h2>
+              <p>Situation de votre équipe.</p>
+            </div>
+          </div>
+          <a routerLink="/admin/attendance/today"
+            >Voir le détail<span class="material-symbols-outlined">arrow_forward</span></a
+          >
+        </div>
+        <div class="presence-overview">
+          <div
+            class="presence-ring"
+            [style.background]="presenceRingBackground()"
+            role="img"
+            [attr.aria-label]="presenceToday.rate + '% de présence aujourd’hui'"
+          >
+            <div>
+              <strong>{{ presenceToday.rate }}%</strong><span>de présence</span>
+            </div>
+          </div>
+          <div class="presence-legend">
+            <div>
+              <span class="legend-dot present"></span>
+              <p>
+                <strong>{{ presenceToday.present }}</strong
+                ><small>Présents</small>
+              </p>
+            </div>
+            <div>
+              <span class="legend-dot leave"></span>
+              <p>
+                <strong>{{ presenceToday.on_leave }}</strong
+                ><small>En congé</small>
+              </p>
+            </div>
+            <div>
+              <span class="legend-dot absent"></span>
+              <p>
+                <strong>{{ presenceToday.absent }}</strong
+                ><small>Absents</small>
+              </p>
+            </div>
+            <div>
+              <span class="legend-dot missing"></span>
+              <p>
+                <strong>{{ presenceToday.not_declared }}</strong
+                ><small>Non déclarés</small>
+              </p>
+            </div>
           </div>
         </div>
-        <div class="text-3xl font-heading font-bold text-text-heading">{{ s?.managers_count ?? '—' }}</div>
-        <div class="flex items-center gap-1.5 mt-2">
-          <span class="text-xs text-text-secondary">{{ s?.regular_employees_count ?? 0 }} employé(s)</span>
-        </div>
-      </div>
+        @if (presenceToday.not_declared > 0) {
+          <a routerLink="/admin/attendance/today" class="presence-alert"
+            ><span class="material-symbols-outlined" aria-hidden="true">info</span
+            ><span
+              ><strong
+                >{{ presenceToday.not_declared }} déclaration{{
+                  presenceToday.not_declared > 1 ? 's' : ''
+                }}
+                manquante{{ presenceToday.not_declared > 1 ? 's' : '' }}</strong
+              ><small>Vérifier les collaborateurs concernés</small></span
+            ><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a
+          >
+        }
+      </section>
+    </div>
 
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300 group">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Départements</span>
-          <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-text-inverse">
-            <span class="material-symbols-outlined text-xl">category</span>
+    <div class="analytics-grid">
+      <section class="panel chart-panel headcount-panel" aria-labelledby="headcount-title">
+        <div class="panel-heading compact">
+          <div>
+            <span class="section-icon violet material-symbols-outlined" aria-hidden="true"
+              >monitoring</span
+            >
+            <div>
+              <h2 id="headcount-title">Évolution des effectifs</h2>
+              <p>Progression sur les douze derniers mois.</p>
+            </div>
           </div>
+          <span class="period-pill">12 mois</span>
         </div>
-        <div class="text-3xl font-heading font-bold text-text-heading">{{ deptCount || '—' }}</div>
-        <div class="flex items-center gap-1.5 mt-2">
-          <span class="text-xs text-text-secondary">
-            @if (deptCount > 0) {
-              {{ deptCount }} configuré(s)
-            } @else {
-              Aucun département défini
+        @if (headcountChartData()) {
+          <div
+            class="chart-container"
+            role="img"
+            aria-label="Graphique de l’évolution mensuelle des effectifs"
+          >
+            <canvas
+              baseChart
+              [data]="headcountChartData()!"
+              [options]="headcountChartOptions()"
+              [type]="'line'"
+            ></canvas>
+          </div>
+          <ul class="sr-only">
+            @for (point of s.headcount_trend; track point.month) {
+              <li>{{ point.label }} : {{ point.count }} collaborateurs</li>
             }
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary text-xl">bar_chart</span>
-            <h2 class="font-heading text-base font-semibold text-text-heading">Répartition par département</h2>
+          </ul>
+        } @else {
+          <div class="widget-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">show_chart</span
+            ><strong>Pas encore assez d’historique</strong>
+            <p>La tendance apparaîtra avec l’évolution de vos effectifs.</p>
           </div>
-          @if (deptCount > 0) {
-            <span class="text-xs text-text-secondary bg-primary-50 px-3 py-1 rounded-full">{{ deptCount }} département(s)</span>
-          }
+        }
+      </section>
+
+      <section class="panel absences-panel" aria-labelledby="absences-title">
+        <div class="panel-heading compact">
+          <div>
+            <span class="section-icon blue material-symbols-outlined" aria-hidden="true"
+              >event_upcoming</span
+            >
+            <div>
+              <h2 id="absences-title">Absences à venir</h2>
+              <p>En cours et sur les sept prochains jours.</p>
+            </div>
+          </div>
+          <a routerLink="/admin/hr/leaves/history"
+            >Tout voir<span class="material-symbols-outlined">arrow_forward</span></a
+          >
         </div>
-        @if ((s?.department_distribution?.length ?? 0) > 0 && barChartData()) {
-          <div class="h-[260px] flex items-center justify-center">
-            <canvas baseChart [data]="barChartData()!" [options]="barChartOptions" [type]="'bar'" class="max-w-full max-h-full"></canvas>
+        @if (upcomingAbsences().length > 0) {
+          <div class="absence-list">
+            @for (absence of upcomingAbsences(); track absence.id) {
+              <div class="absence-row">
+                <span class="employee-avatar" [class]="absenceTone(absence)">{{
+                  getInitials(absence.user?.first_name, absence.user?.last_name)
+                }}</span>
+                <span class="absence-copy"
+                  ><strong>{{ absence.user?.first_name }} {{ absence.user?.last_name }}</strong
+                  ><small
+                    >{{ absenceLabel(absence.type) }} · {{ absence.duration_days }} jour{{
+                      absence.duration_days > 1 ? 's' : ''
+                    }}</small
+                  ></span
+                >
+                <span class="absence-date"
+                  ><strong>{{ absence.start_date | date: 'dd' }}</strong
+                  ><small>{{ absence.start_date | date: 'MMM' }}</small></span
+                >
+              </div>
+            }
           </div>
         } @else {
-          <div class="flex flex-col items-center justify-center py-12 text-center">
-            <span class="material-symbols-outlined text-5xl text-text-muted mb-3">bar_chart</span>
-            <h3 class="font-heading text-base font-semibold text-text-heading mb-1">Aucune donnée disponible</h3>
-            <p class="text-sm text-text-secondary max-w-xs">Importez des employés pour voir la répartition par département.</p>
+          <div class="widget-empty compact-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">event_available</span
+            ><strong>Aucune absence à venir</strong>
+            <p>L’équipe est au complet pour les sept prochains jours.</p>
           </div>
         }
-      </div>
-
-      <div class="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary text-xl">donut_large</span>
-            <h2 class="font-heading text-base font-semibold text-text-heading">Répartition par rôle</h2>
-          </div>
-          @if (totalRoles > 0) {
-            <span class="text-xs text-text-secondary bg-primary-50 px-3 py-1 rounded-full">{{ totalRoles }} personne(s)</span>
-          }
-        </div>
-        @if (totalRoles > 0 && donutChartData()) {
-          <div class="h-[260px] flex items-center justify-center">
-            <canvas baseChart [data]="donutChartData()!" [options]="donutChartOptions" [type]="'doughnut'" class="max-w-full max-h-full"></canvas>
-          </div>
-        } @else {
-          <div class="flex flex-col items-center justify-center py-12 text-center">
-            <span class="material-symbols-outlined text-5xl text-text-muted mb-3">donut_large</span>
-            <h3 class="font-heading text-base font-semibold text-text-heading mb-1">Aucune donnée disponible</h3>
-            <p class="text-sm text-text-secondary max-w-xs">Importez des employés pour voir la répartition par rôle.</p>
-          </div>
-        }
-      </div>
+      </section>
     </div>
 
-    <!-- Recent hires table -->
-    <div class="bg-surface rounded-2xl shadow-sm border border-border hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between px-6 pt-6 pb-4">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary text-xl">person_add</span>
-          <h2 class="font-heading text-base font-semibold text-text-heading">Embauches récentes</h2>
+    <div class="insights-grid">
+      <section class="panel chart-panel department-panel" aria-labelledby="department-title">
+        <div class="panel-heading compact">
+          <div>
+            <span class="section-icon mint material-symbols-outlined" aria-hidden="true"
+              >apartment</span
+            >
+            <div>
+              <h2 id="department-title">Répartition des équipes</h2>
+              <p>
+                {{ s.departments_count }} département{{
+                  s.departments_count > 1 ? 's' : ''
+                }}
+                configuré{{ s.departments_count > 1 ? 's' : '' }}.
+              </p>
+            </div>
+          </div>
+          <a routerLink="/admin/company"
+            >Configurer<span class="material-symbols-outlined">arrow_forward</span></a
+          >
         </div>
-        @if (recentHires > 0) {
-          <a routerLink="/admin/employees" class="text-sm font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer">Voir tout</a>
+        @if (departmentChartData()) {
+          <div
+            class="department-chart"
+            role="img"
+            aria-label="Graphique du nombre de collaborateurs par département"
+          >
+            <canvas
+              baseChart
+              [data]="departmentChartData()!"
+              [options]="departmentChartOptions()"
+              [type]="'bar'"
+            ></canvas>
+          </div>
+          <ul class="sr-only">
+            @for (department of s.department_distribution; track department.department) {
+              <li>{{ department.department }} : {{ department.count }} collaborateurs</li>
+            }
+          </ul>
+        } @else {
+          <div class="widget-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">domain_disabled</span
+            ><strong>Aucun département renseigné</strong>
+            <p>Configurez les équipes pour voir leur répartition.</p>
+            <a routerLink="/admin/company">Configurer les départements</a>
+          </div>
         }
-      </div>
+      </section>
 
-      @if (recent.length > 0) {
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-t border-border">
-                <th class="text-left px-6 py-3 font-semibold text-xs text-text-muted uppercase tracking-wider">Employé</th>
-                <th class="text-left px-6 py-3 font-semibold text-xs text-text-muted uppercase tracking-wider">Poste</th>
-                <th class="text-left px-6 py-3 font-semibold text-xs text-text-muted uppercase tracking-wider">Département</th>
-                <th class="text-left px-6 py-3 font-semibold text-xs text-text-muted uppercase tracking-wider">Date d'embauche</th>
-                <th class="text-left px-6 py-3 font-semibold text-xs text-text-muted uppercase tracking-wider">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (emp of recent; track emp.id) {
-                <tr class="border-t border-border-light hover:bg-background-alt transition-colors">
-                  <td class="px-6 py-3">
-                    <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-primary-50 text-primary font-semibold text-xs flex items-center justify-center shrink-0">
-                        {{ getInitials(emp.first_name, emp.last_name) }}
-                      </div>
-                      <div>
-                        <span class="font-medium text-text-heading">{{ emp.first_name }} {{ emp.last_name }}</span>
-                        <span class="text-text-secondary text-xs block">{{ emp.email }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-3 text-text-secondary">{{ emp.job_title || '—' }}</td>
-                  <td class="px-6 py-3">
-                    @if (emp.department) {
-                      <span class="inline-flex items-center px-3 py-1 bg-primary-50 text-primary rounded-full text-xs font-medium">{{ emp.department.name }}</span>
-                    } @else {
-                      <span class="text-text-muted">—</span>
-                    }
-                  </td>
-                  <td class="px-6 py-3 text-text-secondary">{{ emp.hire_date | date: 'dd/MM/yyyy' }}</td>
-                  <td class="px-6 py-3">
-                    @if (emp.status === 'ACTIVE') {
-                      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                        <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-                        Actif
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-warning">
-                        <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
-                        En attente
-                      </span>
-                    }
-                  </td>
+      <section class="panel hires-panel" aria-labelledby="hires-title">
+        <div class="panel-heading compact">
+          <div>
+            <span class="section-icon amber material-symbols-outlined" aria-hidden="true"
+              >person_add</span
+            >
+            <div>
+              <h2 id="hires-title">Dernières arrivées</h2>
+              <p>Embauches des 30 derniers jours.</p>
+            </div>
+          </div>
+          <a routerLink="/admin/employees"
+            >Voir l’équipe<span class="material-symbols-outlined">arrow_forward</span></a
+          >
+        </div>
+        @if (recentEmployees().length > 0) {
+          <div class="hires-table-wrap">
+            <table class="hires-table">
+              <thead>
+                <tr>
+                  <th>Collaborateur</th>
+                  <th>Département</th>
+                  <th>Arrivée</th>
+                  <th>Statut</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      } @else {
-        <div class="flex flex-col items-center justify-center py-12 text-center px-6">
-          <span class="material-symbols-outlined text-5xl text-text-muted mb-3">person_add</span>
-          <h3 class="font-heading text-base font-semibold text-text-heading mb-1">Aucun employé récent</h3>
-          <p class="text-sm text-text-secondary max-w-sm">Les employés embauchés dans les 30 derniers jours apparaîtront ici.</p>
-        </div>
-      }
+              </thead>
+              <tbody>
+                @for (employee of recentEmployees(); track employee.id) {
+                  <tr>
+                    <td>
+                      <div class="employee-cell">
+                        <span class="employee-avatar violet">{{
+                          getInitials(employee.first_name, employee.last_name)
+                        }}</span
+                        ><span
+                          ><strong>{{ employee.first_name }} {{ employee.last_name }}</strong
+                          ><small>{{ employee.job_title || 'Poste non renseigné' }}</small></span
+                        >
+                      </div>
+                    </td>
+                    <td>
+                      <span class="department-chip">{{
+                        employee.department?.name || 'Non attribué'
+                      }}</span>
+                    </td>
+                    <td>{{ employee.hire_date | date: 'dd MMM yyyy' }}</td>
+                    <td>
+                      <span
+                        class="status-chip"
+                        [class.pending]="employee.status === 'PENDING_ACTIVATION'"
+                        [class.inactive]="
+                          employee.status === 'INACTIVE' || employee.status === 'SUSPENDED'
+                        "
+                        ><i></i>{{ employeeStatusLabel(employee.status) }}</span
+                      >
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="hire-cards">
+            @for (employee of recentEmployees(); track employee.id) {
+              <article>
+                <div class="employee-cell">
+                  <span class="employee-avatar violet">{{
+                    getInitials(employee.first_name, employee.last_name)
+                  }}</span
+                  ><span
+                    ><strong>{{ employee.first_name }} {{ employee.last_name }}</strong
+                    ><small>{{ employee.job_title || 'Poste non renseigné' }}</small></span
+                  >
+                </div>
+                <div>
+                  <span>{{ employee.department?.name || 'Non attribué' }}</span
+                  ><time>{{ employee.hire_date | date: 'dd MMM yyyy' }}</time>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="widget-empty compact-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">group_add</span
+            ><strong>Aucune arrivée récente</strong>
+            <p>Les nouvelles embauches apparaîtront ici.</p>
+            <a routerLink="/admin/employees/import">Importer des employés</a>
+          </div>
+        }
+      </section>
     </div>
   }
 </div>
