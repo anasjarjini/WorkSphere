@@ -1,0 +1,1 @@
+anasjarjini@fedora44:~/Music/Project stage/WorkSphere$ mysqldump -u root -p worksphere > worksphere_backup.sql
