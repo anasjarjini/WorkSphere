@@ -3,21 +3,10 @@
 /**
  * Vercel Serverless Entry Point for Laravel
  *
- * vercel-php@0.7.2 correctly passes REQUEST_URI via functions config.
- * We still patch it here as a safety net.
+ * Using vercel-php@0.9.0 (PHP 8.5) with "functions" config.
+ *
+ * The "functions" config style correctly passes the full REQUEST_URI
+ * unlike the old "builds" style which truncates it.
  */
-
-// Safety net: fix REQUEST_URI if it gets truncated
-$uri = $_SERVER['REQUEST_URI'] ?? '/';
-if ($uri === '/api' || $uri === '/api/') {
-    // Vercel truncation fallback - serve root
-    $_SERVER['REQUEST_URI'] = '/';
-}
-
-// Fix PATH_INFO for Symfony Request
-if (!isset($_SERVER['PATH_INFO'])) {
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-    $_SERVER['PATH_INFO'] = $path;
-}
 
 require __DIR__ . '/../public/index.php';
