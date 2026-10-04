@@ -1,9 +1,13 @@
 <?php
 
-// Strip the leading /api prefix so Laravel doesn't see /api/api/...
-$uri = $_SERVER['REQUEST_URI'] ?? '/';
-if (str_starts_with($uri, '/api')) {
-    $_SERVER['REQUEST_URI'] = substr($uri, 4) ?: '/';
-}
+/**
+ * Vercel Serverless Entry Point for Laravel
+ *
+ * Vercel sends ALL requests here via the route "/(.*)" -> "/api/index.php"
+ * Laravel's routes are defined WITHOUT any prefix in routes/api.php
+ * (Laravel automatically adds the /api prefix via RouteServiceProvider)
+ *
+ * So we just boot Laravel normally — no URI stripping needed.
+ */
 
 require __DIR__ . '/../public/index.php';
