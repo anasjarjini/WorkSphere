@@ -1,3 +1,5 @@
+@import "@fontsource/instrument-sans";
+@import "material-symbols";
 @import "./styles/fonts/fonts.css";
 @import "tailwindcss";
 
