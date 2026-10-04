@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://workspherbackcked.vercel.app/api',
+  apiUrl: 'https://worksphere-backend-git-master-anasjarjinis-projects.vercel.app/api',
 };
