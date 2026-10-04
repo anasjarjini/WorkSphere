@@ -1,22 +1,21 @@
 <?php
 
 /**
- * Vercel Serverless Entry Point for Laravel
- *
- * PROBLEM: Vercel sets REQUEST_URI to just "/api" (the folder name)
- * instead of the real path like "/api/me" or "/api/login".
- *
- * FIX: Vercel passes the real requested path in the "x-vercel-id"
- * header or via the __NEXT_PRIVATE_ORIGIN env. The safest fix is
- * to read the real path from $_SERVER['PATH_INFO'] which vercel-php
- * sets correctly, and rebuild REQUEST_URI from it.
+ * DEBUG MODE - Temporary: Show all PHP server variables
+ * to understand what Vercel is sending us.
+ * We will remove this once we find the correct variable.
  */
 
-// vercel-php sets PATH_INFO to the real path (e.g. /api/me)
-if (!empty($_SERVER['PATH_INFO'])) {
-    $path = $_SERVER['PATH_INFO'];
-    $query = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
-    $_SERVER['REQUEST_URI'] = $path . $query;
-}
-
-require __DIR__ . '/../public/index.php';
+header('Content-Type: application/json');
+echo json_encode([
+    'REQUEST_URI'    => $_SERVER['REQUEST_URI']    ?? 'NOT SET',
+    'PATH_INFO'      => $_SERVER['PATH_INFO']      ?? 'NOT SET',
+    'SCRIPT_NAME'    => $_SERVER['SCRIPT_NAME']    ?? 'NOT SET',
+    'SCRIPT_FILENAME'=> $_SERVER['SCRIPT_FILENAME']?? 'NOT SET',
+    'PHP_SELF'       => $_SERVER['PHP_SELF']       ?? 'NOT SET',
+    'QUERY_STRING'   => $_SERVER['QUERY_STRING']   ?? 'NOT SET',
+    'HTTP_HOST'      => $_SERVER['HTTP_HOST']      ?? 'NOT SET',
+    'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD'] ?? 'NOT SET',
+    'all_headers'    => getallheaders(),
+], JSON_PRETTY_PRINT);
+exit;
