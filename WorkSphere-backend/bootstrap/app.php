@@ -29,4 +29,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+        
+        // TEMPORARY: Catch the original exception for Vercel debugging
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            header("HTTP/1.1 500 Internal Server Error");
+            header("Content-Type: text/plain");
+            echo "--- ORIGINAL EXCEPTION CAUGHT BY DEBUG HANDLER ---\n\n";
+            echo "Message: " . $e->getMessage() . "\n";
+            echo "File: " . $e->getFile() . " on line " . $e->getLine() . "\n\n";
+            echo "Stack trace:\n" . $e->getTraceAsString();
+            die();
+        });
     })->create();
