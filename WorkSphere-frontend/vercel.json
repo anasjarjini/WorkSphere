@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://worksphere-backend-git-master-anasjarjinis-projects.vercel.app/api/:path*"
+    },
+    {
+      "source": "/sanctum/:path*",
+      "destination": "https://worksphere-backend-git-master-anasjarjinis-projects.vercel.app/sanctum/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
