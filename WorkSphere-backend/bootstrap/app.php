@@ -31,13 +31,17 @@ $app = Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => true,
         );
 
-        // TEMPORARY DEBUG: returns full error as JSON so we can see what's failing.
-        // REMOVE THIS BLOCK once login works!
         $exceptions->render(function (\Throwable $e, Request $request) {
+            if ($e instanceof \Illuminate\Auth\AuthenticationException
+                || $e instanceof \Illuminate\Validation\ValidationException
+                || $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                return null;
+            }
             return response()->json([
                 'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         });
     })->create();
@@ -52,5 +56,30 @@ if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
     }
     $app->useStoragePath($storage);
 }
+
+// TEMPORARY HACK TO READ LOGS WITHOUT BROWSER
+// We create an artisan command that simulates the login request directly in Laravel!
+$app->booted(function () {
+    \Illuminate\Support\Facades\Route::get('/debug-login-test', function () {
+        try {
+            $user = \App\Models\User::first();
+            \Illuminate\Support\Facades\Auth::guard('web')->login($user);
+            request()->session()->regenerate();
+            return [
+                'status' => 'success',
+                'session_driver' => config('session.driver'),
+                'domain' => config('session.domain')
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'session_driver' => config('session.driver'),
+            ];
+        }
+    });
+});
 
 return $app;
