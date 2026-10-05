@@ -7,7 +7,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         __DIR__.'/../app/Console/Commands',
     ])
@@ -29,15 +29,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-        
-        // TEMPORARY: Catch the original exception for Vercel debugging
+
+        // TEMPORARY: remove after debugging
         $exceptions->render(function (\Throwable $e, Request $request) {
             header("HTTP/1.1 500 Internal Server Error");
             header("Content-Type: text/plain");
-            echo "--- ORIGINAL EXCEPTION CAUGHT BY DEBUG HANDLER ---\n\n";
             echo "Message: " . $e->getMessage() . "\n";
             echo "File: " . $e->getFile() . " on line " . $e->getLine() . "\n\n";
             echo "Stack trace:\n" . $e->getTraceAsString();
             die();
         });
     })->create();
+
+// Vercel: only /tmp is writable
+if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
+    $storage = '/tmp/storage';
+    foreach (['app/public', 'framework/cache/data', 'framework/sessions', 'framework/views', 'logs'] as $dir) {
+        if (!is_dir("$storage/$dir")) {
+            mkdir("$storage/$dir", 0777, true);
+        }
+    }
+    $app->useStoragePath($storage);
+}
+
+return $app;
