@@ -14,10 +14,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
-        // On Vercel, the proxy strips one /api prefix before Laravel sees the path.
-        // So /api/login arrives as /login. We remove the apiPrefix on Vercel
-        // so routes/api.php matches without a prefix.
-        // Locally nothing changes (apiPrefix defaults to 'api').
         apiPrefix: (isset($_ENV['VERCEL']) || getenv('VERCEL')) ? '' : 'api',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
@@ -32,8 +28,18 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->is('*'),
+            fn (Request $request) => true,
         );
+
+        // TEMPORARY DEBUG: returns full error as JSON so we can see what's failing.
+        // REMOVE THIS BLOCK once login works!
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ], 500);
+        });
     })->create();
 
 // Vercel: only /tmp is writable
