@@ -11,8 +11,13 @@ export class ImageUrlService {
   private readonly backendOrigin: string;
 
   constructor() {
-    const apiUrl = new URL(environment.apiUrl);
-    this.backendOrigin = `${apiUrl.protocol}//${apiUrl.host}`;
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    try {
+      const apiUrl = new URL(environment.apiUrl, base);
+      this.backendOrigin = `${apiUrl.protocol}//${apiUrl.host}`;
+    } catch {
+      this.backendOrigin = base;
+    }
   }
 
   resolve(value: string | null | undefined): string | null {
