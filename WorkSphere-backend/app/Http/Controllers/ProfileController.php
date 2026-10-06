@@ -7,8 +7,6 @@ use App\Http\Requests\UploadAvatarRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class ProfileController extends Controller
 {
@@ -32,30 +30,24 @@ class ProfileController extends Controller
         $user = $request->user();
         $file = $request->file('avatar');
 
-        // ─── Supprimer l'ancien avatar s'il existe ──────────────────────────────────
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-        }
-
         // ─── Générer un nom de fichier unique ──────────────────────────────────────
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = 'avatars/' . Str::random(20) . '.' . $extension;
 
-        // ─── Redimensionner à max 400x400 si GD/Intervention disponible ────────────
-        try {
-            $manager = new ImageManager(GdDriver::class);
-            $image = $manager->make($file->getRealPath());
-            $image->resize(400, 400, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-            $contents = (string) $image->encode();
-        } catch (\Exception $e) {
-            $contents = file_get_contents($file->getRealPath());
-        }
+        // ─── Lecture directe et sûre du fichier binaire ───────────────────────────
+        $contents = file_get_contents($file->getRealPath());
 
-        // ─── Enregistrer sur le disque configuré (S3 ou local) ────────────────────
-        Storage::disk('public')->put($filename, $contents, 'public');
+        // ─── Enregistrer le nouveau fichier sur le stockage (S3 ou local) ─────────
+        Storage::disk('public')->put($filename, $contents);
+
+        // ─── Supprimer l'ancien avatar après confirmation du nouvel upload ────────
+        if ($user->avatar && $user->avatar !== $filename) {
+            try {
+                Storage::disk('public')->delete($user->avatar);
+            } catch (\Throwable $e) {
+                // Ignorer si l'ancien fichier est introuvable
+            }
+        }
 
         // ─── Mettre à jour la base de données ──────────────────────────────────────
         $user->update(['avatar' => $filename]);
@@ -74,7 +66,11 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            try {
+                Storage::disk('public')->delete($user->avatar);
+            } catch (\Throwable $e) {
+                // Ignorer si déjà supprimé
+            }
             $user->update(['avatar' => null]);
         }
 

@@ -8,8 +8,6 @@ use App\Http\Resources\CompanyResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class CompanySettingsController extends Controller
 {
@@ -85,32 +83,24 @@ class CompanySettingsController extends Controller
         $company = $request->user()->company;
         $file = $request->file('logo');
 
-        // ─── Supprimer l'ancien logo s'il existe ──────────────────────────────────
-        if ($company->logo) {
-            Storage::disk('public')->delete($company->logo);
-        }
-
         // ─── Générer un nom de fichier unique ──────────────────────────────────────
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = 'logos/' . Str::random(20) . '.' . $extension;
 
-        // ─── Redimensionner à max 400x400 via intervention/image si disponible ────
-        try {
-            $manager = new ImageManager(GdDriver::class);
-            $image = $manager->make($file->getRealPath());
+        // ─── Lecture directe et sûre du fichier ───────────────────────────────────
+        $contents = file_get_contents($file->getRealPath());
 
-            $image->resize(400, 400, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+        // ─── Enregistrer sur le stockage configuré (S3 ou local) ──────────────────
+        Storage::disk('public')->put($filename, $contents);
 
-            $contents = (string) $image->encode();
-        } catch (\Exception $e) {
-            $contents = file_get_contents($file->getRealPath());
+        // ─── Supprimer l'ancien logo après upload réussi ──────────────────────────
+        if ($company->logo && $company->logo !== $filename) {
+            try {
+                Storage::disk('public')->delete($company->logo);
+            } catch (\Throwable $e) {
+                // Ignorer si l'ancien fichier est introuvable
+            }
         }
-
-        // ─── Enregistrer sur le disque configuré (S3 ou local) ────────────────────
-        Storage::disk('public')->put($filename, $contents, 'public');
 
         // ─── Mettre à jour la base de données ──────────────────────────────────────
         $company->update(['logo' => $filename]);
