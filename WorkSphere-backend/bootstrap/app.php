@@ -20,6 +20,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->api(append: [
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
         $middleware->append(SecurityHeaders::class);
 
         $middleware->alias([
@@ -30,20 +33,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             function (Request $request) { return true; }
         );
-
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            if ($e instanceof \Illuminate\Auth\AuthenticationException
-                || $e instanceof \Illuminate\Validation\ValidationException
-                || $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
-                return null;
-            }
-            return response()->json([
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 500);
-        });
     })->create();
 
 // Vercel: only /tmp is writable
@@ -56,29 +45,5 @@ if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
     }
     $app->useStoragePath($storage);
 }
-
-// TEMPORARY HACK TO READ LOGS WITHOUT BROWSER
-$app->booted(function () {
-    \Illuminate\Support\Facades\Route::get('/debug-login-test', function () {
-        try {
-            $user = \App\Models\User::first();
-            \Illuminate\Support\Facades\Auth::guard('web')->login($user);
-            request()->session()->regenerate();
-            return [
-                'status' => 'success',
-                'session_driver' => config('session.driver'),
-                'domain' => config('session.domain')
-            ];
-        } catch (\Throwable $e) {
-            return [
-                'status' => 'error',
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'session_driver' => config('session.driver'),
-            ];
-        }
-    });
-});
 
 return $app;
