@@ -28,7 +28,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => true,
+            function (Request $request) { return true; }
         );
 
         $exceptions->render(function (\Throwable $e, Request $request) {
@@ -58,7 +58,6 @@ if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
 }
 
 // TEMPORARY HACK TO READ LOGS WITHOUT BROWSER
-// We create an artisan command that simulates the login request directly in Laravel!
 $app->booted(function () {
     \Illuminate\Support\Facades\Route::get('/debug-login-test', function () {
         try {
