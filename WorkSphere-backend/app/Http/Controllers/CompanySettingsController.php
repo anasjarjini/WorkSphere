@@ -41,7 +41,7 @@ class CompanySettingsController extends Controller
         $validated = $request->validated();
 
         // On ne met à jour QUE les champs autorisés, jamais le slug
-        $company->update([
+        $company->update([\
             'name'    => $validated['name'],
             'email'   => $validated['email'] ?? null,
             'phone'   => $validated['phone'] ?? null,
@@ -67,8 +67,7 @@ class CompanySettingsController extends Controller
             abort(404, 'Aucun logo.');
         }
 
-        $path = Storage::disk('public')->path($company->logo);
-        if (! is_file($path)) {
+        if (! Storage::disk('public')->exists($company->logo)) {
             abort(404, 'Logo introuvable.');
         }
 
@@ -80,57 +79,45 @@ class CompanySettingsController extends Controller
 
     /**
      * Upload / remplacement du logo de l'entreprise.
-     *
-     * - Si un logo existe déjà, on supprime l'ancien fichier avant d'enregistrer le nouveau
-     * - Redimensionnement à max 400x400px via intervention/image (scale preserve ratio)
-     * - Stockage : storage/app/public/logos/ (disque 'public')
-     * - Le fichier est accessible via Storage::url() après le symlink storage:link
      */
     public function uploadLogo(UploadCompanyLogoRequest $request)
     {
         $company = $request->user()->company;
         $file = $request->file('logo');
 
-        // ─── Supprimer l'ancien logo s'il existe ──────────────────────────────────────────────────
+        // ─── Supprimer l'ancien logo s'il existe ──────────────────────────────────
         if ($company->logo) {
             Storage::disk('public')->delete($company->logo);
         }
 
-        // ─── Générer un nom de fichier unique ────────────────────────────────────────────────────
+        // ─── Générer un nom de fichier unique ──────────────────────────────────────
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = 'logos/' . Str::random(20) . '.' . $extension;
-        $storagePath = Storage::disk('public')->path($filename);
 
-        // ─── Créer le dossier logos s'il n'existe pas ────────────────────────────────────────────
-        $dirname = dirname($storagePath);
-        if (! is_dir($dirname)) {
-            mkdir($dirname, 0755, true);
-        }
-
-        // ─── Redimensionner à max 400x400 via intervention/image ──────────────────────────────────
-        // Try to resize via Intervention Image when available; otherwise fallback
+        // ─── Redimensionner à max 400x400 via intervention/image si disponible ────
         try {
             $manager = new ImageManager(GdDriver::class);
             $image = $manager->make($file->getRealPath());
 
-            // Resize to fit within 400x400 while preserving aspect ratio and preventing upscaling
             $image->resize(400, 400, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
 
-            $image->save($storagePath);
-        } catch (\Intervention\Image\Exceptions\MissingDependencyException $e) {
-            // Fallback: move uploaded file without resizing (keeps original)
-            $file->move($dirname, basename($storagePath));
+            $contents = (string) $image->encode();
+        } catch (\Exception $e) {
+            $contents = file_get_contents($file->getRealPath());
         }
 
-        // ─── Mettre à jour la base de données ─────────────────────────────────────────────────────
+        // ─── Enregistrer sur le disque configuré (S3 ou local) ────────────────────
+        Storage::disk('public')->put($filename, $contents, 'public');
+
+        // ─── Mettre à jour la base de données ──────────────────────────────────────
         $company->update(['logo' => $filename]);
 
         return response()->json([
             'message'  => 'Logo mis à jour avec succès.',
-            'logo_url' => url(Storage::disk('public')->url($filename)),
+            'logo_url' => Storage::disk('public')->url($filename),
         ], 200);
     }
 }

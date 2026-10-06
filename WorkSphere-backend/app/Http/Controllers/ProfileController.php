@@ -32,23 +32,16 @@ class ProfileController extends Controller
         $user = $request->user();
         $file = $request->file('avatar');
 
-        // ─── Supprimer l'ancien avatar s'il existe ──────────────────────────────────────────────────
+        // ─── Supprimer l'ancien avatar s'il existe ──────────────────────────────────
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        // ─── Générer un nom de fichier unique ────────────────────────────────────────────────────
+        // ─── Générer un nom de fichier unique ──────────────────────────────────────
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = 'avatars/' . Str::random(20) . '.' . $extension;
-        $storagePath = Storage::disk('public')->path($filename);
 
-        // ─── Créer le dossier avatars s'il n'existe pas ──────────────────────────────────────────
-        $dirname = dirname($storagePath);
-        if (! is_dir($dirname)) {
-            mkdir($dirname, 0755, true);
-        }
-
-        // ─── Redimensionner à max 400x400 via intervention/image ──────────────────────────────────
+        // ─── Redimensionner à max 400x400 si GD/Intervention disponible ────────────
         try {
             $manager = new ImageManager(GdDriver::class);
             $image = $manager->make($file->getRealPath());
@@ -56,18 +49,20 @@ class ProfileController extends Controller
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            $image->save($storagePath);
+            $contents = (string) $image->encode();
         } catch (\Exception $e) {
-            // Fallback: move uploaded file without resizing
-            $file->move($dirname, basename($storagePath));
+            $contents = file_get_contents($file->getRealPath());
         }
 
-        // ─── Mettre à jour la base de données ─────────────────────────────────────────────────────
+        // ─── Enregistrer sur le disque configuré (S3 ou local) ────────────────────
+        Storage::disk('public')->put($filename, $contents, 'public');
+
+        // ─── Mettre à jour la base de données ──────────────────────────────────────
         $user->update(['avatar' => $filename]);
 
         return response()->json([
             'message'    => 'Avatar mis à jour avec succès.',
-            'avatar_url' => url(Storage::disk('public')->url($filename)),
+            'avatar_url' => Storage::disk('public')->url($filename),
         ], 200);
     }
 

@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment'; 
+import { environment } from '../../../environments/environment';
 
 /**
  * Résout une valeur d'URL/chemin d'image (avatar, logo, etc.) renvoyée par le backend
- * vers une URL absolue pointant vers l'origine de l'API, quel que soit le format reçu
- * (URL complète, chemin absolu, chemin relatif "storage/..." ou "avatars/...").
+ * vers une URL absolue valide quel que soit le format reçu :
+ * - URL externe complète (Supabase, S3, CDN) -> conservée intacte
+ * - URL localhost -> réécrite vers backendOrigin
+ * - Chemin relatif "storage/...", "avatars/...", "logos/..." -> pointant vers /storage/...
  */
 @Injectable({ providedIn: 'root' })
 export class ImageUrlService {
@@ -29,7 +31,10 @@ export class ImageUrlService {
     if (/^https?:\/\//i.test(rawValue)) {
       try {
         const parsed = new URL(rawValue);
-        return new URL(parsed.pathname, this.backendOrigin).toString();
+        if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+          return new URL(parsed.pathname, this.backendOrigin).toString();
+        }
+        return rawValue;
       } catch {
         return rawValue;
       }

@@ -9,6 +9,10 @@
       "destination": "https://worksphere-backend-git-master-anasjarjinis-projects.vercel.app/sanctum/:path*"
     },
     {
+      "source": "/storage/:path*",
+      "destination": "https://rrctmohzfjgywlgtrowk.supabase.co/storage/v1/object/public/worksphere/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
