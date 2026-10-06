@@ -41,7 +41,7 @@ class CompanySettingsController extends Controller
         $validated = $request->validated();
 
         // On ne met à jour QUE les champs autorisés, jamais le slug
-        $company->update([\
+        $company->update([
             'name'    => $validated['name'],
             'email'   => $validated['email'] ?? null,
             'phone'   => $validated['phone'] ?? null,
@@ -71,8 +71,8 @@ class CompanySettingsController extends Controller
             abort(404, 'Logo introuvable.');
         }
 
-        return response(file_get_contents($path), 200, [
-            'Content-Type'  => mime_content_type($path) ?: 'application/octet-stream',
+        return response(Storage::disk('public')->get($company->logo), 200, [
+            'Content-Type'  => Storage::disk('public')->mimeType($company->logo) ?: 'image/png',
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
