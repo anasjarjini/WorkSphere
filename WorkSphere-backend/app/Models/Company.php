@@ -48,24 +48,14 @@ class Company extends Model
             return null;
         }
 
-        return url(Storage::disk('public')->url($this->logo));
+        return Storage::disk('public')->url($this->logo);
     }
 
-    // ── Relations ──
+    // ─── Relations ───
 
     public function users()
     {
         return $this->hasMany(User::class);
-    }
-
-    public function projects()
-    {
-        return $this->hasMany(Project::class);
-    }
-
-    public function serviceRequests()
-    {
-        return $this->hasMany(ServiceRequest::class);
     }
 
     public function departments()
@@ -73,16 +63,13 @@ class Company extends Model
         return $this->hasMany(Department::class);
     }
 
-    public function hasAdminRh(): bool
+    public function serviceRequests()
     {
-        return $this->users()->where('role', 'HR_ADMIN')->exists();
+        return $this->hasMany(ServiceRequest::class);
     }
 
-    /**
-     * Raccourci : toutes les annonces de l'entreprise via ses départements.
-     */
     public function announcements()
     {
-        return $this->hasManyThrough(Announcement::class, Department::class);
+        return $this->hasMany(Announcement::class);
     }
 }
