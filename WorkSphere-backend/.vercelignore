@@ -1,0 +1,13 @@
+.git
+.github
+tests
+node_modules
+*.sql
+*.log
+README*.md
+.phpunit.result.cache
+phpunit.xml
+Dockerfile
+.dockerignore
+serve.sh
+wsb
