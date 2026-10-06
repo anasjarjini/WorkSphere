@@ -19,6 +19,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(fn () => null);
         $middleware->statefulApi();
         $middleware->api(append: [
             \Illuminate\Session\Middleware\StartSession::class,
@@ -30,6 +31,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        });
         $exceptions->shouldRenderJsonWhen(
             function (Request $request) { return true; }
         );

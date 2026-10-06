@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register-company', [CompanyRegistrationController::class, 'store'])->middleware('throttle:3,1');
 Route::post('/activate', [AccountActivationController::class, 'store'])->middleware('throttle:10,1');
 Route::post('/activate/resend', [AccountActivationController::class, 'resend'])->middleware('throttle:3,1');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1');
 
