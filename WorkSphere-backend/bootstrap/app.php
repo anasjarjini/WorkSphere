@@ -33,6 +33,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             function (Request $request) { return true; }
         );
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        });
     })->create();
 
 // Vercel: only /tmp is writable
